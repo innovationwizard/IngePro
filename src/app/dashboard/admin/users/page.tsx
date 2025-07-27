@@ -1,5 +1,5 @@
-import { User } from '@/types/admin'
 'use client'
+import { User } from '@/types/admin'
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
