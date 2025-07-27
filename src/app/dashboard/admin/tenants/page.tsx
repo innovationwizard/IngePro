@@ -1,3 +1,4 @@
+import { Tenant } from '@/types/admin'
 'use client'
 
 import { useState } from 'react'
@@ -54,7 +55,7 @@ export default function AdminTenantsPage() {
     setIsAddModalOpen(true)
   }
 
-  const handleEditTenant = (tenant: any) => {
+  const handleEditTenant = (tenant: Tenant) => {
     setSelectedTenant(tenant)
     setIsEditModalOpen(true)
   }

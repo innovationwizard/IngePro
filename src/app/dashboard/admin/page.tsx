@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Shield, Users, Settings, BarChart3, Building } from 'lucide-react'
+import { Users, Settings, BarChart3, Building } from 'lucide-react'
 
 export default function AdminPage() {
   const { data: session } = useSession()
