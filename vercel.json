@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/:tenant/dashboard/:path*",
+      "destination": "/dashboard/:path*"
+    },
+    {
+      "source": "/:tenant/api/:path*", 
+      "destination": "/api/:path*"
+    }
+  ]
+}

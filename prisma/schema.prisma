@@ -31,17 +31,28 @@ model User {
 }
 
 model Company {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
-  nameEs      String?  // Spanish company name
+  nameEs      String?
+  slug        String   @unique  // ADD THIS LINE
   status      CompanyStatus @default(ACTIVE)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   
-  // Relationships
-  users       UserTenant[]
+  // Relations (keep existing)
+  users       User[]
   projects    Project[]
-  teams       Team[]
+  workLogs    WorkLog[]
+  
+  @@map("companies")
+}
+
+// ADD THIS ENUM
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  TRIAL
 }
 
 model Team {
