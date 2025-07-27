@@ -1,5 +1,5 @@
 'use client'
-import { User } from '@/types/admin'
+import { User as UserType } from '@/types/admin'
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
@@ -69,12 +69,12 @@ export default function AdminUsersPage() {
     setIsAddModalOpen(true)
   }
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: UserType) => {
     setSelectedUser(user)
     setIsEditModalOpen(true)
   }
 
-  const handleViewHistory = (user: User) => {
+  const handleViewHistory = (user: UserType) => {
     setSelectedUser(user)
     setIsHistoryModalOpen(true)
   }
@@ -326,7 +326,7 @@ export default function AdminUsersPage() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">Historial de Empresas</h4>
                   <div className="space-y-2">
-                    {selectedUser.history.map((entry: User, index: number) => (
+                    {selectedUser.history.map((entry: UserType, index: number) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
                         <div>
                           <div className="font-medium">{entry.company}</div>
