@@ -37,7 +37,7 @@ export default function TenantSignup() {
               value={formData.companyName}
               onChange={(e) => setFormData({...formData, companyName: e.target.value})}
               className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              placeholder="Aplicaciones Especiales"
+              placeholder="Nombre de la empresa"
             />
           </div>
           
@@ -47,7 +47,7 @@ export default function TenantSignup() {
             </label>
             <div className="mt-1 flex rounded-md shadow-sm">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                ingepro.com/
+                ingepro.app/
               </span>
               <input
                 type="text"
@@ -55,7 +55,7 @@ export default function TenantSignup() {
                 value={formData.companySlug}
                 onChange={(e) => setFormData({...formData, companySlug: e.target.value})}
                 className="flex-1 block w-full border border-gray-300 rounded-none rounded-r-md px-3 py-2"
-                placeholder="aplicaciones-especiales"
+                placeholder="nombre-empresa"
               />
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function TenantSignup() {
               value={formData.adminEmail}
               onChange={(e) => setFormData({...formData, adminEmail: e.target.value})}
               className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              placeholder="ricardo@aplicacionesespeciales.com"
+              placeholder="nombre@empresa.com"
             />
           </div>
           
@@ -84,7 +84,7 @@ export default function TenantSignup() {
               value={formData.adminName}
               onChange={(e) => setFormData({...formData, adminName: e.target.value})}
               className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              placeholder="Ricardo Ibarra"
+              placeholder="Nombre Apellido"
             />
           </div>
           
