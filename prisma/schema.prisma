@@ -11,198 +11,196 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  role        Role     @default(WORKER)
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String
+  role      Role       @default(WORKER)
   // User is permanent - no deletion, only status changes
-  status      UserStatus @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
   // Relationships
-  userTenants    UserTenant[]
-  userTeams      UserTeam[]
-  userProjects   UserProject[]
-  workLogs       WorkLog[]
-  
+  userTenants  UserTenant[]
+  userTeams    UserTeam[]
+  userProjects UserProject[]
+  workLogs     WorkLog[]
+
   // Audit trail
-  auditLogs      AuditLog[]
+  auditLogs AuditLog[]
+  Company   Company?   @relation(fields: [companyId], references: [id])
+  companyId String?
 }
 
 model Company {
-  id          String   @id @default(cuid())
-  name        String
-  nameEs      String?
-  slug        String   @unique  // ADD THIS LINE
-  status      CompanyStatus @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id        String        @id @default(cuid())
+  name      String
+  nameEs    String?
+  slug      String        @unique // ADD THIS LINE
+  status    CompanyStatus @default(ACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
   // Relations (keep existing)
-  users       User[]
-  projects    Project[]
-  workLogs    WorkLog[]
-  
+  users      User[]
+  projects   Project[]
+  workLogs   WorkLog[]
+  Team       Team[]
+  UserTenant UserTenant[]
+
   @@map("companies")
 }
 
-// ADD THIS ENUM
-enum CompanyStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
-  TRIAL
-}
-
 model Team {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
-  nameEs      String?  // Spanish team name
+  nameEs      String? // Spanish team name
   description String?
   companyId   String
-  company     Company   @relation(fields: [companyId], references: [id])
+  company     Company    @relation(fields: [companyId], references: [id])
   status      TeamStatus @default(ACTIVE)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
   // Relationships
-  users       UserTeam[]
-  projects    ProjectTeam[]
+  users    UserTeam[]
+  projects ProjectTeam[]
 }
 
 model Project {
-  id          String    @id @default(cuid())
-  name        String
-  nameEs      String?  // Spanish project name
-  description String?
+  id            String        @id @default(cuid())
+  name          String
+  nameEs        String? // Spanish project name
+  description   String?
   descriptionEs String? // Spanish project description
-  companyId   String
-  company     Company   @relation(fields: [companyId], references: [id])
-  status      ProjectStatus @default(ACTIVE)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id])
+  status        ProjectStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
   // Relationships
-  users       UserProject[]
-  teams       ProjectTeam[]
-  workLogs    WorkLog[]
+  users    UserProject[]
+  teams    ProjectTeam[]
+  workLogs WorkLog[]
 }
 
 // Junction table for User-Company relationships with time tracking
 model UserTenant {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
-  
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
   // Time tracking
-  startDate   DateTime @default(now())
-  endDate     DateTime? // null = currently active
-  
+  startDate DateTime  @default(now())
+  endDate   DateTime? // null = currently active
+
   // Role at this company
-  role        Role     @default(WORKER)
-  
+  role Role @default(WORKER)
+
   // Status
-  status      UserTenantStatus @default(ACTIVE)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  status UserTenantStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([userId, companyId, startDate])
 }
 
 // Junction table for User-Team relationships
 model UserTeam {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  teamId      String
-  team        Team     @relation(fields: [teamId], references: [id])
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id])
+
   // Time tracking
-  startDate   DateTime @default(now())
-  endDate     DateTime? // null = currently active
-  
+  startDate DateTime  @default(now())
+  endDate   DateTime? // null = currently active
+
   // Status
-  status      UserTeamStatus @default(ACTIVE)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  status UserTeamStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([userId, teamId, startDate])
 }
 
 // Junction table for User-Project relationships
 model UserProject {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
   // Time tracking
-  startDate   DateTime @default(now())
-  endDate     DateTime? // null = currently active
-  
+  startDate DateTime  @default(now())
+  endDate   DateTime? // null = currently active
+
   // Role in this project
-  role        Role     @default(WORKER)
-  
+  role Role @default(WORKER)
+
   // Status
-  status      UserProjectStatus @default(ACTIVE)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  status UserProjectStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([userId, projectId, startDate])
 }
 
 // Junction table for Project-Team relationships
 model ProjectTeam {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  teamId      String
-  team        Team     @relation(fields: [teamId], references: [id])
-  
-  createdAt   DateTime @default(now())
-  
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+  teamId    String
+  team      Team    @relation(fields: [teamId], references: [id])
+
+  createdAt DateTime @default(now())
+
   @@unique([projectId, teamId])
 }
 
 model WorkLog {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  projectId     String
-  project       Project   @relation(fields: [projectId], references: [id])
-  clockIn       DateTime
-  clockOut      DateTime?
-  location      String?   // GPS coordinates
-  tasksCompleted String   // JSON array of tasks
-  materialsUsed String    // JSON array of materials
-  photos        String[]  // Array of photo URLs
-  notes         String?
-  notesEs       String?   // Spanish notes
-  approved      Boolean   @default(false)
-  approvedBy    String?
-  approvedAt    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  projectId      String
+  project        Project   @relation(fields: [projectId], references: [id])
+  clockIn        DateTime
+  clockOut       DateTime?
+  location       String? // GPS coordinates
+  tasksCompleted String // JSON array of tasks
+  materialsUsed  String // JSON array of materials
+  photos         String[] // Array of photo URLs
+  notes          String?
+  notesEs        String? // Spanish notes
+  approved       Boolean   @default(false)
+  approvedBy     String?
+  approvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Company        Company?  @relation(fields: [companyId], references: [id])
+  companyId      String?
 }
 
 // Audit trail for all changes
 model AuditLog {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  action      String   // CREATE, UPDATE, DELETE, ASSIGN, UNASSIGN
-  entityType  String   // USER, COMPANY, TEAM, PROJECT, etc.
-  entityId    String
-  oldValues   String?  // JSON of old values
-  newValues   String?  // JSON of new values
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String // CREATE, UPDATE, DELETE, ASSIGN, UNASSIGN
+  entityType String // USER, COMPANY, TEAM, PROJECT, etc.
+  entityId   String
+  oldValues  String? // JSON of old values
+  newValues  String? // JSON of new values
+  createdAt  DateTime @default(now())
 }
 
 enum Role {
@@ -221,6 +219,7 @@ enum CompanyStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
+  TRIAL
 }
 
 enum TeamStatus {
