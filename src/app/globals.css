@@ -24,3 +24,26 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Mobile form field fix */
+@media (max-width: 640px) {
+  .form-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+.form-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}

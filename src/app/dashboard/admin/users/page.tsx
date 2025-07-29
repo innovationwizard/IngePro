@@ -220,7 +220,7 @@ export default function AdminUsersPage() {
                   <label className="block text-sm font-medium text-gray-700">Nombre</label>
                   <input
                     type="text"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     placeholder="Nombre completo"
                   />
                 </div>
@@ -228,13 +228,13 @@ export default function AdminUsersPage() {
                   <label className="block text-sm font-medium text-gray-700">Email</label>
                   <input
                     type="email"
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     placeholder="email@ejemplo.com"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Estado</label>
-                  <select className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
+                  <select className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0">
                     <option value="ACTIVE">Activo</option>
                     <option value="INACTIVE">Inactivo</option>
                     <option value="SUSPENDED">Suspendido</option>
@@ -273,7 +273,7 @@ export default function AdminUsersPage() {
                   <input
                     type="text"
                     defaultValue={selectedUser.name}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                   />
                 </div>
                 <div>
@@ -281,14 +281,14 @@ export default function AdminUsersPage() {
                   <input
                     type="email"
                     defaultValue={selectedUser.email}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Estado</label>
                   <select 
                     defaultValue={selectedUser.status}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                   >
                     <option value="ACTIVE">Activo</option>
                     <option value="INACTIVE">Inactivo</option>

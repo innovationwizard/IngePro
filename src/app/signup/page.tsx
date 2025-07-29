@@ -39,7 +39,7 @@ export default function TenantSignup() {
               required
               value={formData.companyName}
               onChange={(e) => setFormData({...formData, companyName: e.target.value})}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
               placeholder="Nombre de la empresa"
             />
           </div>
@@ -57,7 +57,7 @@ export default function TenantSignup() {
                 required
                 value={formData.companySlug}
                 onChange={(e) => setFormData({...formData, companySlug: e.target.value})}
-                className="flex-1 block w-full border border-gray-300 rounded-none rounded-r-md px-3 py-2"
+                className="flex-1 block w-full border border-gray-300 rounded-none rounded-r-md px-2 sm:px-3 py-2 min-w-0"
                 placeholder="nombre-empresa"
               />
             </div>
@@ -72,7 +72,7 @@ export default function TenantSignup() {
               required
               value={formData.adminEmail}
               onChange={(e) => setFormData({...formData, adminEmail: e.target.value})}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
               placeholder="nombre@empresa.com"
             />
           </div>
@@ -86,7 +86,7 @@ export default function TenantSignup() {
               required
               value={formData.adminName}
               onChange={(e) => setFormData({...formData, adminName: e.target.value})}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
               placeholder="Nombre Apellido"
             />
           </div>
