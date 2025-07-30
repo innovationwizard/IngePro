@@ -31,11 +31,22 @@ const adminNavigation = [
   { name: 'Configuración del Sistema', href: '/dashboard/admin/settings', icon: Settings },
 ]
 
-export function Sidebar() {
-  const { data: session } = useSession()
-  const pathname = usePathname()
-  const isAdmin = session?.user?.role === 'ADMIN'
-
+export default function Sidebar() {
+  const { data: session, status } = useSession()
+  
+  // Add loading state
+  if (status === 'loading') {
+    return <div>Cargando...</div>
+  }
+  
+  // Add unauthenticated state
+  if (status === 'unauthenticated') {
+    return null
+  }
+  
+  // Safe to use session.user now
+  const userRole = session?.user?.role || 'WORKER'
+  
   return (
     <div className="w-64 bg-white shadow-sm border-r">
       <nav className="mt-5 px-2">

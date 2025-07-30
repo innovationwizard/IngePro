@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { Providers } from '@/components/providers'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { Toaster } from '@/components/ui/Toaster'
 import { TenantProvider } from '@/contexts/TenantContext'
@@ -22,19 +23,17 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const tenantSlug = await getTenantSlug()
-  
   return (
     <html lang="es">
-      <body>
-        <TenantProvider initialTenant={tenantSlug}>
+      <body className={inter.className}>
+        <Providers>
           {children}
-        </TenantProvider>
+        </Providers>
       </body>
     </html>
   )
