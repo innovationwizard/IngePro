@@ -9,6 +9,22 @@
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts"
   },
+
+  {
+    "scripts": {
+      "dev": "next dev",
+      "build": "prisma generate && next build",
+      "start": "next start",
+      "lint": "next lint"
+    }
+  }
+  
+  {
+    "scripts": {
+      "vercel-build": "prisma generate && next build"
+    }
+  }
+
   "dependencies": {
     "@prisma/client": "^6.12.0",
     "@radix-ui/react-avatar": "^1.1.10",

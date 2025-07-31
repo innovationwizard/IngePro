@@ -3,114 +3,109 @@
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import { es } from '@/lib/translations/es'
-import { 
-  Clock, 
-  Calendar, 
-  FileText, 
-  Settings, 
+import {
+  Home,
+  Clock,
   Users,
-  BarChart3,
-  Shield,
-  Building
+  FolderOpen,
+  Building,
+  Settings,
+  LogOut
 } from 'lucide-react'
-
-const navigation = [
-  { name: es.navigation.dashboard, href: '/dashboard', icon: Clock },
-  { name: es.navigation.workLogs, href: '/dashboard/worklogs', icon: FileText },
-  { name: es.navigation.projects, href: '/dashboard/projects', icon: Calendar },
-  { name: es.navigation.team, href: '/dashboard/team', icon: Users },
-  { name: es.navigation.reports, href: '/dashboard/reports', icon: BarChart3 },
-  { name: es.navigation.settings, href: '/dashboard/settings', icon: Settings },
-]
-
-const adminNavigation = [
-  { name: 'Gestión de Usuarios', href: '/dashboard/admin/users', icon: Users },
-  { name: 'Gestión de Empresas', href: '/dashboard/admin/tenants', icon: Building },
-  { name: 'Configuración del Sistema', href: '/dashboard/admin/settings', icon: Settings },
-]
 
 export default function Sidebar() {
   const { data: session, status } = useSession()
+  const pathname = usePathname()
   
-  // Add loading state
   if (status === 'loading') {
-    return <div>Cargando...</div>
+    return <div className="w-64 bg-gray-800 text-white p-4">Cargando...</div>
   }
   
-  // Add unauthenticated state
   if (status === 'unauthenticated') {
     return null
   }
-  
-  // Safe to use session.user now
+
   const userRole = session?.user?.role || 'WORKER'
-  
+
+  const menuItems = [
+    {
+      name: 'Panel Principal',
+      href: '/dashboard',
+      icon: Home,
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN']
+    },
+    {
+      name: 'Registros de Trabajo',
+      href: '/dashboard/work-logs',
+      icon: Clock,
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN']
+    },
+    {
+      name: 'Proyectos',
+      href: '/dashboard/projects',
+      icon: FolderOpen,
+      roles: ['SUPERVISOR', 'ADMIN']
+    },
+    {
+      name: 'Gestión de Usuarios',
+      href: '/dashboard/admin/users',
+      icon: Users,
+      roles: ['ADMIN']
+    },
+    {
+      name: 'Gestión de Empresas',
+      href: '/dashboard/admin/tenants',
+      icon: Building,
+      roles: ['ADMIN']
+    }
+  ]
+
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(userRole)
+  )
+
   return (
-    <div className="w-64 bg-white shadow-sm border-r">
-      <nav className="mt-5 px-2">
-        <div className="space-y-1">
-          {navigation.map((item) => {
+    <div className="w-64 bg-gray-800 text-white h-full flex flex-col">
+      <div className="p-4 border-b border-gray-700">
+        <h1 className="text-xl font-bold">IngePro</h1>
+        <p className="text-sm text-gray-300">{session?.user?.name}</p>
+        <p className="text-xs text-gray-400">{userRole}</p>
+      </div>
+
+      <nav className="flex-1 p-4">
+        <ul className="space-y-2">
+          {filteredMenuItems.map((item) => {
+            const Icon = item.icon
             const isActive = pathname === item.href
+            
             return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
-                  isActive
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                )}
-              >
-                <item.icon
-                  className={cn(
-                    'mr-3 h-5 w-5',
-                    isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
-                  )}
-                />
-                {item.name}
-              </Link>
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-gray-700 text-white'
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  <Icon className="mr-3 h-5 w-5" />
+                  {item.name}
+                </Link>
+              </li>
             )
           })}
-        </div>
-
-        {isAdmin && (
-          <>
-            <div className="mt-8 pt-4 border-t border-gray-200">
-              <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Administración
-              </div>
-            </div>
-            <div className="mt-1 space-y-1">
-              {adminNavigation.map((item) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
-                      isActive
-                        ? 'bg-red-100 text-red-900'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    )}
-                  >
-                    <item.icon
-                      className={cn(
-                        'mr-3 h-5 w-5',
-                        isActive ? 'text-red-500' : 'text-gray-400 group-hover:text-gray-500'
-                      )}
-                    />
-                    {item.name}
-                  </Link>
-                )
-              })}
-            </div>
-          </>
-        )}
+        </ul>
       </nav>
+
+      <div className="p-4 border-t border-gray-700">
+        <button
+          onClick={() => {/* Add signOut logic */}}
+          className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
+        >
+          <LogOut className="mr-3 h-5 w-5" />
+          Cerrar Sesión
+        </button>
+      </div>
     </div>
   )
 }
