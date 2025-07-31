@@ -3,32 +3,21 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { Sidebar } from '@/components/dashboard/Sidebar'
-import { Header } from '@/components/dashboard/Header'
+import Sidebar from '@/components/dashboard/Sidebar'
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
-    </div>
-  )
-} {
   const { data: session, status } = useSession()
   const router = useRouter()
 
   useEffect(() => {
-    if (status === 'loading') return
-    if (!session) {
+    if (status === 'unauthenticated') {
       router.push('/auth/login')
     }
-  }, [session, status, router])
+  }, [status, router])
 
   if (status === 'loading') {
     return (
@@ -44,7 +33,6 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <div className="flex">
         <Sidebar />
         <main className="flex-1 p-6">{children}</main>
