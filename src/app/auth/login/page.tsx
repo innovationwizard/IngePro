@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Clock } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 
@@ -124,6 +125,15 @@ export default function LoginPage() {
             <div className="text-xs text-gray-500 space-y-1">
               <div><strong>Demo:</strong> worker@demo.com / password123</div>
             </div>
+          </div>
+
+          <div className="mt-4 text-center">
+            <Link
+              href="/auth/login/admin/reset-password"
+              className="text-sm text-blue-600 hover:text-blue-500 underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
         </div>
       </div>
