@@ -32,31 +32,37 @@ export default function Sidebar() {
       name: 'Panel Principal',
       href: '/dashboard',
       icon: Home,
-      roles: ['WORKER', 'SUPERVISOR', 'ADMIN']
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
       name: 'Registros de Trabajo',
       href: '/dashboard/work-logs',
       icon: Clock,
-      roles: ['WORKER', 'SUPERVISOR', 'ADMIN']
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
       name: 'Proyectos',
       href: '/dashboard/projects',
       icon: FolderOpen,
-      roles: ['SUPERVISOR', 'ADMIN']
+      roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
       name: 'Gestión de Usuarios',
       href: '/dashboard/admin/users',
       icon: Users,
-      roles: ['ADMIN']
+      roles: ['ADMIN', 'SUPERUSER']
     },
     {
       name: 'Gestión de Empresas',
       href: '/dashboard/admin/tenants',
       icon: Building,
-      roles: ['ADMIN']
+      roles: ['ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'SuperUser Dashboard',
+      href: '/dashboard/superuser',
+      icon: Settings,
+      roles: ['SUPERUSER']
     }
   ]
 

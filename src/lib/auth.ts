@@ -44,6 +44,14 @@ export const authOptions: NextAuthOptions = {
               role: 'ADMIN',
               companyId: 'demo-company',
               password: 'password123'
+            },
+            {
+              id: '4',
+              email: 'superuser@demo.com', 
+              name: 'System SuperUser',
+              role: 'SUPERUSER',
+              companyId: 'demo-company',
+              password: 'password123'
             }
           ]
 

@@ -208,6 +208,7 @@ enum Role {
   WORKER
   SUPERVISOR
   ADMIN
+  SUPERUSER
 }
 
 enum UserStatus {

@@ -2,7 +2,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'WORKER' | 'SUPERVISOR' | 'ADMIN';
+  role: 'WORKER' | 'SUPERVISOR' | 'ADMIN' | 'SUPERUSER';
   companyId: string;
   createdAt: Date;
 }
