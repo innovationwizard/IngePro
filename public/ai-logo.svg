@@ -1,0 +1,51 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="flameGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ffd23f;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#f7931e;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e63946;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="blueFlame" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0.6" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="100" fill="#000000"/>
+  
+  <!-- Main flame for "A" -->
+  <path d="M 60 140 L 80 80 L 100 120 L 120 80 L 140 140 L 130 140 L 120 100 L 100 130 L 80 100 L 70 140 Z" 
+        fill="url(#flameGradient)" 
+        filter="url(#glow)"/>
+  
+  <!-- Blue flame accents for "A" -->
+  <path d="M 75 90 L 85 70 L 95 85 L 105 70 L 115 90 L 110 90 L 105 75 L 95 90 L 85 75 L 80 90 Z" 
+        fill="url(#blueFlame)" 
+        opacity="0.7"/>
+  
+  <!-- Main flame for "I" -->
+  <path d="M 160 140 L 170 80 L 180 140 L 175 140 L 170 90 L 165 140 Z" 
+        fill="url(#flameGradient)" 
+        filter="url(#glow)"/>
+  
+  <!-- Blue flame accent for "I" -->
+  <path d="M 167 90 L 170 75 L 173 90 L 172 90 L 170 80 L 168 90 Z" 
+        fill="url(#blueFlame)" 
+        opacity="0.7"/>
+  
+  <!-- Glow effect -->
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Subtle glow beneath flames -->
+  <ellipse cx="100" cy="150" rx="60" ry="10" fill="rgba(255,107,53,0.3)" opacity="0.6"/>
+</svg> 

@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IngePro - Gestión de Productividad en Construcción
+
+Una plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.
+
+## Features
+
+- 🏗️ **Gestión de Proyectos**: Control completo de proyectos de construcción
+- ⏱️ **Seguimiento de Tiempo**: Registro de horas trabajadas en tiempo real
+- 👥 **Gestión de Usuarios**: Sistema de usuarios y roles administrativos
+- 📱 **Diseño Responsivo**: Interfaz optimizada para dispositivos móviles
+- ⚡ **Rendimiento Optimizado**: Construido con Next.js y TypeScript
+- 🔒 **Autenticación Segura**: Sistema de login y autorización
+- 🎯 **TypeScript**: Seguridad de tipos para mejor experiencia de desarrollo
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js (version 16 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/innovationwizard/ingepro.git
+cd ingepro
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Start the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open your browser and navigate to `http://localhost:3000`
 
-## Learn More
+## Tecnologías Utilizadas
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 14** - Framework de React para aplicaciones web
+- **TypeScript** - Seguridad de tipos y mejor experiencia de desarrollo
+- **Prisma** - ORM para gestión de base de datos
+- **NextAuth.js** - Autenticación y autorización
+- **Tailwind CSS** - Framework de CSS para diseño responsivo
+- **PostgreSQL** - Base de datos relacional
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Building for Production
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+```
 
-## Deploy on Vercel
+The built files will be in the `dist` directory.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## License
+
+ISC License
+
+## Contact
+
+For questions or contributions, please open an issue on GitHub.
