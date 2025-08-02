@@ -22,7 +22,6 @@ export const metadata: Metadata = {
     apple: [
       { url: '/ingepro_logo_small.png', sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
   },
   keywords: ['construcción', 'productividad', 'gestión', 'proyectos', 'seguimiento de tiempo', 'IngePro'],
   authors: [{ name: 'IngePro' }],
