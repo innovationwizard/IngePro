@@ -11,8 +11,31 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'IngePro - Gestión de Productividad en Construcción',
-  description: 'Seguimiento en tiempo real de la productividad en construcción y gestión de proyectos',
+  description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
   manifest: '/manifest.json',
+  keywords: ['construcción', 'productividad', 'gestión', 'proyectos', 'seguimiento de tiempo', 'IngePro'],
+  authors: [{ name: 'IngePro' }],
+  openGraph: {
+    title: 'IngePro - Gestión de Productividad en Construcción',
+    description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
+    url: 'https://ingepro.com',
+    siteName: 'IngePro',
+    images: [
+      {
+        url: '/ingepro_logo_small.png',
+        width: 120,
+        height: 120,
+        alt: 'IngePro Logo',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'IngePro - Gestión de Productividad en Construcción',
+    description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
+    images: ['/ingepro_logo_small.png'],
+  },
 }
 
 export const viewport: Viewport = {
