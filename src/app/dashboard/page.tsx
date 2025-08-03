@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { ClockInCard } from '@/components/dashboard/ClockInCard'
 import { ProjectSelector } from '@/components/dashboard/ProjectSelector'
 import { LocationTracker } from '@/components/dashboard/LocationTracker'
@@ -11,6 +12,7 @@ import { es } from '@/lib/translations/es'
 
 export default function DashboardPage() {
   const { data: session } = useSession()
+  const router = useRouter()
   const { isClockedIn, currentWorkLog } = useWorkLogStore()
   const [currentTime, setCurrentTime] = useState(new Date())
 
@@ -21,6 +23,22 @@ export default function DashboardPage() {
 
     return () => clearInterval(timer)
   }, [])
+
+  // Redirect superusers to their dashboard
+  useEffect(() => {
+    if (session?.user?.role === 'SUPERUSER') {
+      router.push('/dashboard/superuser')
+    }
+  }, [session, router])
+
+  // Don't render the regular dashboard for superusers
+  if (session?.user?.role === 'SUPERUSER') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

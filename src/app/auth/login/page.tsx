@@ -45,15 +45,20 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
+      console.log('Attempting login with:', email)
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       })
 
+      console.log('Login result:', result)
+
       if (result?.error) {
+        console.error('Login error:', result.error)
         alert(es.auth.invalidCredentials)
       } else {
+        console.log('Login successful, redirecting to dashboard')
         router.push('/dashboard')
       }
     } catch (error) {

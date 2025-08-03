@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Activity, 
   Users, 
@@ -23,14 +23,41 @@ import {
 } from 'lucide-react'
 
 export default function SuperUserPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('system')
 
+  // Add debugging
+  useEffect(() => {
+    console.log('SuperUser Dashboard - Session:', session)
+    console.log('SuperUser Dashboard - Status:', status)
+    console.log('SuperUser Dashboard - User Role:', session?.user?.role)
+  }, [session, status])
+
   // Check if user is superuser
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
   if (session?.user?.role !== 'SUPERUSER') {
+    console.log('Access denied - User role:', session?.user?.role)
     router.push('/dashboard')
-    return null
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Acceso Denegado
+          </h2>
+          <p className="text-gray-600">
+            Redirigiendo...
+          </p>
+        </div>
+      </div>
+    )
   }
 
   const systemManagementFeatures = [
