@@ -38,5 +38,3 @@ export async function POST() {
     }, { status: 500 })
   }
 } 
-
-# Added VERCEL LARGEST IP RANGE FOR CONNECTIVITY TEST TO DB
