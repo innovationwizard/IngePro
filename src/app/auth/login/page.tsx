@@ -23,8 +23,18 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === 'loading') return
-    if (session) {
-      router.push('/dashboard')
+    
+    // If user is already authenticated, redirect them
+    if (status === 'authenticated' && session) {
+      console.log('User already authenticated, redirecting:', session.user?.role)
+      
+      // Check if it's a superuser and redirect accordingly
+      if (session.user?.role === 'SUPERUSER') {
+        console.log('Superuser detected, redirecting to superuser dashboard')
+        router.push('/dashboard/superuser')
+      } else {
+        router.push('/dashboard')
+      }
     }
   }, [session, status, router])
 
@@ -58,15 +68,8 @@ export default function LoginPage() {
         console.error('Login error:', result.error)
         alert(es.auth.invalidCredentials)
       } else {
-        console.log('Login successful, redirecting to dashboard')
-        
-        // Check if it's a superuser and redirect accordingly
-        if (email === 'superuser@demo.com') {
-          console.log('Superuser detected, redirecting to superuser dashboard')
-          router.push('/dashboard/superuser')
-        } else {
-          router.push('/dashboard')
-        }
+        console.log('Login successful, waiting for session...')
+        // Don't redirect here - let the useEffect handle it after session is established
       }
     } catch (error) {
       console.error('Login error:', error)

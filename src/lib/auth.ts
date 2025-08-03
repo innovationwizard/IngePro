@@ -128,12 +128,17 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
+      console.log('Session callback - token:', token)
+      console.log('Session callback - session before:', session)
+      
       if (token) {
         session.user.id = token.sub
         session.user.role = token.role as string
         session.user.companyId = token.companyId as string
         session.user.companySlug = token.companySlug as string
       }
+      
+      console.log('Session callback - session after:', session)
       return session
     }
   },
