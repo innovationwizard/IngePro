@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-
-const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +52,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   } finally {
-    await prisma.$disconnect()
+    // The original code had prisma.$disconnect(), but prisma is now imported directly.
+    // If the intent was to close the connection, it should be removed or handled differently
+    // if the prisma instance is global or managed elsewhere.
+    // For now, removing as per the new_code.
   }
 }
