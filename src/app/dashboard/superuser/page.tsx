@@ -3,29 +3,10 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { 
-  Activity, 
-  Users, 
-  Building, 
-  Database, 
-  BarChart3, 
-  Shield, 
-  Bug, 
-  Settings,
-  TrendingUp,
-  AlertTriangle,
-  Eye,
-  Zap,
-  Globe,
-  FileText,
-  Lock,
-  Monitor
-} from 'lucide-react'
 
 export default function SuperUserPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState('system')
 
   // Add debugging
   useEffect(() => {
@@ -60,159 +41,6 @@ export default function SuperUserPage() {
     )
   }
 
-  const systemManagementFeatures = [
-    {
-      title: 'System Health Monitor',
-      description: 'Real-time system performance, uptime, and infrastructure metrics',
-      icon: Activity,
-      href: '/dashboard/superuser/system-health',
-      color: 'bg-green-500',
-    },
-    {
-      title: 'Multi-tenant Oversight',
-      description: 'View all companies, users, and projects across all tenants',
-      icon: Building,
-      href: '/dashboard/superuser/tenants',
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'Database Operations',
-      description: 'Direct data fixes, migrations, and performance tuning',
-      icon: Database,
-      href: '/dashboard/superuser/database',
-      color: 'bg-purple-500',
-    },
-    {
-      title: 'Application Monitoring',
-      description: 'Error logs, performance metrics, and usage analytics',
-      icon: Monitor,
-      href: '/dashboard/superuser/monitoring',
-      color: 'bg-orange-500',
-    },
-    {
-      title: 'Feature Flags',
-      description: 'Enable/disable features per tenant for testing',
-      icon: Zap,
-      href: '/dashboard/superuser/feature-flags',
-      color: 'bg-yellow-500',
-    },
-  ]
-
-  const businessIntelligenceFeatures = [
-    {
-      title: 'Revenue Analytics',
-      description: 'MRR, churn, growth metrics across all tenants',
-      icon: TrendingUp,
-      href: '/dashboard/superuser/revenue',
-      color: 'bg-green-600',
-    },
-    {
-      title: 'Usage Patterns',
-      description: 'Feature adoption, user engagement, performance bottlenecks',
-      icon: BarChart3,
-      href: '/dashboard/superuser/usage',
-      color: 'bg-blue-600',
-    },
-    {
-      title: 'Support Queue',
-      description: 'All tenant support requests in unified dashboard',
-      icon: Users,
-      href: '/dashboard/superuser/support',
-      color: 'bg-red-500',
-    },
-    {
-      title: 'Onboarding Pipeline',
-      description: 'Track signups, conversion rates, drop-off points',
-      icon: FileText,
-      href: '/dashboard/superuser/onboarding',
-      color: 'bg-indigo-500',
-    },
-  ]
-
-  const developmentToolsFeatures = [
-    {
-      title: 'Live Debugging',
-      description: 'Access production logs, user sessions for support',
-      icon: Bug,
-      href: '/dashboard/superuser/debug',
-      color: 'bg-red-600',
-    },
-    {
-      title: 'A/B Testing',
-      description: 'Deploy features to subset of tenants',
-      icon: Eye,
-      href: '/dashboard/superuser/ab-testing',
-      color: 'bg-purple-600',
-    },
-    {
-      title: 'Data Export',
-      description: 'Extract anonymized data for analysis/ML training',
-      icon: FileText,
-      href: '/dashboard/superuser/data-export',
-      color: 'bg-gray-600',
-    },
-    {
-      title: 'System Health',
-      description: 'AWS costs, database performance, infrastructure alerts',
-      icon: Activity,
-      href: '/dashboard/superuser/infrastructure',
-      color: 'bg-green-600',
-    },
-  ]
-
-  const securityFeatures = [
-    {
-      title: 'Audit Trails',
-      description: 'All administrative actions logged',
-      icon: Shield,
-      href: '/dashboard/superuser/audit',
-      color: 'bg-blue-600',
-    },
-    {
-      title: 'User Impersonation',
-      description: 'Debug issues as specific users (with logging)',
-      icon: Users,
-      href: '/dashboard/superuser/impersonation',
-      color: 'bg-orange-600',
-    },
-    {
-      title: 'Data Privacy',
-      description: 'GDPR compliance tools, data deletion requests',
-      icon: Lock,
-      href: '/dashboard/superuser/privacy',
-      color: 'bg-red-600',
-    },
-    {
-      title: 'Security Monitoring',
-      description: 'Failed login attempts, suspicious activity',
-      icon: AlertTriangle,
-      href: '/dashboard/superuser/security',
-      color: 'bg-red-500',
-    },
-  ]
-
-  const tabs = [
-    { id: 'system', name: 'System Management', icon: Settings },
-    { id: 'business', name: 'Business Intelligence', icon: TrendingUp },
-    { id: 'development', name: 'Development Tools', icon: Bug },
-    { id: 'security', name: 'Security & Compliance', icon: Shield },
-  ]
-
-  const getFeaturesByTab = (tabId: string) => {
-    switch (tabId) {
-      case 'system':
-        return systemManagementFeatures
-      case 'business':
-        return businessIntelligenceFeatures
-      case 'development':
-        return developmentToolsFeatures
-      case 'security':
-        return securityFeatures
-      default:
-        return systemManagementFeatures
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -220,106 +48,49 @@ export default function SuperUserPage() {
         <p className="text-gray-600">System-wide administration and development tools</p>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="flex items-center">
-            <Building className="h-8 w-8 text-blue-600" />
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Active Tenants</p>
-              <p className="text-2xl font-bold text-gray-900">24</p>
-            </div>
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Welcome, {session.user.name}!</h2>
+        <p className="text-gray-600">Role: {session.user.role}</p>
+        <p className="text-gray-600">Email: {session.user.email}</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Stats</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-blue-900">Active Tenants</h3>
+            <p className="text-2xl font-bold text-blue-600">24</p>
           </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="flex items-center">
-            <Users className="h-8 w-8 text-green-600" />
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">1,247</p>
-            </div>
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-green-900">Total Users</h3>
+            <p className="text-2xl font-bold text-green-600">1,247</p>
           </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="flex items-center">
-            <Activity className="h-8 w-8 text-orange-600" />
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">System Uptime</p>
-              <p className="text-2xl font-bold text-gray-900">99.9%</p>
-            </div>
+          <div className="bg-orange-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-orange-900">System Uptime</h3>
+            <p className="text-2xl font-bold text-orange-600">99.9%</p>
           </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="flex items-center">
-            <AlertTriangle className="h-8 w-8 text-red-600" />
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Active Alerts</p>
-              <p className="text-2xl font-bold text-gray-900">3</p>
-            </div>
+          <div className="bg-red-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-red-900">Active Alerts</h3>
+            <p className="text-2xl font-bold text-red-600">3</p>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="mr-2 h-4 w-4" />
-                {tab.name}
-              </button>
-            )
-          })}
-        </nav>
-      </div>
-
-      {/* Features Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {getFeaturesByTab(activeTab).map((feature) => {
-          const IconComponent = feature.icon
-          return (
-            <div
-              key={feature.title}
-              className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => router.push(feature.href)}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`p-3 rounded-lg ${feature.color}`}>
-                  <IconComponent className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
-                  <p className="text-sm text-gray-600">{feature.description}</p>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Priority Alerts */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center">
-          <AlertTriangle className="h-5 w-5 text-yellow-600 mr-2" />
-          <h3 className="text-sm font-medium text-yellow-800">Priority Items</h3>
-        </div>
-        <div className="mt-2 text-sm text-yellow-700">
-          <ul className="list-disc list-inside space-y-1">
-            <li>Error monitoring - 3 critical errors in production</li>
-            <li>Revenue dashboard - Monthly metrics need review</li>
-            <li>Support tools - 5 pending customer requests</li>
-            <li>Development tools - New feature deployment pending</li>
-          </ul>
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">System Management</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <h3 className="font-semibold text-gray-900">System Health Monitor</h3>
+            <p className="text-sm text-gray-600">Real-time system performance</p>
+          </div>
+          <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <h3 className="font-semibold text-gray-900">Multi-tenant Oversight</h3>
+            <p className="text-sm text-gray-600">View all companies and users</p>
+          </div>
+          <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <h3 className="font-semibold text-gray-900">Revenue Analytics</h3>
+            <p className="text-sm text-gray-600">MRR, churn, growth metrics</p>
+          </div>
         </div>
       </div>
     </div>
