@@ -1,0 +1,21 @@
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+export async function GET() {
+  try {
+    // Test database connection
+    const result = await prisma.$queryRaw`SELECT 1 as test`
+    console.log('Database connection test result:', result)
+    
+    return NextResponse.json({
+      message: 'Database connection successful',
+      result
+    })
+  } catch (error) {
+    console.error('Database connection test error:', error)
+    return NextResponse.json({
+      message: 'Database connection failed',
+      error: (error as any)?.message
+    }, { status: 500 })
+  }
+} 
