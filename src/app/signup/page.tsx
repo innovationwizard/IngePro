@@ -189,6 +189,7 @@ export default function SignupPage() {
                   <label className="block text-sm font-medium text-gray-700">
                     Contraseña
                   </label>
+                  <p className="text-xs text-gray-500 mb-1">Al menos 8 caracteres</p>
                   <input
                     type="password"
                     required
