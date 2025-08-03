@@ -5,11 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function DashboardLayout({ children, }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
   const router = useRouter()
 
@@ -22,11 +18,12 @@ export default function DashboardLayout({
 
   useEffect(() => {
     // Only redirect if we're sure the user is not authenticated
-    if (status === 'unauthenticated') {
-      console.log('User not authenticated, redirecting to login')
+    // AND we're not in a loading state
+    if (status === 'unauthenticated' && !session) {
+      console.log('Dashboard Layout - Unauthenticated, redirecting to login')
       router.push('/auth/login')
     }
-  }, [status, router])
+  }, [status, session, router])
 
   // Show loading while checking authentication
   if (status === 'loading') {
@@ -39,23 +36,9 @@ export default function DashboardLayout({
   }
 
   // Don't render anything if not authenticated (will redirect)
-  if (status === 'unauthenticated') {
-    console.log('Dashboard Layout - Unauthenticated, not rendering')
+  if (status === 'unauthenticated' || !session) {
+    console.log('Dashboard Layout - Unauthenticated or no session, not rendering')
     return null
-  }
-
-  // Don't render if no session (shouldn't happen but safety check)
-  if (!session) {
-    console.log('Dashboard Layout - No session, showing verification message')
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Verificando sesión...
-          </h2>
-        </div>
-      </div>
-    )
   }
 
   console.log('Dashboard Layout - Rendering dashboard with session:', session.user?.name)

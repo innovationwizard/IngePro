@@ -27,6 +27,7 @@ export const authOptions: NextAuthOptions = {
               name: 'Ricardo Trabajador',
               role: 'WORKER',
               companyId: 'demo-company',
+              companySlug: 'demo-company',
               password: 'password123'
             },
             {
@@ -35,6 +36,7 @@ export const authOptions: NextAuthOptions = {
               name: 'Ricardo Supervisor',
               role: 'SUPERVISOR',
               companyId: 'demo-company',
+              companySlug: 'demo-company',
               password: 'password123'
             },
             {
@@ -43,6 +45,7 @@ export const authOptions: NextAuthOptions = {
               name: 'Ricardo Administrador',
               role: 'ADMIN',
               companyId: 'demo-company',
+              companySlug: 'demo-company',
               password: 'password123'
             },
             {
@@ -51,6 +54,7 @@ export const authOptions: NextAuthOptions = {
               name: 'System SuperUser',
               role: 'SUPERUSER',
               companyId: 'demo-company',
+              companySlug: 'demo-company',
               password: 'password123'
             }
           ]
@@ -63,8 +67,9 @@ export const authOptions: NextAuthOptions = {
               email: demoUser.email,
               name: demoUser.name,
               role: demoUser.role,
-              companyId: demoUser.companyId
-            }
+              companyId: demoUser.companyId,
+              companySlug: demoUser.companySlug
+            } as any
           }
 
           // Check real users from database
@@ -120,11 +125,16 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log('JWT callback - user:', user)
+      console.log('JWT callback - token before:', token)
+      
       if (user) {
         token.role = user.role
         token.companyId = user.companyId
         token.companySlug = user.companySlug
       }
+      
+      console.log('JWT callback - token after:', token)
       return token
     },
     async session({ session, token }) {
@@ -132,10 +142,22 @@ export const authOptions: NextAuthOptions = {
       console.log('Session callback - session before:', session)
       
       if (token) {
-        session.user.id = token.sub
-        session.user.role = token.role as string
-        session.user.companyId = token.companyId as string
-        session.user.companySlug = token.companySlug as string
+        // Ensure session.user exists with proper typing
+        if (!session.user) {
+          session.user = {
+            id: '',
+            name: '',
+            email: '',
+            role: '',
+            companyId: '',
+            companySlug: ''
+          }
+        }
+        
+        session.user.id = token.sub || ''
+        session.user.role = (token.role as string) || ''
+        session.user.companyId = (token.companyId as string) || ''
+        session.user.companySlug = (token.companySlug as string) || ''
       }
       
       console.log('Session callback - session after:', session)
