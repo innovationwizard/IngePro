@@ -59,7 +59,14 @@ export default function LoginPage() {
         alert(es.auth.invalidCredentials)
       } else {
         console.log('Login successful, redirecting to dashboard')
-        router.push('/dashboard')
+        
+        // Check if it's a superuser and redirect accordingly
+        if (email === 'superuser@demo.com') {
+          console.log('Superuser detected, redirecting to superuser dashboard')
+          router.push('/dashboard/superuser')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (error) {
       console.error('Login error:', error)
