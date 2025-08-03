@@ -28,13 +28,16 @@ export default function LoginPage() {
     if (status === 'authenticated' && session) {
       console.log('User already authenticated, redirecting:', session.user?.role)
       
-      // Check if it's a superuser and redirect accordingly
-      if (session.user?.role === 'SUPERUSER') {
-        console.log('Superuser detected, redirecting to superuser dashboard')
-        router.push('/dashboard/superuser')
-      } else {
-        router.push('/dashboard')
-      }
+      // Add a small delay to ensure session is fully established
+      setTimeout(() => {
+        // Check if it's a superuser and redirect accordingly
+        if (session.user?.role === 'SUPERUSER') {
+          console.log('Superuser detected, redirecting to superuser dashboard')
+          router.push('/dashboard/superuser')
+        } else {
+          router.push('/dashboard')
+        }
+      }, 100)
     }
   }, [session, status, router])
 

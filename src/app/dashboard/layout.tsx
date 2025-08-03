@@ -13,6 +13,13 @@ export default function DashboardLayout({
   const { data: session, status } = useSession()
   const router = useRouter()
 
+  // Add debugging
+  useEffect(() => {
+    console.log('Dashboard Layout - Session:', session)
+    console.log('Dashboard Layout - Status:', status)
+    console.log('Dashboard Layout - User Role:', session?.user?.role)
+  }, [session, status])
+
   useEffect(() => {
     // Only redirect if we're sure the user is not authenticated
     if (status === 'unauthenticated') {
@@ -23,6 +30,7 @@ export default function DashboardLayout({
 
   // Show loading while checking authentication
   if (status === 'loading') {
+    console.log('Dashboard Layout - Loading...')
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -32,11 +40,13 @@ export default function DashboardLayout({
 
   // Don't render anything if not authenticated (will redirect)
   if (status === 'unauthenticated') {
+    console.log('Dashboard Layout - Unauthenticated, not rendering')
     return null
   }
 
   // Don't render if no session (shouldn't happen but safety check)
   if (!session) {
+    console.log('Dashboard Layout - No session, showing verification message')
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -48,6 +58,7 @@ export default function DashboardLayout({
     )
   }
 
+  console.log('Dashboard Layout - Rendering dashboard with session:', session.user?.name)
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
