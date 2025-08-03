@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Clock } from 'lucide-react'
@@ -13,6 +13,13 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { data: session, status } = useSession()
   const router = useRouter()
+
+  useEffect(() => {
+    // Clear any existing session when visiting login page
+    if (status === 'authenticated' && session) {
+      signOut({ redirect: false })
+    }
+  }, [session, status])
 
   useEffect(() => {
     if (status === 'loading') return
