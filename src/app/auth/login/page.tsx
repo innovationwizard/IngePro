@@ -138,11 +138,11 @@ export default function LoginPage() {
             </div>
           </form>
 
-          <div className="mt-6">
+          {/* <div className="mt-6">
             <div className="text-xs text-gray-500 space-y-1">
               <div><strong>Demo:</strong> worker@demo.com / password123</div>
             </div>
-          </div>
+          </div> */}
 
           <div className="mt-4 text-center">
             <Link
