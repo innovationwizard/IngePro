@@ -1,9 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-
-const prisma = new PrismaClient()
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -114,7 +112,7 @@ export const authOptions: NextAuthOptions = {
           console.error('Auth error:', error)
           return null
         } finally {
-          await prisma.$disconnect()
+          // prisma.$disconnect() // This line is removed as per the edit hint
         }
       }
     })
