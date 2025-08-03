@@ -14,14 +14,8 @@ export const metadata: Metadata = {
   description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
   manifest: '/manifest.json',
   icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/ingepro_logo_small.png', sizes: '32x32', type: 'image/png' },
-      { url: '/ingepro_logo.png', sizes: '192x192', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/ingepro_logo_small.png', sizes: '180x180', type: 'image/png' },
-    ],
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
   },
   keywords: ['construcción', 'productividad', 'gestión', 'proyectos', 'seguimiento de tiempo', 'IngePro'],
   authors: [{ name: 'IngePro' }],
@@ -63,12 +57,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/ingepro_logo_small.png" type="image/png" sizes="32x32" />
-        <link rel="icon" href="/ingepro_logo.png" type="image/png" sizes="192x192" />
-        <link rel="apple-touch-icon" href="/ingepro_logo_small.png" />
-      </head>
       <body className={inter.className}>
         <Providers>
           {children}
