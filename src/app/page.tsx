@@ -8,7 +8,7 @@ export default function LandingPage() {
           <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
             <span className="text-blue-600">IngePro</span>
             <br />
-            <span className="text-black-400">Gestión de Productividad en Construcción</span>
+            <span className="text-black-400 text-2xl">Gestión de Productividad en Construcción</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg tracking-tight text-slate-700">
             Controla la productividad de tus trabajadores, gestiona materiales y 
