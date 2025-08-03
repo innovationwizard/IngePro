@@ -125,25 +125,33 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log('=== JWT CALLBACK ===')
       console.log('JWT callback - user:', user)
       console.log('JWT callback - token before:', token)
       
       if (user) {
+        console.log('JWT callback - Setting user data on token')
         token.role = user.role
         token.companyId = user.companyId
         token.companySlug = user.companySlug
+      } else {
+        console.log('JWT callback - No user data, keeping existing token')
       }
       
       console.log('JWT callback - token after:', token)
+      console.log('=== END JWT CALLBACK ===')
       return token
     },
     async session({ session, token }) {
+      console.log('=== SESSION CALLBACK ===')
       console.log('Session callback - token:', token)
       console.log('Session callback - session before:', session)
       
       if (token) {
+        console.log('Session callback - Token exists, setting user data')
         // Ensure session.user exists with proper typing
         if (!session.user) {
+          console.log('Session callback - Creating new session.user object')
           session.user = {
             id: '',
             name: '',
@@ -158,9 +166,14 @@ export const authOptions: NextAuthOptions = {
         session.user.role = (token.role as string) || ''
         session.user.companyId = (token.companyId as string) || ''
         session.user.companySlug = (token.companySlug as string) || ''
+        
+        console.log('Session callback - User data set:', session.user)
+      } else {
+        console.log('Session callback - No token provided')
       }
       
       console.log('Session callback - session after:', session)
+      console.log('=== END SESSION CALLBACK ===')
       return session
     }
   },

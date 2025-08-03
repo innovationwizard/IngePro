@@ -15,16 +15,8 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Clear any existing session when visiting login page
-    if (status === 'authenticated' && session) {
-      signOut({ redirect: false })
-    }
-  }, [session, status])
-
-  useEffect(() => {
-    if (status === 'loading') return
-    
-    // If user is already authenticated, redirect them
+    // Don't automatically clear session - let the user stay logged in if they are
+    // Only redirect if they're already authenticated
     if (status === 'authenticated' && session) {
       console.log('User already authenticated, redirecting:', session.user?.role)
       
