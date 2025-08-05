@@ -10,6 +10,10 @@ import {
 } from '@/lib/sanitize';
 import { checkRateLimit, getRateLimitInfo } from '@/lib/rateLimit';
 
+// Force dynamic rendering - prevents build-time database connections
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting

@@ -5,6 +5,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
+// Force dynamic rendering - prevents build-time database connections
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {

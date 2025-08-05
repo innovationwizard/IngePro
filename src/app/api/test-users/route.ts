@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering - prevents build-time database connections
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
+  // Skip database connection during build
+  if (process.env.SKIP_BUILD_STATIC_GENERATION === 'true') {
+    return NextResponse.json({ 
+      status: 'build-time-skip',
+      message: 'User test skipped during build' 
+    });
+  }
   try {
     const users = await prisma.user.findMany({
       select: {

@@ -2,7 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+// Force dynamic rendering - prevents build-time database connections
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
+  // Skip database connection during build
+  if (process.env.SKIP_BUILD_STATIC_GENERATION === 'true') {
+    return NextResponse.json({ 
+      status: 'build-time-skip',
+      message: 'Database connection skipped during build' 
+    });
+  }
+
   try {
     const body = await request.json();
     const { companyName, companySlug, adminName, adminEmail, adminPassword } = body;
