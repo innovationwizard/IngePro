@@ -1,254 +1,209 @@
-'use client'
+// src/app/signup/page.tsx
+// Update the form action to use the working signup-test endpoint
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { signIn } from 'next-auth/react'
-import Link from 'next/link'
-import { HardHat } from 'lucide-react'
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { HardHat } from 'lucide-react';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
-    // Company data
     companyName: '',
     companySlug: '',
-    
-    // Admin user data
     adminName: '',
     adminEmail: '',
-    adminPassword: '',
-    confirmPassword: ''
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
+    adminPassword: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
-
-    // Validation
-    if (formData.adminPassword !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden')
-      setIsLoading(false)
-      return
-    }
-
-    if (formData.adminPassword.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres')
-      setIsLoading(false)
-      return
-    }
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
     try {
-      // 1. Create tenant + admin user
-      const response = await fetch('/api/signup', {
+      // Use the working signup-test endpoint temporarily
+      const response = await fetch('/api/signup-test', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Error al crear la cuenta')
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(true);
+        // Redirect to login after success
+        setTimeout(() => {
+          window.location.href = '/auth/login';
+        }, 2000);
+      } else {
+        setError(data.error || 'Error al crear cuenta');
       }
-
-      const { tenant, user } = await response.json()
-
-      // 2. Automatically sign in the new admin user
-      const signInResult = await signIn('credentials', {
-        email: formData.adminEmail,
-        password: formData.adminPassword,
-        redirect: false
-      })
-
-      if (signInResult?.error) {
-        throw new Error('Error al iniciar sesión automáticamente')
-      }
-
-      // 3. Redirect to their tenant dashboard
-      router.push(`/${formData.companySlug}/dashboard`)
-
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      setError('Error de conexión. Por favor, intente nuevamente.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Auto-generate slug from company name
+    if (name === 'companyName') {
+      const slug = value
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+      setFormData(prev => ({ ...prev, companySlug: slug }));
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="flex justify-center mb-4">
+            <HardHat className="h-16 w-16 text-green-500" />
+          </div>
+          <h1 className="font-display text-3xl font-medium tracking-tight text-slate-900 mb-4">
+            ¡Cuenta Creada!
+          </h1>
+          <p className="text-slate-600 mb-4">
+            Su cuenta ha sido creada exitosamente. Será redirigido al login en breve.
+          </p>
+          <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-6">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         {/* Header */}
-        <div className="pt-8 pb-4">
-          <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700">
-            <span className="text-md font-light">← Volver al Inicio</span>
+        <div className="flex justify-center mb-4">
+          <HardHat className="h-24 w-24 sm:h-40 sm:w-40 text-yellow-500" />
+        </div>
+        
+        <h1 className="font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl text-center mb-2">
+          IngePro
+        </h1>
+        
+        <p className="text-md font-light text-slate-600 text-center mb-8">
+          Crear Cuenta
+        </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre de la Empresa
+            </label>
+            <input
+              type="text"
+              name="companyName"
+              value={formData.companyName}
+              onChange={handleInputChange}
+              className="w-full px-3 sm:px-4 py-2 min-w-0 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Identificador de Empresa
+            </label>
+            <input
+              type="text"
+              name="companySlug"
+              value={formData.companySlug}
+              onChange={handleInputChange}
+              className="w-full px-3 sm:px-4 py-2 min-w-0 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">Se genera automáticamente del nombre</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre del Administrador
+            </label>
+            <input
+              type="text"
+              name="adminName"
+              value={formData.adminName}
+              onChange={handleInputChange}
+              className="w-full px-3 sm:px-4 py-2 min-w-0 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email del Administrador
+            </label>
+            <input
+              type="email"
+              name="adminEmail"
+              value={formData.adminEmail}
+              onChange={handleInputChange}
+              className="w-full px-3 sm:px-4 py-2 min-w-0 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Contraseña
+            </label>
+            <input
+              type="password"
+              name="adminPassword"
+              value={formData.adminPassword}
+              onChange={handleInputChange}
+              className="w-full px-3 sm:px-4 py-2 min-w-0 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            {isLoading ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                Creando cuenta...
+              </>
+            ) : (
+              'Crear Cuenta'
+            )}
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-gray-600">
+          ¿Ya tienes cuenta?{' '}
+          <Link href="/auth/login" className="text-blue-600 hover:text-blue-500">
+            Iniciar sesión
           </Link>
-        </div>
-        <div className="pt-8 pb-8 lg:pt-12">
-          <div className="flex justify-center mb-4">
-            <HardHat className="h-24 w-24 text-yellow-500 sm:h-40 sm:w-40" />
-          </div>
-          <h1 className="mx-auto max-w-4xl font-display text-center text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
-            <span className="text-blue-600">IngePro</span>
-            <br />
-            <span className="text-black-400 text-4xl">Crear Cuenta</span>
-          </h1>
-
-          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="bg-white/80 backdrop-blur-sm py-8 px-6 shadow-xl rounded-2xl border border-white/20">
-              <form className="space-y-6" onSubmit={handleSubmit}>
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
-                    {error}
-                  </div>
-                )}
-
-                {/* Company Information */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                    Información de la Empresa
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Nombre de la Empresa
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        value={formData.companyName}
-                        onChange={(e) => {
-                          const name = e.target.value
-                          const slug = name.toLowerCase()
-                            .replace(/[^a-z0-9\s]/g, '')
-                            .replace(/\s+/g, '-')
-                          
-                          setFormData({
-                            ...formData,
-                            companyName: name,
-                            companySlug: slug
-                          })
-                        }}
-                        placeholder="Nombre de la empresa"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        URL de la Empresa
-                      </label>
-                      <div className="flex rounded-lg shadow-sm">
-                        <span className="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-sm">
-                          ingepro.app/
-                        </span>
-                        <input
-                          type="text"
-                          required
-                          className="flex-1 block w-full px-4 py-3 border border-slate-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          value={formData.companySlug}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            companySlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
-                          })}
-                          placeholder="nombre-empresa"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Admin User Information */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                    Administrador Principal
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Nombre Completo
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        value={formData.adminName}
-                        onChange={(e) => setFormData({...formData, adminName: e.target.value})}
-                        placeholder="Nombre completo"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        value={formData.adminEmail}
-                        onChange={(e) => setFormData({...formData, adminEmail: e.target.value})}
-                        placeholder="email@empresa.com"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Contraseña
-                      </label>
-                      <p className="text-xs text-slate-500 mb-2">Al menos 8 caracteres</p>
-                      <input
-                        type="password"
-                        required
-                        minLength={8}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        value={formData.adminPassword}
-                        onChange={(e) => setFormData({...formData, adminPassword: e.target.value})}
-                        placeholder="Contraseña"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Confirmar Contraseña
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                        placeholder="Confirmar contraseña"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
-                >
-                  {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
-                </button>
-
-                <div className="text-center">
-                  <p className="text-sm text-slate-600">
-                    ¿Ya tienes una cuenta?{' '}
-                    <br />
-                    <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-700">
-                      Iniciar Sesión
-                    </Link>
-                  </p>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+        </p>
       </div>
     </div>
-  )
+  );
 }
