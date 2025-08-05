@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
@@ -12,6 +12,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { message: 'Todos los campos son requeridos' },
         { status: 400 }
+      )
+    }
+
+    // Test database connection first
+    try {
+      await prisma.$queryRaw`SELECT 1 as test`
+    } catch (dbError) {
+      console.error('Database connection failed:', dbError)
+      return NextResponse.json(
+        { 
+          message: 'Servicio temporalmente no disponible. Por favor, intente nuevamente en unos minutos.',
+          error: 'DATABASE_CONNECTION_ERROR'
+        },
+        { status: 503 }
       )
     }
 
@@ -93,13 +107,20 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Signup error:', error)
-    console.error('Error details:', {
-      name: (error as any)?.name,
-      message: (error as any)?.message,
-      stack: (error as any)?.stack
-    })
+    
+    // Check if it's a database connection error
+    if (error instanceof Error && error.message.includes('Can\'t reach database server')) {
+      return NextResponse.json(
+        { 
+          message: 'Servicio temporalmente no disponible. Por favor, intente nuevamente en unos minutos.',
+          error: 'DATABASE_CONNECTION_ERROR'
+        },
+        { status: 503 }
+      )
+    }
+    
     return NextResponse.json(
-      { message: 'Error interno del servidor' },
+      { message: 'Error interno del servidor', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
