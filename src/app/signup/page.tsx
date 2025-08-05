@@ -68,12 +68,12 @@ export default function SignupPage() {
         
         <h1 className="font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
           IngePro
-        </h1>
+
         
         <p className="text-md font-light text-slate-600 mt-6 mb-12">
           Crear Cuenta
         </p>
-
+        </h1>
         <div className="max-w-md mx-auto px-6">
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
