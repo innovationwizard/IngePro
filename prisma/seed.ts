@@ -1,92 +1,114 @@
-import { PrismaClient } from '@prisma/client'
+// prisma/seed.ts
+// Fix the missing slug field and other required fields
 
-const prisma = new PrismaClient()
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
 
 async function main() {
-  // Create a demo company
-  const company = await prisma.company.upsert({
+  // Create demo company with all required fields
+  const demoCompany = await prisma.company.upsert({
     where: { id: 'demo-company' },
     update: {},
     create: {
       id: 'demo-company',
       name: 'Demo Construction Company',
       nameEs: 'Empresa de Construcción Demo',
+      slug: 'demo-company', // Add required slug field
+      status: 'ACTIVE', // Add required status field
     },
-  })
+  });
 
-  // Create demo users
-  const worker = await prisma.user.upsert({
-    where: { email: 'worker@demo.com' },
-    update: {},
-    create: {
+  // Hash password for demo users
+  const hashedPassword = await bcrypt.hash('password123', 12);
+
+  // Create demo users with all required fields
+  const demoUsers = [
+    {
+      id: 'demo-worker',
       email: 'worker@demo.com',
       name: 'Juan Pérez',
-      role: 'WORKER',
-      companyId: company.id,
+      password: hashedPassword,
+      role: 'WORKER' as const,
+      status: 'ACTIVE' as const,
+      companyId: demoCompany.id,
     },
-  })
-
-  const supervisor = await prisma.user.upsert({
-    where: { email: 'supervisor@demo.com' },
-    update: {},
-    create: {
+    {
+      id: 'demo-supervisor',
       email: 'supervisor@demo.com',
       name: 'María González',
-      role: 'SUPERVISOR',
-      companyId: company.id,
+      password: hashedPassword,
+      role: 'SUPERVISOR' as const,
+      status: 'ACTIVE' as const,
+      companyId: demoCompany.id,
     },
-  })
-
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@demo.com' },
-    update: {},
-    create: {
+    {
+      id: 'demo-admin',
       email: 'admin@demo.com',
       name: 'Carlos Rodríguez',
-      role: 'ADMIN',
-      companyId: company.id,
+      password: hashedPassword,
+      role: 'ADMIN' as const,
+      status: 'ACTIVE' as const,
+      companyId: demoCompany.id,
     },
-  })
+    {
+      id: 'demo-superuser',
+      email: 'superuser@demo.com',
+      name: 'Ana Superuser',
+      password: hashedPassword,
+      role: 'SUPERUSER' as const,
+      status: 'ACTIVE' as const,
+      companyId: demoCompany.id,
+    },
+  ];
+
+  for (const userData of demoUsers) {
+    await prisma.user.upsert({
+      where: { id: userData.id },
+      update: {},
+      create: userData,
+    });
+  }
 
   // Create demo projects
-  const project1 = await prisma.project.upsert({
-    where: { id: 'demo-project-1' },
-    update: {},
-    create: {
+  const demoProjects = [
+    {
       id: 'demo-project-1',
       name: 'Downtown Office Complex',
       nameEs: 'Complejo de Oficinas Centro',
-      description: 'Main building construction',
-      descriptionEs: 'Construcción del edificio principal',
-      companyId: company.id,
+      description: 'Modern office building construction',
+      descriptionEs: 'Construcción de edificio de oficinas moderno',
+      status: 'ACTIVE' as const,
+      companyId: demoCompany.id,
     },
-  })
-
-  const project2 = await prisma.project.upsert({
-    where: { id: 'demo-project-2' },
-    update: {},
-    create: {
+    {
       id: 'demo-project-2',
       name: 'Residential Tower A',
       nameEs: 'Torre Residencial A',
-      description: 'Apartment complex phase 1',
-      descriptionEs: 'Complejo de apartamentos fase 1',
-      companyId: company.id,
+      description: 'High-rise residential construction',
+      descriptionEs: 'Construcción de torre residencial',
+      status: 'ACTIVE' as const,
+      companyId: demoCompany.id,
     },
-  })
+  ];
 
-  console.log('Demo data created successfully!')
-  console.log('Users:')
-  console.log('- Worker:', worker.email, '(password123)')
-  console.log('- Supervisor:', supervisor.email, '(password123)')
-  console.log('- Admin:', admin.email, '(password123)')
+  for (const projectData of demoProjects) {
+    await prisma.project.upsert({
+      where: { id: projectData.id },
+      update: {},
+      create: projectData,
+    });
+  }
+
+  console.log('✅ Seed data created successfully');
 }
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error('❌ Seed failed:', e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });
