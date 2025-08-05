@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { signIn, useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Clock } from 'lucide-react'
+import { HardHat } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 
 export default function LoginPage() {
@@ -75,82 +75,101 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <Clock className="h-12 w-12 text-blue-600" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="pt-8 pb-4">
+          <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700">
+            <span className="text-md font-light">← Volver al Inicio</span>
+          </Link>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-          IngePro
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Iniciar sesión en su cuenta
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                {es.auth.email}
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-w-0"
-                />
+        <div className="pt-8 pb-8 text-center lg:pt-12">
+          <div className="flex justify-center mb-4">
+            <HardHat className="h-24 w-24 text-yellow-500 sm:h-40 sm:w-40" />
+          </div>
+          <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
+            <span className="text-blue-600">IngePro</span>
+            <br />
+            <span className="text-black-400 text-4xl">Iniciar Sesión</span>
+          </h1>
+
+          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="bg-white/80 backdrop-blur-sm py-8 px-6 shadow-xl rounded-2xl border border-white/20">
+              <form className="space-y-6" onSubmit={handleSubmit}>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                    {es.auth.email}
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="email@empresa.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
+                    {es.auth.password}
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Contraseña"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+                  >
+                    {isLoading ? es.auth.signingIn : es.auth.signIn}
+                  </button>
+                </div>
+              </form>
+
+              {/* <div className="mt-6">
+                <div className="text-xs text-slate-500 space-y-1">
+                  <div><strong>Demo:</strong> worker@demo.com / password123</div>
+                </div>
+              </div> */}
+
+              <div className="mt-6 text-center">
+                <Link
+                  href="/auth/login/admin/reset-password"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+
+              <div className="mt-4 text-center">
+                <p className="text-sm text-slate-600">
+                  ¿No tienes una cuenta?{' '}
+                  <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-700">
+                    Crear Empresa
+                  </Link>
+                </p>
               </div>
             </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                {es.auth.password}
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-w-0"
-                />
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                {isLoading ? es.auth.signingIn : es.auth.signIn}
-              </button>
-            </div>
-          </form>
-
-          {/* <div className="mt-6">
-            <div className="text-xs text-gray-500 space-y-1">
-              <div><strong>Demo:</strong> worker@demo.com / password123</div>
-            </div>
-          </div> */}
-
-          <div className="mt-4 text-center">
-            <Link
-              href="/auth/login/admin/reset-password"
-              className="text-sm text-blue-600 hover:text-blue-500 underline"
-            >
-              ¿Olvidaste tu contraseña?
-            </Link>
           </div>
         </div>
       </div>

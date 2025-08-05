@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
+import { HardHat } from 'lucide-react'
 
 export default function LandingPage() {
   const { data: session, status } = useSession()
@@ -31,6 +32,9 @@ export default function LandingPage() {
         )}
         
         <div className="pt-20 pb-16 text-center lg:pt-32">
+          <div className="flex justify-center mb-4">
+            <HardHat className="h-24 w-24 text-yellow-500 sm:h-40 sm:w-40" />
+          </div>
           <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
             <span className="text-blue-600">IngePro</span>
             <br />
@@ -53,12 +57,12 @@ export default function LandingPage() {
             >
               Iniciar Sesión
             </Link>
-            <Link
+            {/* <Link
               href="/aplicaciones-especiales/dashboard"
               className="group inline-flex ring-1 items-center justify-center rounded-full py-2 px-4 text-sm ring-slate-200 text-slate-700 hover:text-slate-900"
             >
               Ver Demo
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>

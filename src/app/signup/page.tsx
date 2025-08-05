@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
+import { HardHat } from 'lucide-react'
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -75,156 +77,176 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Crear Cuenta IngePro
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Gestión de productividad para construcción
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="pt-8 pb-4">
+          <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700">
+            <span className="text-md font-light">← Volver al Inicio</span>
+          </Link>
+        </div>
+        <div className="pt-8 pb-8 lg:pt-12">
+          <div className="flex justify-center mb-4">
+            <HardHat className="h-24 w-24 text-yellow-500 sm:h-40 sm:w-40" />
+          </div>
+          <h1 className="mx-auto max-w-4xl font-display text-center text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
+            <span className="text-blue-600">IngePro</span>
+            <br />
+            <span className="text-black-400 text-4xl">Crear Cuenta</span>
+          </h1>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
+          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="bg-white/80 backdrop-blur-sm py-8 px-6 shadow-xl rounded-2xl border border-white/20">
+              <form className="space-y-6" onSubmit={handleSubmit}>
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+                    {error}
+                  </div>
+                )}
 
-            {/* Company Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Información de la Empresa
-              </h3>
-              
-              <div className="space-y-4">
+                {/* Company Information */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Nombre de la Empresa
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={formData.companyName}
-                    onChange={(e) => {
-                      const name = e.target.value
-                      const slug = name.toLowerCase()
-                        .replace(/[^a-z0-9\s]/g, '')
-                        .replace(/\s+/g, '-')
-                      
-                      setFormData({
-                        ...formData,
-                        companyName: name,
-                        companySlug: slug
-                      })
-                    }}
-                    placeholder="Nombre de la empresa"
-                  />
-                </div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                    Información de la Empresa
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Nombre de la Empresa
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        value={formData.companyName}
+                        onChange={(e) => {
+                          const name = e.target.value
+                          const slug = name.toLowerCase()
+                            .replace(/[^a-z0-9\s]/g, '')
+                            .replace(/\s+/g, '-')
+                          
+                          setFormData({
+                            ...formData,
+                            companyName: name,
+                            companySlug: slug
+                          })
+                        }}
+                        placeholder="Nombre de la empresa"
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    URL de la Empresa
-                  </label>
-                  <div className="mt-1 flex rounded-md shadow-sm">
-                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                      ingepro.app/
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      className="flex-1 block w-full px-3 py-2 border border-gray-300 rounded-none rounded-r-md"
-                      value={formData.companySlug}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        companySlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
-                      })}
-                      placeholder="nombre-empresa"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        URL de la Empresa
+                      </label>
+                      <div className="flex rounded-lg shadow-sm">
+                        <span className="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-sm">
+                          ingepro.app/
+                        </span>
+                        <input
+                          type="text"
+                          required
+                          className="flex-1 block w-full px-4 py-3 border border-slate-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          value={formData.companySlug}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            companySlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
+                          })}
+                          placeholder="nombre-empresa"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+
+                {/* Admin User Information */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                    Administrador Principal
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Nombre Completo
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        value={formData.adminName}
+                        onChange={(e) => setFormData({...formData, adminName: e.target.value})}
+                        placeholder="Nombre completo"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        value={formData.adminEmail}
+                        onChange={(e) => setFormData({...formData, adminEmail: e.target.value})}
+                        placeholder="email@empresa.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Contraseña
+                      </label>
+                      <p className="text-xs text-slate-500 mb-2">Al menos 8 caracteres</p>
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        value={formData.adminPassword}
+                        onChange={(e) => setFormData({...formData, adminPassword: e.target.value})}
+                        placeholder="Contraseña"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Confirmar Contraseña
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                        placeholder="Confirmar contraseña"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+                >
+                  {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
+                </button>
+
+                <div className="text-center">
+                  <p className="text-sm text-slate-600">
+                    ¿Ya tienes una cuenta?{' '}
+                    <br />
+                    <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-700">
+                      Iniciar Sesión
+                    </Link>
+                  </p>
+                </div>
+              </form>
             </div>
-
-            {/* Admin User Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Administrador Principal
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Nombre Completo
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={formData.adminName}
-                    onChange={(e) => setFormData({...formData, adminName: e.target.value})}
-                    placeholder="Nombre completo"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={formData.adminEmail}
-                    onChange={(e) => setFormData({...formData, adminEmail: e.target.value})}
-                    placeholder="email@empresa.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Contraseña
-                  </label>
-                  <p className="text-xs text-gray-500 mb-1">Al menos 8 caracteres</p>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={formData.adminPassword}
-                    onChange={(e) => setFormData({...formData, adminPassword: e.target.value})}
-                    placeholder="Contraseña"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Confirmar Contraseña
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                    placeholder="Confirmar contraseña"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
-            </button>
-          </form>
+          </div>
         </div>
       </div>
     </div>
