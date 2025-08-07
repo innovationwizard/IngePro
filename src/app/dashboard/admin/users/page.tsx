@@ -326,7 +326,7 @@ export default function AdminUsersPage() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">Historial de Empresas</h4>
                   <div className="space-y-2">
-                    {selectedUser.history.map((entry: UserType, index: number) => (
+                    {selectedUser.history.map((entry: { company: string; role: string; startDate: string; endDate: string | null }, index: number) => (
                       <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
                         <div>
                           <div className="font-medium">{entry.company}</div>

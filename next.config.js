@@ -20,11 +20,6 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@prisma/client'],
   },
   
-  // Environment variables available at build time
-  env: {
-    SKIP_BUILD_STATIC_GENERATION: 'true',
-  },
-  
   // Webpack configuration for Prisma
   webpack: (config, { isServer }) => {
     if (isServer) {

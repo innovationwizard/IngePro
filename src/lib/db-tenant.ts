@@ -9,7 +9,7 @@ export async function getTenantSlug(): Promise<string | null> {
   
   // Fallback to cookies
   if (!tenantSlug) {
-    tenantSlug = cookieStore.get('tenant')?.value
+    tenantSlug = cookieStore.get('tenant')?.value || null
   }
   
   return tenantSlug

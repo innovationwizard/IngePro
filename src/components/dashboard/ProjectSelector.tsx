@@ -7,9 +7,33 @@ import { es } from '@/lib/translations/es'
 
 // Mock projects for demo with Spanish names
 const mockProjects = [
-  { id: '1', name: 'Downtown Office Complex', nameEs: 'Complejo de Oficinas Centro', description: 'Main building construction', descriptionEs: 'Construcción del edificio principal' },
-  { id: '2', name: 'Residential Tower A', nameEs: 'Torre Residencial A', description: 'Apartment complex phase 1', descriptionEs: 'Complejo de apartamentos fase 1' },
-  { id: '3', name: 'Shopping Center', nameEs: 'Centro Comercial', description: 'Retail space development', descriptionEs: 'Desarrollo de espacio comercial' },
+  { 
+    id: '1', 
+    name: 'Downtown Office Complex', 
+    nameEs: 'Complejo de Oficinas Centro', 
+    description: 'Main building construction', 
+    descriptionEs: 'Construcción del edificio principal',
+    companyId: 'demo-company',
+    createdAt: new Date()
+  },
+  { 
+    id: '2', 
+    name: 'Residential Tower A', 
+    nameEs: 'Torre Residencial A', 
+    description: 'Apartment complex phase 1', 
+    descriptionEs: 'Complejo de apartamentos fase 1',
+    companyId: 'demo-company',
+    createdAt: new Date()
+  },
+  { 
+    id: '3', 
+    name: 'Shopping Center', 
+    nameEs: 'Centro Comercial', 
+    description: 'Retail space development', 
+    descriptionEs: 'Desarrollo de espacio comercial',
+    companyId: 'demo-company',
+    createdAt: new Date()
+  },
 ]
 
 export function ProjectSelector() {

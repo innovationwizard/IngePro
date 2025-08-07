@@ -1,5 +1,4 @@
 // src/app/api/signup/route.ts
-// Replace the broken signup with the working signup-test logic
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
@@ -12,84 +11,94 @@ export const runtime = 'nodejs';
 const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
-  try {
-    console.log('Signup started');
-    
-    const body = await request.json();
-    console.log('Body parsed:', body);
-    
-    const { companyName, companySlug, adminName, adminEmail, adminPassword } = body;
-    
-    // Basic validation
-    if (!companyName || !companySlug || !adminName || !adminEmail || !adminPassword) {
-      console.log('Validation failed');
-      return NextResponse.json(
-        { error: 'Todos los campos son requeridos' },
-        { status: 400 }
-      );
-    }
-    
-    console.log('Validation passed, starting database operations');
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(adminPassword, 12);
-    console.log('Password hashed');
+  const maxRetries = 3;
+  const baseDelay = 1000; // 1 second base delay
 
-    // Database transaction
-    const result = await prisma.$transaction(async (tx) => {
-      console.log('Transaction started');
+  // Read body once at the beginning
+  const body = await request.json();
+  const { companyName, companySlug, adminName, adminEmail, adminPassword } = body;
+  
+  // Basic validation
+  if (!companyName || !companySlug || !adminName || !adminEmail || !adminPassword) {
+    return NextResponse.json(
+      { error: 'Todos los campos son requeridos' },
+      { status: 400 }
+    );
+  }
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Hash password
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
+      // Database transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // Create company
+        const company = await tx.company.create({
+          data: {
+            name: companyName,
+            nameEs: companyName,
+            slug: companySlug,
+            status: 'ACTIVE',
+          }
+        });
+
+        // Create admin user
+        const user = await tx.user.create({
+          data: {
+            email: adminEmail,
+            name: adminName,
+            password: hashedPassword,
+            role: 'ADMIN',
+            status: 'ACTIVE',
+            companyId: company.id,
+          }
+        });
+
+        // Create UserTenant relationship
+        const userTenant = await tx.userTenant.create({
+          data: {
+            userId: user.id,
+            companyId: company.id,
+            role: 'ADMIN',
+            status: 'ACTIVE',
+            startDate: new Date(),
+          }
+        });
+
+        return { company, user, userTenant };
+      });
       
-      // Create company
-      const company = await tx.company.create({
-        data: {
-          name: companyName,
-          nameEs: companyName,
-          slug: companySlug,
-          status: 'ACTIVE',
+      return NextResponse.json({
+        message: 'Cuenta creada exitosamente',
+        tenant: {
+          id: result.company.id,
+          name: result.company.name,
+          slug: result.company.slug
+        },
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          role: result.user.role
         }
-      });
-      console.log('Company created:', company.id);
-
-      // Create admin user
-      const user = await tx.user.create({
-        data: {
-          email: adminEmail,
-          name: adminName,
-          password: hashedPassword,
-          role: 'ADMIN',
-          status: 'ACTIVE',
-          companyId: company.id,
-        }
-      });
-      console.log('User created:', user.id);
-
-      return { company, user };
-    });
-    
-    console.log('Transaction completed successfully');
-    
-    return NextResponse.json({
-      message: 'Cuenta creada exitosamente',
-      tenant: {
-        id: result.company.id,
-        name: result.company.name,
-        slug: result.company.slug
-      },
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        role: result.user.role
+      }, { status: 201 });
+      
+    } catch (error) {
+      console.error(`Signup attempt ${attempt} failed:`, error);
+      
+      if (attempt === maxRetries) {
+        return NextResponse.json({
+          error: 'Error al crear cuenta',
+          details: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString()
+        }, { status: 500 });
       }
-    }, { status: 201 });
-    
-  } catch (error) {
-    console.error('Signup error:', error);
-    return NextResponse.json({
-      error: 'Error al crear cuenta',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+      
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
 }
 
@@ -98,12 +107,13 @@ export async function GET() {
     await prisma.$queryRaw`SELECT 1 as test`;
     return NextResponse.json({ 
       status: 'healthy',
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     return NextResponse.json({ 
       status: 'unhealthy',
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
     }, { status: 503 });
   }
 }

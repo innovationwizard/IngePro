@@ -16,7 +16,9 @@ export interface Company {
 export interface Project {
   id: string;
   name: string;
+  nameEs?: string;
   description?: string;
+  descriptionEs?: string;
   companyId: string;
   createdAt: Date;
 }

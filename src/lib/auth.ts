@@ -3,6 +3,28 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
+// Helper function for exponential backoff retry
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -71,34 +93,59 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Check real users from database
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-            include: {
-              userTenants: {
-                where: { status: 'ACTIVE' },
-                include: { company: true },
-                orderBy: { startDate: 'desc' },
-                take: 1
+          console.log('🔍 Checking database for user:', credentials.email);
+          const user = await retryWithBackoff(async () => {
+            return await prisma.user.findUnique({
+              where: { email: credentials.email },
+              include: {
+                userTenants: {
+                  where: { status: 'ACTIVE' },
+                  include: { company: true },
+                  orderBy: { startDate: 'desc' },
+                  take: 1
+                }
               }
-            }
-          })
+            });
+          });
+
+          console.log('👤 User found:', user ? 'Yes' : 'No');
+          if (user) {
+            console.log('🔑 User has password:', !!user.password);
+            console.log('🏢 User tenants:', user.userTenants.length);
+          }
 
           if (!user || !user.password) {
+            console.log('❌ User not found or no password');
             return null
           }
 
           // Verify password
           const isValid = await bcrypt.compare(credentials.password, user.password)
+          console.log('🔐 Password valid:', isValid);
           if (!isValid) {
+            console.log('❌ Invalid password');
             return null
           }
 
           // Get user's current company (most recent active tenant relationship)
           const currentTenant = user.userTenants[0]
+          console.log('🏢 Current tenant:', currentTenant ? 'Found' : 'Not found');
+          
+          // If no tenant relationship found (database connection issues), use direct user role
           if (!currentTenant) {
-            return null
+            console.log('⚠️ No tenant relationship, using direct user role');
+            // Fallback: use user's direct role and companyId
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              companyId: user.companyId || 'unknown',
+              companySlug: 'unknown'
+            }
           }
 
+          console.log('✅ Auth successful with tenant');
           return {
             id: user.id,
             email: user.email,
@@ -111,8 +158,6 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           console.error('Auth error:', error)
           return null
-        } finally {
-          // prisma.$disconnect() // This line is removed as per the edit hint
         }
       }
     })
@@ -123,33 +168,17 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      console.log('=== JWT CALLBACK ===')
-      console.log('JWT callback - user:', user)
-      console.log('JWT callback - token before:', token)
-      
       if (user) {
-        console.log('JWT callback - Setting user data on token')
         token.role = user.role
         token.companyId = user.companyId
         token.companySlug = user.companySlug
-      } else {
-        console.log('JWT callback - No user data, keeping existing token')
       }
-      
-      console.log('JWT callback - token after:', token)
-      console.log('=== END JWT CALLBACK ===')
       return token
     },
     async session({ session, token }) {
-      console.log('=== SESSION CALLBACK ===')
-      console.log('Session callback - token:', token)
-      console.log('Session callback - session before:', session)
-      
       if (token) {
-        console.log('Session callback - Token exists, setting user data')
         // Ensure session.user exists with proper typing
         if (!session.user) {
-          console.log('Session callback - Creating new session.user object')
           session.user = {
             id: '',
             name: '',
@@ -164,14 +193,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = (token.role as string) || ''
         session.user.companyId = (token.companyId as string) || ''
         session.user.companySlug = (token.companySlug as string) || ''
-        
-        console.log('Session callback - User data set:', session.user)
-      } else {
-        console.log('Session callback - No token provided')
       }
-      
-      console.log('Session callback - session after:', session)
-      console.log('=== END SESSION CALLBACK ===')
       return session
     }
   },

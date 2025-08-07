@@ -1,11 +1,18 @@
 'use client'
 
 import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Clock, User, LogOut } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 
 export function Header() {
   const { data: session } = useSession()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false })
+    router.push('/')
+  }
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -27,7 +34,7 @@ export function Header() {
             </div>
             
             <button
-              onClick={() => signOut()}
+              onClick={handleLogout}
               className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
             >
               <LogOut className="h-4 w-4" />

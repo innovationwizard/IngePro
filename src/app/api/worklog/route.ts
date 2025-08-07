@@ -14,15 +14,29 @@ import { checkRateLimit, getRateLimitInfo } from '@/lib/rateLimit';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function POST(request: NextRequest) {
-  // Check if prisma client is available
-  if (!prisma) {
-    return NextResponse.json(
-      { error: 'Prisma client is not available (build mode or initialization failed)' },
-      { status: 503 }
-    );
+// Helper function for exponential backoff retry
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
+  throw new Error('Max retries exceeded');
+}
 
+export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const clientIp = request.headers.get('x-forwarded-for') || request.ip || 'unknown';
@@ -56,10 +70,10 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     try {
-      validateRequiredId(userId!, 'userId');
-      validateRequiredId(projectId!, 'projectId');
-      validateRequiredString(work!, 'work', 2, 200);
-      validateRequiredString(project!, 'project', 2, 200);
+      validateRequiredId(userId, 'userId');
+      validateRequiredId(projectId, 'projectId');
+      validateRequiredString(work, 'work', 2, 200);
+      validateRequiredString(project, 'project', 2, 200);
     } catch (error) {
       return NextResponse.json(
         { error: error instanceof Error ? error.message : 'Datos inválidos' },
@@ -67,66 +81,71 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate that user exists
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
+    // Use retry logic for database operations (background operation)
+    const workLog = await retryWithBackoff(async () => {
+      // Validate that user exists
+      const user = await prisma.user.findUnique({
+        where: { id: userId! }
+      });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Usuario no encontrado' },
-        { status: 404 }
-      );
-    }
+      if (!user) {
+        throw new Error('Usuario no encontrado');
+      }
 
-    // Validate that project exists
-    const dbProject = await prisma.project.findUnique({
-      where: { id: projectId }
-    });
+      // Validate that project exists
+      const dbProject = await prisma.project.findUnique({
+        where: { id: projectId! }
+      });
 
-    if (!dbProject) {
-      return NextResponse.json(
-        { error: 'Proyecto no encontrado' },
-        { status: 404 }
-      );
-    }
+      if (!dbProject) {
+        throw new Error('Proyecto no encontrado');
+      }
 
-    // Store work document data as JSON in the notes field
-    const workDocumentData = {
-      work,
-      project,
-      thickness,
-      sector,
-      level,
-      quantity,
-      unit,
-      materials,
-      originalNotes: notes
-    };
+      // Store work document data as JSON in the notes field
+      const workDocumentData = {
+        work: work!,
+        project: project!,
+        thickness,
+        sector,
+        level,
+        quantity,
+        unit,
+        materials,
+        originalNotes: notes
+      };
 
-    console.log('Creating work log with sanitized data:', workDocumentData);
-
-    // Create work log using existing schema
-    const workLog = await prisma.workLog.create({
-      data: {
-        userId,
-        projectId,
-        clockIn: new Date(),
-        tasksCompleted: JSON.stringify([work]), // Store work type as task
-        materialsUsed: materials ? JSON.stringify([materials]) : '[]',
-        photos: [],
-        notes: JSON.stringify(workDocumentData), // Store all work document data as JSON
-        notesEs: notes, // Store original notes in Spanish field
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
+      // Create work log using existing schema
+      return await prisma.workLog.create({
+        data: {
+          userId: userId!,
+          projectId: projectId!,
+          clockIn: new Date(),
+          tasksCompleted: JSON.stringify([work!]), // Store work type as task
+          materialsUsed: materials ? JSON.stringify([materials]) : '[]',
+          photos: [],
+          notes: JSON.stringify(workDocumentData), // Store all work document data as JSON
+          notesEs: notes, // Store original notes in Spanish field
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
     });
 
     return NextResponse.json({
       id: workLog.id,
       message: 'Registro guardado exitosamente',
       data: workLog,
-      workDocument: workDocumentData
+      workDocument: {
+        work: work!,
+        project: project!,
+        thickness,
+        sector,
+        level,
+        quantity,
+        unit,
+        materials,
+        originalNotes: notes
+      }
     });
 
   } catch (error) {

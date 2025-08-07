@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Home,
   Clock,
@@ -16,6 +16,7 @@ import {
 export default function Sidebar() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
+  const router = useRouter()
   
   if (status === 'loading') {
     return <div className="w-64 bg-gray-800 text-white p-4">Cargando...</div>
@@ -27,8 +28,9 @@ export default function Sidebar() {
 
   const userRole = session?.user?.role || 'WORKER'
 
-  const handleLogout = () => {
-    signOut({ callbackUrl: '/' })
+  const handleLogout = async () => {
+    await signOut({ redirect: false })
+    router.push('/')
   }
 
   const menuItems = [

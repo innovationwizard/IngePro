@@ -6,7 +6,7 @@ import { TenantProvider } from '@/contexts/TenantContext'
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <TenantProvider>
+      <TenantProvider initialTenant={null}>
         {children}
       </TenantProvider>
     </SessionProvider>
