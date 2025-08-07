@@ -175,15 +175,6 @@ model WorkLog {
   projectId      String
   project        Project   @relation(fields: [projectId], references: [id])
   
-  // Real-world work document fields
-  work           String    // Type of work being done
-  thickness      String?   // Material thickness
-  sector         String?   // Work sector/area
-  level          String?   // Work level/floor
-  quantity       Int?      // Quantity of work
-  unit           String?   // Unit of measurement
-  materials      String?   // Materials used (JSON string)
-  
   // Original fields
   clockIn        DateTime
   clockOut       DateTime?

@@ -15,6 +15,14 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  // Check if prisma client is available
+  if (!prisma) {
+    return NextResponse.json(
+      { error: 'Prisma client is not available (build mode or initialization failed)' },
+      { status: 503 }
+    );
+  }
+
   try {
     // Rate limiting
     const clientIp = request.headers.get('x-forwarded-for') || request.ip || 'unknown';

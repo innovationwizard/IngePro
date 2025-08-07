@@ -6,13 +6,14 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  // Skip database connection during build
-  if (process.env.SKIP_BUILD_STATIC_GENERATION === 'true') {
-    return NextResponse.json({ 
-      status: 'build-time-skip',
-      message: 'User test skipped during build' 
+  // Check if prisma client is available
+  if (!prisma) {
+    return NextResponse.json({
+      error: 'Prisma client is not available (build mode or initialization failed)',
+      status: 'unavailable'
     });
   }
+
   try {
     const users = await prisma.user.findMany({
       select: {

@@ -7,19 +7,29 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
-// Only create Prisma client if not in build mode
-export const prisma = process.env.SKIP_BUILD_STATIC_GENERATION === 'true' 
-  ? null 
-  : (globalThis.__prisma ?? new PrismaClient({
-      log: ['error'],
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL
-        }
-      }
-    }));
+// Force initialization for testing - comment out the build check temporarily
+export const prisma = globalThis.__prisma ?? new PrismaClient({
+  log: ['error'],
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+});
 
-if (process.env.NODE_ENV !== 'production' && prisma) {
+// Original code (commented out for testing):
+// export const prisma = process.env.SKIP_BUILD_STATIC_GENERATION === 'true' 
+//   ? null 
+//   : (globalThis.__prisma ?? new PrismaClient({
+//       log: ['error'],
+//       datasources: {
+//         db: {
+//           url: process.env.DATABASE_URL
+//         }
+//       }
+//     }));
+
+if (process.env.NODE_ENV !== 'production') {
   globalThis.__prisma = prisma;
 }
 
