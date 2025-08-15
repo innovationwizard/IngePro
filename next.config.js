@@ -6,6 +6,9 @@ const nextConfig = {
   // Optimize for serverless deployment
   output: 'standalone',
   
+  // Disable static generation to prevent API route timeouts
+  staticPageGenerationTimeout: 0,
+  
   // Skip type checking and linting during build (faster deployment)
   typescript: {
     ignoreBuildErrors: true, // Skip TypeScript errors during build
@@ -26,6 +29,43 @@ const nextConfig = {
       config.externals.push('@prisma/client');
     }
     return config;
+  },
+  
+  // Disable static generation for the entire app to prevent API route timeouts
+  trailingSlash: false,
+  
+  // Prevent static generation of dynamic routes
+  async generateStaticParams() {
+    return [];
+  },
+  
+  // Disable static generation for API routes
+  async rewrites() {
+    return [
+      {
+        source: '/api/aws-rds',
+        destination: '/api/aws-rds',
+      },
+      {
+        source: '/api/aws-s3',
+        destination: '/api/aws-s3',
+      },
+    ];
+  },
+  
+  // Ensure API routes are not statically generated
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
   },
 };
 
