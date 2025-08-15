@@ -31,14 +31,6 @@ const nextConfig = {
     return config;
   },
   
-  // Disable static generation for the entire app to prevent API route timeouts
-  trailingSlash: false,
-  
-  // Prevent static generation of dynamic routes
-  async generateStaticParams() {
-    return [];
-  },
-  
   // Disable static generation for API routes
   async rewrites() {
     return [

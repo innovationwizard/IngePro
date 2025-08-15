@@ -42,3 +42,6 @@ export async function GET() {
     await client.end();
   }
 }
+
+// Prevent static generation
+export const dynamic = 'force-dynamic';

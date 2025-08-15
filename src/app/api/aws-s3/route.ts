@@ -22,3 +22,6 @@ export async function GET() {
   );
   return result?.Contents?.map((object) => object.Key) ?? [];
 }
+
+// Prevent static generation
+export const dynamic = 'force-dynamic';
