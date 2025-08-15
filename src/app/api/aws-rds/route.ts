@@ -17,6 +17,9 @@ export async function GET() {
     host: RDS_HOSTNAME,
     database: RDS_DATABASE,
     port: RDS_PORT,
+    ssl: {
+      rejectUnauthorized: false
+    }
   });
 
   try {

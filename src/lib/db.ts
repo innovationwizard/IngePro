@@ -10,12 +10,12 @@ const RDS_DATABASE = process.env.RDS_DATABASE!;
 const RDS_USERNAME = process.env.RDS_USERNAME!;
 const RDS_PASSWORD = process.env.RDS_PASSWORD!;
 
-// Create Prisma client with password authentication
+// Create Prisma client with password authentication and SSL
 export async function getPrismaClient(): Promise<PrismaClient> {
   return new PrismaClient({
     datasources: {
       db: {
-        url: `postgresql://${RDS_USERNAME}:${encodeURIComponent(RDS_PASSWORD)}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}`,
+        url: `postgresql://${RDS_USERNAME}:${encodeURIComponent(RDS_PASSWORD)}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}?sslmode=require`,
       },
     },
   });
