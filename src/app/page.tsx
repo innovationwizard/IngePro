@@ -58,7 +58,7 @@ export default function LandingPage() {
               Iniciar Sesión
             </Link>
             {/* <Link
-              href="/aplicaciones-especiales/dashboard"
+                              href="/empresa-ejemplo/dashboard"
               className="group inline-flex ring-1 items-center justify-center rounded-full py-2 px-4 text-sm ring-slate-200 text-slate-700 hover:text-slate-900"
             >
               Ver Demo

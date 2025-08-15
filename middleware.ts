@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
   
-  // Extract tenant from path (/aplicaciones-especiales/dashboard)
+  // Extract tenant from path (/empresa-ejemplo/dashboard)
   const pathParts = pathname.split('/')
   let tenant = null
   
@@ -11,7 +11,7 @@ export function middleware(request: NextRequest) {
     tenant = pathParts[1]
   }
   
-  // Fallback to query parameter (?tenant=aplicaciones-especiales)
+  // Fallback to query parameter (?tenant=empresa-ejemplo)
   if (!tenant) {
     tenant = searchParams.get('tenant')
   }

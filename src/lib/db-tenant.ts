@@ -22,7 +22,7 @@ export async function getTenantId(): Promise<string | null> {
   
   // For now, use demo data - later connect to real database
   const demoCompanies: Record<string, string> = {
-    'aplicaciones-especiales': 'company-1',
+    'empresa-ejemplo': 'company-1',
     'constructora-maya': 'company-2',
     'grupo-inmobiliario': 'company-3'
   }
