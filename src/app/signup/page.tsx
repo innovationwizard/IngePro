@@ -37,14 +37,14 @@ export default function SignupPage() {
     setSuccess('');
     setIsSuccess(false);
 
-    // Validate password confirmation!
+    // Validate password confirmation
     if (formData.adminPassword !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       setIsLoading(false);
       return;
     }
 
-    // Validate password length!
+    // Validate password length
     if (formData.adminPassword.length < 8) {
       setError('La contraseña debe tener al menos 8 caracteres');
       setIsLoading(false);
