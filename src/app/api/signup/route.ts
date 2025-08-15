@@ -1,14 +1,12 @@
 // src/app/api/signup/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { getPrismaClient } from '@/lib/db';
 
 // Force dynamic rendering - prevents build-time database connections
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   const maxRetries = 3;
@@ -28,6 +26,9 @@ export async function POST(request: NextRequest) {
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      // Get Prisma client with OIDC authentication
+      const prisma = await getPrismaClient();
+      
       // Hash password
       const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
@@ -69,6 +70,9 @@ export async function POST(request: NextRequest) {
         return { company, user, userTenant };
       });
       
+      // Close the Prisma client
+      await prisma.$disconnect();
+      
       return NextResponse.json({
         message: 'Cuenta creada exitosamente',
         tenant: {
@@ -104,7 +108,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    const prisma = await getPrismaClient();
     await prisma.$queryRaw`SELECT 1 as test`;
+    await prisma.$disconnect();
+    
     return NextResponse.json({ 
       status: 'healthy',
       timestamp: new Date().toISOString()

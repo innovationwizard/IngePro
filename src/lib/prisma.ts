@@ -1,5 +1,5 @@
 // src/lib/prisma.ts
-// Prisma client configuration
+// Prisma client configuration with OIDC authentication
 
 import { PrismaClient } from '@prisma/client';
 
@@ -7,14 +7,14 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
-// Create Prisma client
+// Create Prisma client with placeholder for auth token
+// The actual authentication will be handled in the API routes
 export const prisma = globalThis.__prisma ?? new PrismaClient({
-  log: ['error'],
   datasources: {
     db: {
-      url: process.env.DATABASE_URL
-    }
-  }
+      url: process.env.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
+    },
+  },
 });
 
 if (process.env.NODE_ENV !== 'production') {
