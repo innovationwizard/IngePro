@@ -14,7 +14,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Session status for debugging */}
+        {/* Session status for debugging WHERE DO I SEE THIS? */}
         {session && (
           <div className="pt-4 text-center">
             <div className="inline-flex items-center space-x-2 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded">
