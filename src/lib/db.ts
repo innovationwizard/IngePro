@@ -26,7 +26,7 @@ export async function getPrismaClient(): Promise<PrismaClient> {
   return new PrismaClient({
     datasources: {
       db: {
-        url: `postgresql://${RDS_USERNAME}:${encodeURIComponent(authToken)}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}?schema=public`,
+        url: `postgresql://${RDS_USERNAME}:${encodeURIComponent(authToken)}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}`,
       },
     },
   });
