@@ -1,27 +1,26 @@
-import { awsCredentialsProvider } from '@vercel/functions/oidc';
-import { Signer } from '@aws-sdk/rds-signer';
+import { NextRequest, NextResponse } from 'next/server';
 import { Client } from 'pg';
- 
+import { Signer } from '@aws-sdk/rds-signer';
+import { fromEnv } from '@aws-sdk/credential-providers';
+
+// RDS configuration
 const RDS_PORT = parseInt(process.env.RDS_PORT!);
 const RDS_HOSTNAME = process.env.RDS_HOSTNAME!;
 const RDS_DATABASE = process.env.RDS_DATABASE!;
 const RDS_USERNAME = process.env.RDS_USERNAME!;
 const AWS_REGION = process.env.AWS_REGION!;
-const AWS_ROLE_ARN = process.env.AWS_ROLE_ARN!;
- 
-// Initialize the RDS Signer
+
+// Initialize the RDS Signer with IAM user credentials
 const signer = new Signer({
-  // Use the Vercel AWS SDK credentials provider
-  credentials: awsCredentialsProvider({
-    roleArn: AWS_ROLE_ARN,
-  }),
+  credentials: fromEnv(), // This will use AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
   region: AWS_REGION,
   port: RDS_PORT,
   hostname: RDS_HOSTNAME,
   username: RDS_USERNAME,
 });
- 
-// Export the route handler
+
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const client = new Client({
     password: signer.getAuthToken,
@@ -42,6 +41,3 @@ export async function GET() {
     await client.end();
   }
 }
-
-// Prevent static generation
-export const dynamic = 'force-dynamic';

@@ -1,27 +1,29 @@
-import * as S3 from '@aws-sdk/client-s3';
-import { awsCredentialsProvider } from '@vercel/functions/oidc';
- 
-const AWS_REGION = process.env.AWS_REGION!;
-const AWS_ROLE_ARN = process.env.AWS_ROLE_ARN!;
-const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
- 
-// Initialize the S3 Client
-const s3client = new S3.S3Client({
-  region: AWS_REGION,
-  // Use the Vercel AWS SDK credentials provider
-  credentials: awsCredentialsProvider({
-    roleArn: AWS_ROLE_ARN,
-  }),
-});
- 
-export async function GET() {
-  const result = await s3client.send(
-    new S3.ListObjectsV2Command({
-      Bucket: S3_BUCKET_NAME,
-    }),
-  );
-  return result?.Contents?.map((object) => object.Key) ?? [];
-}
+import { NextRequest, NextResponse } from 'next/server';
+import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3';
+import { fromEnv } from '@aws-sdk/credential-providers';
 
-// Prevent static generation
+// AWS configuration
+const AWS_REGION = process.env.AWS_REGION!;
+
+// Initialize the S3 client with IAM user credentials
+const s3Client = new S3Client({
+  credentials: fromEnv(), // This will use AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+  region: AWS_REGION,
+});
+
 export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  try {
+    const command = new ListBucketsCommand({});
+    const response = await s3Client.send(command);
+    
+    return Response.json({
+      buckets: response.Buckets?.map(bucket => bucket.Name) || [],
+      message: 'S3 buckets retrieved successfully'
+    });
+  } catch (error) {
+    console.error('S3 error:', error);
+    return Response.json({ error: 'Failed to retrieve S3 buckets' }, { status: 500 });
+  }
+}
