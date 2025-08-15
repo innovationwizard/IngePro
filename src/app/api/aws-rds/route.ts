@@ -1,29 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Client } from 'pg';
-import { Signer } from '@aws-sdk/rds-signer';
-import { fromEnv } from '@aws-sdk/credential-providers';
 
 // RDS configuration
 const RDS_PORT = parseInt(process.env.RDS_PORT!);
 const RDS_HOSTNAME = process.env.RDS_HOSTNAME!;
 const RDS_DATABASE = process.env.RDS_DATABASE!;
 const RDS_USERNAME = process.env.RDS_USERNAME!;
-const AWS_REGION = process.env.AWS_REGION!;
-
-// Initialize the RDS Signer with IAM user credentials
-const signer = new Signer({
-  credentials: fromEnv(), // This will use AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-  region: AWS_REGION,
-  port: RDS_PORT,
-  hostname: RDS_HOSTNAME,
-  username: RDS_USERNAME,
-});
+const RDS_PASSWORD = process.env.RDS_PASSWORD!;
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const client = new Client({
-    password: signer.getAuthToken,
+    password: RDS_PASSWORD,
     user: RDS_USERNAME,
     host: RDS_HOSTNAME,
     database: RDS_DATABASE,
