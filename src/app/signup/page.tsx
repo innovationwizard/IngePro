@@ -54,9 +54,9 @@ export default function SignupPage() {
     const data = {
       companyName: formData.companyName,
       companySlug: formData.companySlug,
-      adminName: formData.adminName,
-      adminEmail: formData.adminEmail,
-      adminPassword: formData.adminPassword,
+      userName: formData.adminName,
+      userEmail: formData.adminEmail,
+      userPassword: formData.adminPassword,
     };
 
     try {
