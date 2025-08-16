@@ -1,5 +1,4 @@
 // src/app/signup/page.tsx
-// Restore EXACT original design from your documentation
 
 'use client';
 
