@@ -1,12 +1,11 @@
 // src/lib/db.ts
 // Database utility with AWS RDS IAM authentication
 
-import { config } from 'dotenv';
-import { RDS } from '@aws-sdk/client-rds';
+import { RDS } from '@aws-sdk/client-rds'; // Explicit import
 import { PrismaClient } from '@prisma/client';
+import { config } from 'dotenv';
 
-// Load environment variables from .env
-config();
+config(); // Load .env
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error('DATABASE_URL is not set');
@@ -18,11 +17,14 @@ const RDS_DATABASE = url.pathname.slice(1);
 const RDS_USERNAME = url.username;
 const AWS_REGION = 'us-east-2';
 
-const rdsClient = new RDS({ region: AWS_REGION });
+const rdsClient = new RDS({ region: AWS_REGION }); // Ensure this line executes
 
 async function getPrismaClient() {
   try {
     console.log(`Generating token for ${RDS_USERNAME}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}`);
+    if (!rdsClient.generateDbAuthToken) {
+      throw new Error('generateDbAuthToken is not available on rdsClient');
+    }
     const token = await rdsClient.generateDbAuthToken({
       hostname: RDS_HOSTNAME,
       port: RDS_PORT,
