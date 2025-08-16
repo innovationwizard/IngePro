@@ -1,0 +1,48 @@
+// src/app/api/health/route.ts
+// Health check route for monitoring system status
+
+import { NextResponse } from 'next/server';
+import { getPrismaClient } from '@/lib/db';
+
+export async function GET() {
+  const startTime = Date.now();
+  
+  try {
+    // Test database connection
+    const prisma = await getPrismaClient();
+    
+    // Simple query to test database connectivity
+    const result = await prisma.$queryRaw`SELECT 1 as test, NOW() as timestamp`;
+    
+    await prisma.$disconnect();
+    
+    const responseTime = Date.now() - startTime;
+    
+    return NextResponse.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      responseTime: `${responseTime}ms`,
+      database: {
+        status: 'connected',
+        test: result
+      },
+      environment: process.env.NODE_ENV || 'development'
+    });
+    
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+    
+    console.error('Health check failed:', error);
+    
+    return NextResponse.json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      responseTime: `${responseTime}ms`,
+      database: {
+        status: 'disconnected',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      },
+      environment: process.env.NODE_ENV || 'development'
+    }, { status: 503 });
+  }
+}

@@ -163,7 +163,7 @@ export default function LoginPage() {
 
               <div className="mt-4 text-center">
                 <p className="text-sm text-slate-600">
-                  ¿No tienes una cuenta?{' '}
+                  ¿No tienes una cuenta? <br />
                   <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-700">
                     Crear Empresa
                   </Link>

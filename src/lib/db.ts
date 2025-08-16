@@ -2,6 +2,7 @@
 // Database utility with AWS RDS IAM authentication
 
 import { RDS } from '@aws-sdk/client-rds'; // Explicit import
+import { Signer } from '@aws-sdk/rds-signer';
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 
@@ -22,15 +23,17 @@ const rdsClient = new RDS({ region: AWS_REGION }); // Ensure this line executes
 async function getPrismaClient() {
   try {
     console.log(`Generating token for ${RDS_USERNAME}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}`);
-    if (!rdsClient.generateDbAuthToken) {
-      throw new Error('generateDbAuthToken is not available on rdsClient');
-    }
-    const token = await rdsClient.generateDbAuthToken({
+    
+    const signer = new Signer({
       hostname: RDS_HOSTNAME,
       port: RDS_PORT,
       username: RDS_USERNAME,
+      region: AWS_REGION,
     });
-    console.log('Token generated:', token);
+    
+    const token = await signer.getAuthToken();
+    console.log('Token generated successfully');
+    
     const dbUrl = `postgresql://${RDS_USERNAME}:${encodeURIComponent(token)}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}?sslmode=require`;
 
     return new PrismaClient({
