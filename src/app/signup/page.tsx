@@ -60,7 +60,7 @@ export default function SignupPage() {
     };
 
     try {
-      console.log('🚀 Attempting to create account:', data.adminEmail);
+      console.log('🚀 Attempting to create account:', data.userEmail);
       
       const response = await fetch('/api/signup', {
         method: 'POST',

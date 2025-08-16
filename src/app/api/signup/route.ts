@@ -26,10 +26,14 @@ export async function POST(request: Request) {
   try {
     // Parse and validate request body
     const body = await request.json();
+    console.log('📥 Received signup data:', body);
+    
     const validatedData = signupSchema.parse(body);
+    console.log('✅ Validated data:', validatedData);
     
     // Get Prisma client with IAM authentication
     const prisma = await getPrismaClient();
+    console.log('🔌 Database connection established');
     
     // Check if company slug already exists
     const existingCompany = await prisma.company.findUnique({
@@ -135,6 +139,7 @@ export async function POST(request: Request) {
     
     // Handle validation errors
     if (error instanceof z.ZodError) {
+      console.log('❌ Validation errors:', error.errors);
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
         { status: 400 }

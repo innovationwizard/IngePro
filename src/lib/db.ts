@@ -45,8 +45,22 @@ async function getPrismaClient() {
     });
   } catch (error) {
     console.error('RDS auth token error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    throw new Error('Database authentication failed: ' + errorMessage);
+    
+    // Fallback: Try to use the original DATABASE_URL if IAM auth fails
+    console.log('Falling back to direct connection...');
+    try {
+      return new PrismaClient({
+        datasources: {
+          db: {
+            url: DATABASE_URL,
+          },
+        },
+      });
+    } catch (fallbackError) {
+      console.error('Fallback connection also failed:', fallbackError);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error('Database authentication failed: ' + errorMessage);
+    }
   }
 }
 
