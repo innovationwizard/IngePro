@@ -10,6 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/client-rds": "^3.864.0",
     "@aws-sdk/client-s3": "^3.540.0",
     "@aws-sdk/rds-signer": "^3.540.0",
     "@next-auth/prisma-adapter": "^1.0.7",
