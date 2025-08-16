@@ -1,30 +1,34 @@
 // src/lib/db.ts
 // Database utility with AWS RDS IAM authentication
 
+import { config } from 'dotenv';
 import { RDS } from '@aws-sdk/client-rds';
 import { PrismaClient } from '@prisma/client';
 
-// Extract database connection details from DATABASE_URL
-const DATABASE_URL = process.env.DATABASE_URL!;
+// Load environment variables from .env
+config();
+
+const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error('DATABASE_URL is not set');
 const url = new URL(DATABASE_URL);
 
 const RDS_HOSTNAME = url.hostname;
-const RDS_PORT = parseInt(url.port || '5432', 10); // Fallback to 5432
-const RDS_DATABASE = url.pathname.slice(1); // e.g., 'postgres'
+const RDS_PORT = parseInt(url.port || '5432', 10);
+const RDS_DATABASE = url.pathname.slice(1);
 const RDS_USERNAME = url.username;
-const AWS_REGION = 'us-east-2'; // Hardcoded, or use process.env.AWS_REGION if re-added
+const AWS_REGION = 'us-east-2';
 
 const rdsClient = new RDS({ region: AWS_REGION });
 
-// Create Prisma client with IAM authentication
-export async function getPrismaClient(): Promise<PrismaClient> {
+async function getPrismaClient() {
   try {
+    console.log(`Generating token for ${RDS_USERNAME}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}`);
     const token = await rdsClient.generateDbAuthToken({
       hostname: RDS_HOSTNAME,
       port: RDS_PORT,
       username: RDS_USERNAME,
     });
+    console.log('Token generated:', token);
     const dbUrl = `postgresql://${RDS_USERNAME}:${encodeURIComponent(token)}@${RDS_HOSTNAME}:${RDS_PORT}/${RDS_DATABASE}?sslmode=require`;
 
     return new PrismaClient({
@@ -35,7 +39,11 @@ export async function getPrismaClient(): Promise<PrismaClient> {
       },
     });
   } catch (error) {
-    console.error('Failed to generate RDS auth token:', error);
-    throw new Error('Database authentication failed');
+    console.error('RDS auth token error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error('Database authentication failed: ' + errorMessage);
   }
-} 
+}
+
+// Export the function instead of top-level await
+export { getPrismaClient }; 
