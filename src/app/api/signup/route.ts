@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Get Prisma client with OIDC authentication
+      // Get Prisma client with IAM authentication
       const prisma = await getPrismaClient();
       
       // Hash password

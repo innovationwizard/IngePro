@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Client } from 'pg';
 import { RDS } from '@aws-sdk/client-rds';
 
-// RDS configuration
-const RDS_PORT = parseInt(process.env.RDS_PORT!);
-const RDS_HOSTNAME = process.env.RDS_HOSTNAME!;
-const RDS_DATABASE = process.env.RDS_DATABASE!;
-const RDS_USERNAME = process.env.RDS_USERNAME!;
-const AWS_REGION = process.env.AWS_REGION!;
+// Extract database connection details from DATABASE_URL
+const DATABASE_URL = process.env.DATABASE_URL!;
+const url = new URL(DATABASE_URL);
+
+const RDS_HOSTNAME = url.hostname;
+const RDS_PORT = parseInt(url.port);
+const RDS_DATABASE = url.pathname.slice(1); // Remove leading slash
+const RDS_USERNAME = url.username;
+const AWS_REGION = 'us-east-2'; // Hardcoded region
 
 // Initialize RDS client for token generation
 const rdsClient = new RDS({ region: AWS_REGION });
