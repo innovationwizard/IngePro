@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     // Handle other errors
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { error: 'Failed to create account', details: errorMessage },
+      { error: 'Failed to create an account', details: errorMessage },
       { status: 500 }
     );
   }
