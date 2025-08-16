@@ -31,6 +31,8 @@ model User {
   auditLogs AuditLog[]
   Company   Company?   @relation(fields: [companyId], references: [id])
   companyId String?
+
+  @@map("User")
 }
 
 model Company {
@@ -66,6 +68,8 @@ model Team {
   // Relationships
   users    UserTeam[]
   projects ProjectTeam[]
+
+  @@map("Team")
 }
 
 model Project {
@@ -84,6 +88,8 @@ model Project {
   users    UserProject[]
   teams    ProjectTeam[]
   workLogs WorkLog[]
+
+  @@map("Project")
 }
 
 // Junction table for User-Company relationships with time tracking
@@ -108,6 +114,7 @@ model UserTenant {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, companyId, startDate])
+  @@map("UserTenant")
 }
 
 // Junction table for User-Team relationships
@@ -129,6 +136,7 @@ model UserTeam {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, teamId, startDate])
+  @@map("UserTeam")
 }
 
 // Junction table for User-Project relationships
@@ -153,6 +161,7 @@ model UserProject {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, projectId, startDate])
+  @@map("UserProject")
 }
 
 // Junction table for Project-Team relationships
@@ -166,6 +175,7 @@ model ProjectTeam {
   createdAt DateTime @default(now())
 
   @@unique([projectId, teamId])
+  @@map("ProjectTeam")
 }
 
 model WorkLog {
@@ -191,6 +201,8 @@ model WorkLog {
   updatedAt      DateTime  @updatedAt
   Company        Company?  @relation(fields: [companyId], references: [id])
   companyId      String?
+
+  @@map("WorkLog")
 }
 
 // Audit trail for all changes
@@ -204,6 +216,8 @@ model AuditLog {
   oldValues  String? // JSON of old values
   newValues  String? // JSON of new values
   createdAt  DateTime @default(now())
+
+  @@map("AuditLog")
 }
 
 enum Role {
