@@ -59,6 +59,9 @@ export default function SignupPage() {
       userPassword: formData.adminPassword,
     };
 
+    console.log('🔍 Form data:', formData);
+    console.log('📤 Data being sent:', data);
+
     try {
       console.log('🚀 Attempting to create account:', data.userEmail);
       
