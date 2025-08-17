@@ -1,5 +1,5 @@
 // src/app/api/health/route.ts
-// Health check route for monitoring system status
+// Health check route for monitoring system health status
 
 import { NextResponse } from 'next/server';
 import { getPrismaClient } from '@/lib/db';
