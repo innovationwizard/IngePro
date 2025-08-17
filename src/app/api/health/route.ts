@@ -12,8 +12,7 @@ export async function GET() {
     const prisma = await getPrismaClient();
     
     // Simple query to test database connectivity
-    const result = await prisma.$queryRaw`SELECT 1 as test, NOW() as timestamp`;
-    
+    const result = await prisma.$queryRaw`SELECT 1 as test, NOW() as timestamp FROM companies LIMIT 1`;    
     await prisma.$disconnect();
     
     const responseTime = Date.now() - startTime;
