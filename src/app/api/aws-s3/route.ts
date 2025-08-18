@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3';
-import { fromEnv } from '@aws-sdk/credential-providers';
+import { awsCredentialsProvider } from '@vercel/functions/oidc';
 
 // AWS configuration
 const AWS_REGION = process.env.AWS_REGION!;
+const AWS_ROLE_ARN = process.env.AWS_ROLE_ARN!;
 
-// Initialize the S3 client with IAM user credentials
+// Initialize the S3 client with OIDC credentials
 const s3Client = new S3Client({
-  credentials: fromEnv(), // This will use AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
   region: AWS_REGION,
+  // Use the Vercel AWS SDK credentials provider for OIDC
+  credentials: awsCredentialsProvider({
+    roleArn: AWS_ROLE_ARN,
+  }),
 });
 
 export const dynamic = 'force-dynamic';

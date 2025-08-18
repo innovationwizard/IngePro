@@ -10,6 +10,7 @@ import { getTenantSlug } from '@/lib/db-tenant'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ingepro.com'),
   title: 'IngePro - Gestión de Productividad en Construcción',
   description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
   manifest: '/manifest.json',
