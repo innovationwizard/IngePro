@@ -10,7 +10,7 @@ import { getTenantSlug } from '@/lib/db-tenant'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ingepro.com'),
+  metadataBase: new URL('https://ingepro.app'),
   title: 'IngePro - Gestión de Productividad en Construcción',
   description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
   manifest: '/manifest.json',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'IngePro - Gestión de Productividad en Construcción',
     description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
-    url: 'https://ingepro.com',
+    url: 'https://ingepro.app',
     siteName: 'IngePro',
     images: [
       {
