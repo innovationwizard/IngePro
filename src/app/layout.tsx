@@ -34,7 +34,7 @@ export const metadata: Metadata = {
         url: '/ingepro_logo_small.png',
         width: 120,
         height: 120,
-        alt: 'IngePro Logo',
+        alt: 'IngePro',
       },
     ],
     type: 'website',
