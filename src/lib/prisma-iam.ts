@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { withAccelerate } from '@prisma/extension-accelerate'
 import { Signer } from '@aws-sdk/rds-signer'
 
 export async function getPrismaWithIam() {
@@ -25,5 +26,5 @@ export async function getPrismaWithIam() {
     `postgresql://${username}:${encodeURIComponent(token)}@${host}:${port}/${database}` +
     `?sslmode=require` // keep SSL on for IAM
 
-  return new PrismaClient({ datasources: { db: { url: dbUrl } } })
+  return new PrismaClient({ datasources: { db: { url: dbUrl } } }).$extends(withAccelerate())
 }
