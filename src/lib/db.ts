@@ -1,7 +1,7 @@
 // src/lib/db.ts
 // Database utility with AWS RDS IAM authentication
 
-import { RDS } from '@aws-sdk/client-rds'; // Explicit import
+import { RDS } from '@aws-sdk/client-rds';
 import { Signer } from '@aws-sdk/rds-signer';
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';

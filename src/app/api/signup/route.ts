@@ -2,7 +2,7 @@
 // Production signup route for creating users and companies
 
 import { NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/db';
+import { getPrismaWithIam } from '@/lib/prisma-iam';
 import { hash } from 'bcryptjs';
 import { z } from 'zod';
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     console.log('✅ Validated data:', validatedData);
     
     // Get Prisma client with IAM authentication
-    const prisma = await getPrismaClient();
+    const prisma = await getPrismaWithIam();
     console.log('🔌 Database connection established');
     
     // Check if company slug already exists

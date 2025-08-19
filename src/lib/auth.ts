@@ -1,6 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from '@/lib/prisma'
+import { getPrismaWithIam } from '@/lib/prisma-iam'
 import bcrypt from 'bcryptjs'
 
 // Helper function for exponential backoff retry
@@ -94,6 +94,7 @@ export const authOptions: NextAuthOptions = {
 
           // Check real users from database
           console.log('🔍 Checking database for user:', credentials.email);
+          const prisma = await getPrismaWithIam();
           const user = await retryWithBackoff(async () => {
             return await prisma.user.findUnique({
               where: { email: credentials.email },

@@ -3,7 +3,7 @@ import { authOptions } from '@/lib/auth'
 
 // Force dynamic rendering - prevents build-time database connections
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'; // NOT 'edge' (edge can't sign tokens)
 
 const handler = NextAuth(authOptions)
 
