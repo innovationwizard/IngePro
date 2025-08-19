@@ -16,7 +16,7 @@ export { getPrismaClient };
 export const prisma = globalThis.__prisma ?? new PrismaClient({
   datasources: {
     db: {
-      url: 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
+      url: process.env.DATABASE_URL ,
     },
   },
 });
