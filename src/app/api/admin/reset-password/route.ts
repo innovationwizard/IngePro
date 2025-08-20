@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { getPrisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { getServerSession } from 'next-auth'
+
+export const runtime = 'nodejs';
 import { authOptions } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {

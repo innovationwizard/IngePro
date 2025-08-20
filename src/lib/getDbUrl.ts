@@ -7,18 +7,16 @@ let cachedUrl: string | null = null;
 export async function getDbUrl() {
   if (cachedUrl) return cachedUrl;
 
-  const client = new SecretsManagerClient({ 
+  const sm = new SecretsManagerClient({
     region: process.env.AWS_REGION!,
-    credentials: awsCredentialsProvider({
-      roleArn: process.env.AWS_ROLE_ARN!,
-    }),
+    credentials: awsCredentialsProvider({ roleArn: process.env.AWS_ROLE_ARN! }),
   });
   
   const cmd = new GetSecretValueCommand({
     SecretId: "arn:aws:secretsmanager:us-east-2:524390297512:secret:ingepro-IAM-secret-NLApH7",
   });
 
-  const { SecretString } = await client.send(cmd);
+  const { SecretString } = await sm.send(cmd);
   if (!SecretString) throw new Error("Secret has no string value");
 
   const s = JSON.parse(SecretString);

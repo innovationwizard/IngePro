@@ -2,8 +2,10 @@
 // Production projects route for CRUD operations
 
 import { NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/db';
+import { getPrisma } from '@/lib/prisma';
 import { z } from 'zod';
+
+export const runtime = 'nodejs';
 
 // Validation schema for project data
 const projectSchema = z.object({
@@ -18,7 +20,7 @@ const projectSchema = z.object({
 // GET - List all projects
 export async function GET() {
   try {
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     const projects = await prisma.project.findMany({
       select: {
@@ -66,7 +68,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = projectSchema.parse(body);
     
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     // Verify company exists
     const company = await prisma.company.findUnique({

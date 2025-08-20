@@ -2,14 +2,16 @@
 // Health check route for monitoring system health status
 
 import { NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/db';
+import { getPrisma } from '@/lib/prisma';
+
+export const runtime = 'nodejs';
 
 export async function GET() {
   const startTime = Date.now();
   
   try {
     // Test database connection
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     // Simple query to test database connectivity
     const result = await prisma.$queryRaw`SELECT 1 as test, NOW() as timestamp FROM companies LIMIT 1`;    

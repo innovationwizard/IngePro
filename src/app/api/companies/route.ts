@@ -2,8 +2,10 @@
 // Production companies route for CRUD operations
 
 import { NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/db';
+import { getPrisma } from '@/lib/prisma';
 import { z } from 'zod';
+
+export const runtime = 'nodejs';
 
 // Validation schema for company data
 const companySchema = z.object({
@@ -16,7 +18,7 @@ const companySchema = z.object({
 // GET - List all companies
 export async function GET() {
   try {
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     const companies = await prisma.company.findMany({
       select: {
@@ -56,7 +58,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = companySchema.parse(body);
     
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     // Check if company slug already exists
     const existingCompany = await prisma.company.findUnique({

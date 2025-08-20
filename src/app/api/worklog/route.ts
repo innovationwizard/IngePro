@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { 
   sanitizeString, 
   sanitizeNumber, 
@@ -81,6 +81,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get Prisma client
+    const prisma = await getPrisma();
+    
     // Use retry logic for database operations (background operation)
     const workLog = await retryWithBackoff(async () => {
       // Validate that user exists
@@ -181,6 +184,9 @@ export async function GET(request: NextRequest) {
     const projectId = sanitizeId(searchParams.get('projectId'));
     const limit = sanitizeLimit(searchParams.get('limit'), 10, 100);
 
+    // Get Prisma client
+    const prisma = await getPrisma();
+    
     const where: any = {};
     
     if (userId) {

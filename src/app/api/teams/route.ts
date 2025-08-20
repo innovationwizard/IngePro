@@ -2,8 +2,10 @@
 // Production teams route for CRUD operations
 
 import { NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/db';
+import { getPrisma } from '@/lib/prisma';
 import { z } from 'zod';
+
+export const runtime = 'nodejs';
 
 // Validation schema for team data
 const teamSchema = z.object({
@@ -17,7 +19,7 @@ const teamSchema = z.object({
 // GET - List all teams
 export async function GET() {
   try {
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     const teams = await prisma.team.findMany({
       select: {
@@ -63,7 +65,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = teamSchema.parse(body);
     
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     // Verify company exists
     const company = await prisma.company.findUnique({

@@ -2,8 +2,10 @@
 // Production users route for CRUD operations
 
 import { NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/db';
+import { getPrisma } from '@/lib/prisma';
 import { z } from 'zod';
+
+export const runtime = 'nodejs';
 
 // Validation schema for user data
 const userSchema = z.object({
@@ -18,7 +20,7 @@ const userSchema = z.object({
 // GET - List all users
 export async function GET() {
   try {
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     const users = await prisma.user.findMany({
       select: {
@@ -66,7 +68,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = userSchema.parse(body);
     
-    const prisma = await getPrismaClient();
+    const prisma = await getPrisma();
     
     // Check if user email already exists
     const existingUser = await prisma.user.findUnique({

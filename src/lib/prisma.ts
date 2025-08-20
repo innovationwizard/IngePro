@@ -1,12 +1,16 @@
+// lib/prisma.ts
 import { PrismaClient } from "@prisma/client";
 import { getDbUrl } from "./getDbUrl";
 
-let prisma: PrismaClient | undefined;
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined;
+}
 
 export async function getPrisma() {
-  if (!prisma) {
-    const url = await getDbUrl();           // <- from Secrets Manager
-    prisma = new PrismaClient({ datasources: { db: { url } } });
+  if (!globalThis.__prisma) {
+    const url = await getDbUrl(); // builds from Secrets Manager
+    globalThis.__prisma = new PrismaClient({ datasources: { db: { url } } });
   }
-  return prisma;
+  return globalThis.__prisma;
 }
