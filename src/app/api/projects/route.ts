@@ -70,6 +70,8 @@ export async function GET(request: NextRequest) {
       })
       
       const adminCompanyIds = userTenants.map(ut => ut.companyId)
+      console.log('GET /api/projects - ADMIN userTenants:', userTenants)
+      console.log('GET /api/projects - ADMIN company IDs:', adminCompanyIds)
       
       projects = await prisma.project.findMany({
         where: {
@@ -88,6 +90,9 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { createdAt: 'desc' }
       })
+      
+      console.log('GET /api/projects - ADMIN found projects:', projects.length)
+      projects.forEach(p => console.log('Project:', p.name, 'Company:', p.company.name, 'CompanyID:', p.companyId))
     } else {
       // WORKER/SUPERVISOR can see projects they're assigned to
       projects = await prisma.project.findMany({
@@ -168,6 +173,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('POST /api/projects - Creating project for company:', validatedData.companyId)
+    
     const project = await prisma.project.create({
       data: {
         name: validatedData.name,
@@ -179,6 +186,8 @@ export async function POST(request: NextRequest) {
         company: true
       }
     })
+    
+    console.log('POST /api/projects - Project created:', project.id, 'Company:', project.company.name)
 
     return NextResponse.json({
       success: true,
