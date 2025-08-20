@@ -47,7 +47,7 @@ export default function Sidebar() {
       roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
-      name: 'Proyectos',
+      name: 'Gestión de Proyectos',
       href: '/dashboard/projects',
       icon: FolderOpen,
       roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']

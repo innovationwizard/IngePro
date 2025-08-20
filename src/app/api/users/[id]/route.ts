@@ -8,10 +8,11 @@ export const runtime = 'nodejs'
 
 // Validation schema for updating user assignments
 const updateAssignmentSchema = z.object({
-  action: z.enum(['end-assignment', 'assign-company']),
+  action: z.enum(['end-assignment', 'assign-company', 'assign-project']),
   assignmentId: z.string(),
   assignmentType: z.enum(['company', 'team', 'project']),
   companyId: z.string().optional(),
+  projectId: z.string().optional(),
   role: z.enum(['WORKER', 'SUPERVISOR', 'ADMIN']).optional(),
 })
 
@@ -260,6 +261,70 @@ export async function PUT(
       return NextResponse.json({
         success: true,
         message: 'User assigned to company successfully'
+      })
+    } else if (validatedData.action === 'assign-project') {
+      // Assign user to a project
+      if (!validatedData.projectId || !validatedData.role) {
+        return NextResponse.json(
+          { error: 'Project ID and role are required' },
+          { status: 400 }
+        )
+      }
+
+      // Check if admin has access to the project's company
+      if (session.user?.role === 'ADMIN') {
+        const project = await prisma.project.findUnique({
+          where: { id: validatedData.projectId },
+          select: { companyId: true }
+        })
+        
+        if (!project) {
+          return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+        }
+
+        const userTenant = await prisma.userTenant.findFirst({
+          where: {
+            userId: session.user?.id,
+            companyId: project.companyId,
+            status: 'ACTIVE'
+          }
+        })
+        
+        if (!userTenant) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+      }
+
+      // Check if user is already assigned to this project
+      const existingAssignment = await prisma.userProject.findFirst({
+        where: {
+          userId: userId,
+          projectId: validatedData.projectId,
+          status: 'ACTIVE'
+        }
+      })
+
+      if (existingAssignment) {
+        return NextResponse.json(
+          { error: 'User is already assigned to this project' },
+          { status: 409 }
+        )
+      }
+
+      // Create new assignment
+      await prisma.userProject.create({
+        data: {
+          userId: userId,
+          projectId: validatedData.projectId,
+          role: validatedData.role,
+          startDate: new Date(),
+          status: 'ACTIVE'
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: 'User assigned to project successfully'
       })
     }
 

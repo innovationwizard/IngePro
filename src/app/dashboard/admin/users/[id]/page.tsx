@@ -50,6 +50,12 @@ export default function UserDetailPage() {
     role: 'WORKER' as 'WORKER' | 'SUPERVISOR' | 'ADMIN'
   })
   const [availableCompanies, setAvailableCompanies] = useState<Array<{id: string, name: string}>>([])
+  
+  const [assignProjectFormData, setAssignProjectFormData] = useState({
+    projectId: '',
+    role: 'WORKER' as 'WORKER' | 'SUPERVISOR'
+  })
+  const [availableProjects, setAvailableProjects] = useState<Array<{id: string, name: string, company: {name: string}}>>([])
 
   // Check if user is admin
   if (session?.user?.role !== 'ADMIN') {
@@ -93,6 +99,20 @@ export default function UserDetailPage() {
     }
   }
 
+  const fetchAvailableProjects = async () => {
+    try {
+      const response = await fetch('/api/projects')
+      if (response.ok) {
+        const data = await response.json()
+        setAvailableProjects(data.projects || [])
+      } else {
+        console.error('Error fetching projects')
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error)
+    }
+  }
+
   const handleOpenAssignCompanyModal = () => {
     fetchAvailableCompanies() // Fetch companies when opening modal
     setIsAssignCompanyModalOpen(true)
@@ -102,7 +122,8 @@ export default function UserDetailPage() {
     setIsAssignTeamModalOpen(true)
   }
 
-  const handleAssignProject = () => {
+  const handleOpenAssignProjectModal = () => {
+    fetchAvailableProjects() // Fetch projects when opening modal
     setIsAssignProjectModalOpen(true)
   }
 
@@ -166,6 +187,41 @@ export default function UserDetailPage() {
       }
     } catch (error) {
       console.error('Error assigning user:', error)
+      setMessage('Error de conexión')
+    } finally {
+      setIsActionLoading(false)
+    }
+  }
+
+  const handleAssignProject = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsActionLoading(true)
+    
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'assign-project',
+          assignmentId: '',
+          assignmentType: 'project',
+          projectId: assignProjectFormData.projectId,
+          role: assignProjectFormData.role
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage(data.message)
+        setIsAssignProjectModalOpen(false)
+        setAssignProjectFormData({ projectId: '', role: 'WORKER' })
+        fetchUserData() // Refresh user data
+      } else {
+        setMessage(data.error || 'Error al asignar proyecto')
+      }
+    } catch (error) {
+      console.error('Error assigning project:', error)
       setMessage('Error de conexión')
     } finally {
       setIsActionLoading(false)
@@ -338,7 +394,7 @@ export default function UserDetailPage() {
                 Proyectos Actuales
               </h2>
               <button
-                onClick={handleAssignProject}
+                onClick={handleOpenAssignProjectModal}
                 className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4" />
@@ -444,6 +500,63 @@ export default function UserDetailPage() {
                   <button
                     type="button"
                     onClick={() => setIsAssignCompanyModalOpen(false)}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isActionLoading}
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isActionLoading ? 'Asignando...' : 'Asignar'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Project Modal */}
+      {isAssignProjectModalOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Asignar a Proyecto</h3>
+              <form onSubmit={handleAssignProject} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Proyecto</label>
+                  <select
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={assignProjectFormData.projectId}
+                    onChange={(e) => setAssignProjectFormData({ ...assignProjectFormData, projectId: e.target.value })}
+                  >
+                    <option value="">Seleccionar proyecto</option>
+                    {availableProjects.map(project => (
+                      <option key={project.id} value={project.id}>
+                        {project.name} ({project.company.name})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Rol</label>
+                  <select
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={assignProjectFormData.role}
+                    onChange={(e) => setAssignProjectFormData({ ...assignProjectFormData, role: e.target.value as any })}
+                  >
+                    <option value="WORKER">Trabajador</option>
+                    <option value="SUPERVISOR">Supervisor</option>
+                  </select>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsAssignProjectModalOpen(false)}
                     className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
                   >
                     Cancelar
