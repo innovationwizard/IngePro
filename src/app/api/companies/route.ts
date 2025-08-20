@@ -28,38 +28,42 @@ export async function GET(request: NextRequest) {
 
     const prisma = await getPrisma()
 
-    // If admin, only show their company
+    // If admin, show all their companies
     if (session.user?.role === 'ADMIN') {
-      const company = await prisma.company.findUnique({
-        where: { id: session.user.companyId },
+      const userTenants = await prisma.userTenant.findMany({
+        where: { 
+          userId: session.user.id,
+          status: 'ACTIVE'
+        },
         include: {
-          _count: {
-            select: {
-              users: true,
-              projects: true,
-              workLogs: true
+          company: {
+            include: {
+              _count: {
+                select: {
+                  users: true,
+                  projects: true,
+                  workLogs: true
+                }
+              }
             }
           }
         }
       })
 
-      if (!company) {
-        return NextResponse.json({ error: 'Company not found' }, { status: 404 })
-      }
+      const companies = userTenants.map(ut => ({
+        id: ut.company.id,
+        name: ut.company.name,
+        nameEs: ut.company.nameEs,
+        slug: ut.company.slug,
+        status: ut.company.status,
+        createdAt: ut.company.createdAt,
+        users: ut.company._count.users,
+        projects: ut.company._count.projects,
+        workLogs: ut.company._count.workLogs,
+        role: ut.role
+      }))
 
-      return NextResponse.json({
-        companies: [{
-          id: company.id,
-          name: company.name,
-          nameEs: company.nameEs,
-          slug: company.slug,
-          status: company.status,
-          createdAt: company.createdAt,
-          users: company._count.users,
-          projects: company._count.projects,
-          workLogs: company._count.workLogs
-        }]
-      })
+      return NextResponse.json({ companies })
     }
 
     // If superuser, show all companies
@@ -149,11 +153,8 @@ export async function POST(request: NextRequest) {
           }
         })
 
-        // Update user's companyId to the new company
-        await tx.user.update({
-          where: { id: session.user.id },
-          data: { companyId: company.id }
-        })
+        // Don't update user's companyId - keep them associated with all their companies
+        // The user can switch between companies using the UserTenant relationships
       }
 
       return company

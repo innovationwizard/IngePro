@@ -15,6 +15,7 @@ interface Company {
   users: number
   projects: number
   workLogs: number
+  role?: string
 }
 
 export default function AdminTenantsPage() {
@@ -224,11 +225,14 @@ export default function AdminTenantsPage() {
                           <Building className="h-5 w-5 text-blue-600" />
                         </div>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{company.nameEs || company.name}</div>
-                        <div className="text-sm text-gray-500">ID: {company.id}</div>
-                        <div className="text-xs text-gray-400">Slug: {company.slug}</div>
-                      </div>
+                                              <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{company.nameEs || company.name}</div>
+                          <div className="text-sm text-gray-500">ID: {company.id}</div>
+                          <div className="text-xs text-gray-400">Slug: {company.slug}</div>
+                          {company.role && (
+                            <div className="text-xs text-blue-600">Tu rol: {company.role}</div>
+                          )}
+                        </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
