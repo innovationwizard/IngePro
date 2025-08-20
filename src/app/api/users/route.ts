@@ -40,12 +40,22 @@ export async function GET(request: NextRequest) {
     const prisma = await getPrisma()
     const companyId = session.user?.companyId
 
-    // Get users for the admin's company
+    // Get users for all companies the admin has access to
+    const adminUserTenants = await prisma.userTenant.findMany({
+      where: {
+        userId: session.user?.id,
+        status: 'ACTIVE'
+      },
+      select: { companyId: true }
+    })
+    
+    const adminCompanyIds = adminUserTenants.map(ut => ut.companyId)
+    
     const users = await prisma.user.findMany({
       where: {
         userTenants: {
           some: {
-            companyId: companyId,
+            companyId: { in: adminCompanyIds },
             status: 'ACTIVE'
           }
         }
@@ -103,7 +113,24 @@ export async function POST(request: NextRequest) {
     const validatedData = createUserSchema.parse(body)
     
     const prisma = await getPrisma()
-    const adminCompanyId = session.user?.companyId
+    
+    // Get admin's current active company (most recent UserTenant)
+    const adminUserTenant = await prisma.userTenant.findFirst({
+      where: {
+        userId: session.user?.id,
+        status: 'ACTIVE'
+      },
+      orderBy: { startDate: 'desc' }
+    })
+    
+    if (!adminUserTenant) {
+      return NextResponse.json(
+        { error: 'Admin not associated with any company' },
+        { status: 400 }
+      )
+    }
+    
+    const adminCompanyId = adminUserTenant.companyId
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -143,7 +170,7 @@ export async function POST(request: NextRequest) {
       await tx.userTenant.create({
         data: {
           userId: user.id,
-          companyId: adminCompanyId!,
+          companyId: adminCompanyId,
           role: validatedData.role,
           startDate: new Date(),
         }
