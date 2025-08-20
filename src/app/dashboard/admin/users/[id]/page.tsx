@@ -347,44 +347,7 @@ export default function UserDetailPage() {
             </div>
           </div>
 
-          {/* Teams */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Users className="h-5 w-5 mr-2" />
-                Equipos Actuales
-              </h2>
-              <button
-                onClick={handleAssignTeam}
-                className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              {user.currentAssignments.teams.length > 0 ? (
-                user.currentAssignments.teams.map((team) => (
-                  <div key={team.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{team.name}</div>
-                      <div className="text-sm text-gray-500">Empresa: {team.company}</div>
-                      <div className="text-xs text-gray-400">
-                        Desde: {new Date(team.startDate).toLocaleDateString('es-ES')}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleEndAssignment('team', team.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Terminar
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">No hay equipos asignados</p>
-              )}
-            </div>
-          </div>
+
 
           {/* Projects */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
