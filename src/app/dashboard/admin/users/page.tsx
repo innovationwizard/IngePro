@@ -1,63 +1,46 @@
 'use client'
-import { User as UserType } from '@/types/admin'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Plus, Edit, Eye, User, Mail, Building, Calendar, Clock } from 'lucide-react'
+import { Plus, Edit, Eye, User, Mail, Building, Calendar, Clock, Copy, Check } from 'lucide-react'
 
-// Mock users data with relationship history
-const mockUsers = [
-  {
-    id: '1',
-    name: 'Juan Pérez',
-    email: 'worker@demo.com',
-    status: 'ACTIVE',
-    createdAt: '2024-01-15',
-    currentCompany: 'Empresa de Construcción Demo',
-    currentTeams: ['Equipo A', 'Equipo B'],
-    currentProjects: ['Proyecto Centro', 'Proyecto Norte'],
-    history: [
-      { company: 'Empresa de Construcción Demo', startDate: '2024-01-15', endDate: null, role: 'WORKER' },
-      { company: 'Constructora del Norte', startDate: '2023-06-01', endDate: '2023-12-31', role: 'WORKER' },
-    ]
-  },
-  {
-    id: '2',
-    name: 'María González',
-    email: 'supervisor@demo.com',
-    status: 'ACTIVE',
-    createdAt: '2024-01-10',
-    currentCompany: 'Empresa de Construcción Demo',
-    currentTeams: ['Equipo Supervisor'],
-    currentProjects: ['Proyecto Centro'],
-    history: [
-      { company: 'Empresa de Construcción Demo', startDate: '2024-01-10', endDate: null, role: 'SUPERVISOR' },
-    ]
-  },
-  {
-    id: '3',
-    name: 'Carlos Rodríguez',
-    email: 'admin@demo.com',
-    status: 'ACTIVE',
-    createdAt: '2024-01-05',
-    currentCompany: 'Empresa de Construcción Demo',
-    currentTeams: ['Equipo Admin'],
-    currentProjects: ['Todos los Proyectos'],
-    history: [
-      { company: 'Empresa de Construcción Demo', startDate: '2024-01-05', endDate: null, role: 'ADMIN' },
-    ]
-  },
-]
+interface User {
+  id: string
+  name: string
+  email: string
+  status: string
+  role: string
+  createdAt: string
+  currentCompany: string
+  currentTeams: string[]
+  currentProjects: string[]
+  hasPassword: boolean
+}
+
+interface InvitationData {
+  link: string
+  temporaryPassword: string
+  expiresAt: string
+}
 
 export default function AdminUsersPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [users, setUsers] = useState(mockUsers)
+  const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [invitationData, setInvitationData] = useState<InvitationData | null>(null)
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedPassword, setCopiedPassword] = useState(false)
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'WORKER' as 'WORKER' | 'SUPERVISOR' | 'ADMIN'
+  })
 
   // Check if user is admin
   if (session?.user?.role !== 'ADMIN') {
@@ -65,18 +48,106 @@ export default function AdminUsersPage() {
     return null
   }
 
+  // Fetch users on component mount
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/users')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data.users)
+      } else {
+        console.error('Failed to fetch users')
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleAddUser = () => {
+    setFormData({ name: '', email: '', role: 'WORKER' })
     setIsAddModalOpen(true)
   }
 
-  const handleEditUser = (user: UserType) => {
+  const handleEditUser = (user: User) => {
     setSelectedUser(user)
     setIsEditModalOpen(true)
   }
 
-  const handleViewHistory = (user: UserType) => {
-    setSelectedUser(user)
-    setIsHistoryModalOpen(true)
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setInvitationData(data.invitation)
+        setIsAddModalOpen(false)
+        fetchUsers() // Refresh user list
+      } else {
+        alert(data.error || 'Error creating user')
+      }
+    } catch (error) {
+      console.error('Error creating user:', error)
+      alert('Error creating user')
+    }
+  }
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedUser) return
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedUser.id,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setIsEditModalOpen(false)
+        setSelectedUser(null)
+        fetchUsers() // Refresh user list
+      } else {
+        alert(data.error || 'Error updating user')
+      }
+    } catch (error) {
+      console.error('Error updating user:', error)
+      alert('Error updating user')
+    }
+  }
+
+  const copyToClipboard = async (text: string, type: 'link' | 'password') => {
+    try {
+      await navigator.clipboard.writeText(text)
+      if (type === 'link') {
+        setCopiedLink(true)
+        setTimeout(() => setCopiedLink(false), 2000)
+      } else {
+        setCopiedPassword(true)
+        setTimeout(() => setCopiedPassword(false), 2000)
+      }
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -94,25 +165,50 @@ export default function AdminUsersPage() {
     )
   }
 
+  const getRoleBadge = (role: string) => {
+    const roleConfig = {
+      WORKER: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Trabajador' },
+      SUPERVISOR: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Supervisor' },
+      ADMIN: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Administrador' },
+    }
+    const config = roleConfig[role as keyof typeof roleConfig] || roleConfig.WORKER
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+        {config.label}
+      </span>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
-          <p className="text-gray-600">Los usuarios son permanentes y no se pueden eliminar</p>
+          <p className="text-gray-600">Invitar y gestionar usuarios de la empresa</p>
         </div>
         <button
           onClick={handleAddUser}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
-          <span>Agregar Usuario</span>
+          <span>Invitar Usuario</span>
         </button>
       </div>
 
       <div className="bg-white shadow-sm border rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Lista de Usuarios</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Usuarios de la Empresa</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -122,16 +218,16 @@ export default function AdminUsersPage() {
                   Usuario
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rol
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Estado
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Empresa Actual
+                  Contraseña
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Equipos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Proyectos
+                  Fecha de Creación
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -158,31 +254,20 @@ export default function AdminUsersPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    {getRoleBadge(user.role)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(user.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center">
-                      <Building className="h-3 w-3 mr-1 text-gray-400" />
-                      {user.currentCompany}
-                    </div>
+                    {user.hasPassword ? (
+                      <span className="text-green-600">✓ Configurada</span>
+                    ) : (
+                      <span className="text-orange-600">⚠ Pendiente</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex flex-wrap gap-1">
-                      {user.currentTeams.map((team: string, index: number) => (
-                        <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                          {team}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex flex-wrap gap-1">
-                      {user.currentProjects.map((project: string, index: number) => (
-                        <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                          {project}
-                        </span>
-                      ))}
-                    </div>
+                    {new Date(user.createdAt).toLocaleDateString('es-ES')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
@@ -214,30 +299,40 @@ export default function AdminUsersPage() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Agregar Usuario</h3>
-              <form className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Invitar Usuario</h3>
+              <form onSubmit={handleCreateUser} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre</label>
                   <input
                     type="text"
+                    required
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     placeholder="Nombre completo"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Email</label>
                   <input
                     type="email"
+                    required
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     placeholder="email@ejemplo.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Estado</label>
-                  <select className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0">
-                    <option value="ACTIVE">Activo</option>
-                    <option value="INACTIVE">Inactivo</option>
-                    <option value="SUSPENDED">Suspendido</option>
+                  <label className="block text-sm font-medium text-gray-700">Rol</label>
+                  <select 
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  >
+                    <option value="WORKER">Trabajador</option>
+                    <option value="SUPERVISOR">Supervisor</option>
+                    <option value="ADMIN">Administrador</option>
                   </select>
                 </div>
                 <div className="flex space-x-3">
@@ -252,7 +347,7 @@ export default function AdminUsersPage() {
                     type="submit"
                     className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                   >
-                    Agregar
+                    Invitar
                   </button>
                 </div>
               </form>
@@ -267,32 +362,37 @@ export default function AdminUsersPage() {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Usuario</h3>
-              <form className="space-y-4">
+              <form onSubmit={handleUpdateUser} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre</label>
                   <input
                     type="text"
+                    required
                     defaultValue={selectedUser.name}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Email</label>
                   <input
                     type="email"
+                    required
                     defaultValue={selectedUser.email}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Estado</label>
+                  <label className="block text-sm font-medium text-gray-700">Rol</label>
                   <select 
-                    defaultValue={selectedUser.status}
+                    defaultValue={selectedUser.role}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                   >
-                    <option value="ACTIVE">Activo</option>
-                    <option value="INACTIVE">Inactivo</option>
-                    <option value="SUSPENDED">Suspendido</option>
+                    <option value="WORKER">Trabajador</option>
+                    <option value="SUPERVISOR">Supervisor</option>
+                    <option value="ADMIN">Administrador</option>
                   </select>
                 </div>
                 <div className="flex space-x-3">
@@ -316,38 +416,63 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* User History Modal */}
-      {isHistoryModalOpen && selectedUser && (
+      {/* Invitation Success Modal */}
+      {invitationData && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-2xl shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Historial de {selectedUser.name}</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Usuario Invitado Exitosamente</h3>
               <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Historial de Empresas</h4>
-                  <div className="space-y-2">
-                    {selectedUser.history.map((entry: { company: string; role: string; startDate: string; endDate: string | null }, index: number) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
-                        <div>
-                          <div className="font-medium">{entry.company}</div>
-                          <div className="text-sm text-gray-500">{entry.role}</div>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          <div>{new Date(entry.startDate).toLocaleDateString('es-ES')}</div>
-                          <div>{entry.endDate ? new Date(entry.endDate).toLocaleDateString('es-ES') : 'Actual'}</div>
-                        </div>
-                      </div>
-                    ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Enlace de Invitación</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={invitationData.link}
+                      className="flex-1 block w-full border border-gray-300 rounded-md px-2 py-2 text-sm"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(invitationData.link, 'link')}
+                      className="p-2 text-gray-500 hover:text-gray-700"
+                      title="Copiar enlace"
+                    >
+                      {copiedLink ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setIsHistoryModalOpen(false)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-                  >
-                    Cerrar
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña Temporal</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={invitationData.temporaryPassword}
+                      className="flex-1 block w-full border border-gray-300 rounded-md px-2 py-2 text-sm font-mono"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(invitationData.temporaryPassword, 'password')}
+                      className="p-2 text-gray-500 hover:text-gray-700"
+                      title="Copiar contraseña"
+                    >
+                      {copiedPassword ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+                  <p className="font-medium">Instrucciones:</p>
+                  <ul className="mt-1 list-disc list-inside">
+                    <li>Comparte el enlace con el usuario</li>
+                    <li>El usuario debe usar la contraseña temporal para acceder</li>
+                    <li>Se le pedirá cambiar la contraseña en el primer acceso</li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => setInvitationData(null)}
+                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                >
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>

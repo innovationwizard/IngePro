@@ -1,130 +1,288 @@
 // src/app/api/users/route.ts
 // Production users route for CRUD operations
 
-import { NextResponse } from 'next/server';
-import { getPrisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { getPrisma } from '@/lib/prisma'
+import { hash } from 'bcryptjs'
+import { z } from 'zod'
+import crypto from 'crypto'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
-// Validation schema for user data
-const userSchema = z.object({
-  email: z.string().email('Invalid email address'),
+// Validation schema for creating users
+const createUserSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  role: z.enum(['WORKER', 'SUPERVISOR', 'ADMIN']).default('WORKER'),
-  companyId: z.string().optional(),
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']).default('ACTIVE'),
-});
+  email: z.string().email('Invalid email address'),
+  role: z.enum(['WORKER', 'SUPERVISOR', 'ADMIN']),
+  companyId: z.string().optional(), // Optional for cross-company invitations
+})
 
-// GET - List all users
-export async function GET() {
+// Validation schema for updating users
+const updateUserSchema = z.object({
+  id: z.string(),
+  name: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']).optional(),
+  role: z.enum(['WORKER', 'SUPERVISOR', 'ADMIN']).optional(),
+})
+
+// GET - List users for the admin's company
+export async function GET(request: NextRequest) {
   try {
-    const prisma = await getPrisma();
+    const session = await getServerSession(authOptions)
     
+    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const prisma = await getPrisma()
+    const companyId = session.user?.companyId
+
+    // Get users for the admin's company
     const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        company: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          }
-        },
-        _count: {
-          select: {
-            workLogs: true,
-            userTenants: true,
-            userTeams: true,
-            userProjects: true,
+      where: {
+        userTenants: {
+          some: {
+            companyId: companyId,
+            status: 'ACTIVE'
           }
         }
       },
+      include: {
+        userTenants: {
+          where: { companyId: companyId },
+          include: { company: true }
+        },
+        userTeams: {
+          where: { status: 'ACTIVE' },
+          include: { team: true }
+        },
+        userProjects: {
+          where: { status: 'ACTIVE' },
+          include: { project: true }
+        }
+      },
       orderBy: { createdAt: 'desc' }
-    });
-    
-    await prisma.$disconnect();
-    
-    return NextResponse.json({ users });
+    })
+
+    const formattedUsers = users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      status: user.status,
+      role: user.userTenants[0]?.role || user.role,
+      createdAt: user.createdAt,
+      currentCompany: user.userTenants[0]?.company.name || 'Unknown',
+      currentTeams: user.userTeams.map(ut => ut.team.name),
+      currentProjects: user.userProjects.map(up => up.project.name),
+      hasPassword: !!user.password
+    }))
+
+    return NextResponse.json({ users: formattedUsers })
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Error fetching users:', error)
     return NextResponse.json(
       { error: 'Failed to fetch users' },
       { status: 500 }
-    );
+    )
   }
 }
 
-// POST - Create a new user
-export async function POST(request: Request) {
+// POST - Create new user with invitation
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const validatedData = userSchema.parse(body);
+    const session = await getServerSession(authOptions)
     
-    const prisma = await getPrisma();
+    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const validatedData = createUserSchema.parse(body)
     
-    // Check if user email already exists
+    const prisma = await getPrisma()
+    const adminCompanyId = session.user?.companyId
+
+    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email }
-    });
-    
+    })
+
     if (existingUser) {
-      await prisma.$disconnect();
       return NextResponse.json(
-        { error: 'User email already exists' },
+        { error: 'User with this email already exists' },
         { status: 409 }
-      );
+      )
     }
-    
-    // Hash the password
-    const { hash } = await import('bcryptjs');
-    const hashedPassword = await hash(validatedData.password, 12);
-    
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        ...validatedData,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        status: true,
-        companyId: true,
-        createdAt: true,
-        updatedAt: true,
-      }
-    });
-    
-    await prisma.$disconnect();
-    
+
+    // Generate temporary password
+    const tempPassword = crypto.randomBytes(8).toString('hex')
+    const hashedPassword = await hash(tempPassword, 12)
+
+    // Generate invitation token
+    const invitationToken = crypto.randomBytes(32).toString('hex')
+    const invitationExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+
+    // Create user in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email: validatedData.email,
+          name: validatedData.name,
+          password: hashedPassword,
+          role: validatedData.role,
+          status: 'ACTIVE',
+          companyId: adminCompanyId,
+        }
+      })
+
+      // Create UserTenant relationship
+      await tx.userTenant.create({
+        data: {
+          userId: user.id,
+          companyId: adminCompanyId!,
+          role: validatedData.role,
+          startDate: new Date(),
+        }
+      })
+
+      // Create audit log
+      await tx.auditLog.create({
+        data: {
+          userId: session.user?.id || '',
+          action: 'CREATE',
+          entityType: 'USER',
+          entityId: user.id,
+          newValues: JSON.stringify({
+            email: user.email,
+            name: user.name,
+            role: validatedData.role,
+            status: user.status
+          })
+        }
+      })
+
+      return { user, tempPassword, invitationToken }
+    })
+
+    // Generate invitation link
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    const invitationLink = `${baseUrl}/auth/invitation?token=${result.invitationToken}&email=${validatedData.email}`
+
+    // TODO: Send email invitation (implement email service)
+    console.log('Invitation link:', invitationLink)
+    console.log('Temporary password:', result.tempPassword)
+
     return NextResponse.json({
       success: true,
-      user
-    }, { status: 201 });
-    
+      message: 'User created successfully',
+      user: {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        role: validatedData.role,
+        status: result.user.status
+      },
+      invitation: {
+        link: invitationLink,
+        temporaryPassword: result.tempPassword,
+        expiresAt: invitationExpires
+      }
+    })
+
   } catch (error) {
-    console.error('Error creating user:', error);
+    console.error('Error creating user:', error)
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
         { status: 400 }
-      );
+      )
     }
-    
+
     return NextResponse.json(
       { error: 'Failed to create user' },
       { status: 500 }
-    );
+    )
+  }
+}
+
+// PUT - Update user
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const validatedData = updateUserSchema.parse(body)
+    
+    const prisma = await getPrisma()
+
+    // Update user
+    const updatedUser = await prisma.user.update({
+      where: { id: validatedData.id },
+      data: {
+        ...(validatedData.name && { name: validatedData.name }),
+        ...(validatedData.email && { email: validatedData.email }),
+        ...(validatedData.status && { status: validatedData.status }),
+        ...(validatedData.role && { role: validatedData.role }),
+      }
+    })
+
+    // Update UserTenant role if role changed
+    if (validatedData.role) {
+      await prisma.userTenant.updateMany({
+        where: { 
+          userId: validatedData.id,
+          companyId: session.user?.companyId,
+          status: 'ACTIVE'
+        },
+        data: { role: validatedData.role }
+      })
+    }
+
+    // Create audit log
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user?.id || '',
+        action: 'UPDATE',
+        entityType: 'USER',
+        entityId: validatedData.id,
+        newValues: JSON.stringify(validatedData)
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'User updated successfully',
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        status: updatedUser.status
+      }
+    })
+
+  } catch (error) {
+    console.error('Error updating user:', error)
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to update user' },
+      { status: 500 }
+    )
   }
 }
