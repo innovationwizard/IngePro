@@ -3,18 +3,16 @@ import { Client } from 'pg';
 import { Signer } from '@aws-sdk/rds-signer';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 
-// Extract database connection details from DATABASE_URL
-const DATABASE_URL = process.env.DATABASE_URL!;
-const url = new URL(DATABASE_URL);
-
-const RDS_HOSTNAME = url.hostname;
-const RDS_PORT = parseInt(url.port);
-const RDS_DATABASE = url.pathname.slice(1); // Remove leading slash
-const RDS_USERNAME = url.username;
+// Extract database connection details from environment variables
+const RDS_HOSTNAME = process.env.DB_HOST!;
+const RDS_PORT = parseInt(process.env.DB_PORT || '5432');
+const RDS_DATABASE = process.env.DB_NAME!;
+const RDS_USERNAME = process.env.DB_USER!;
 const AWS_REGION = process.env.AWS_REGION!;
 const AWS_ROLE_ARN = process.env.AWS_ROLE_ARN!;
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET() {
   let client: Client | null = null;
