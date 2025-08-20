@@ -1,5 +1,5 @@
 // src/app/api/projects/route.ts
-// Production projects route for CRUD operations
+// Projects route for CRUD operations
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
