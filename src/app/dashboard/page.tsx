@@ -97,7 +97,7 @@ export default function DashboardPage() {
 
           // Calculate stats
           const totalUsers = companiesData.companies.reduce((acc: number, company: any) => 
-            acc + (company.userCount || 0), 0)
+            acc + (company.users || 0), 0)
           const totalProjects = projectsData.projects.length
           const totalWorkHours = workLogsData.workLogs.reduce((acc: number, log: any) => 
             acc + (log.duration || 0), 0) / 60 // Convert minutes to hours
@@ -112,9 +112,9 @@ export default function DashboardPage() {
             companies: companiesData.companies.map((company: any) => ({
               id: company.id,
               name: company.name,
-              userCount: company.userCount || 0,
-              projectCount: company.projectCount || 0,
-              totalHours: Math.round((company.totalHours || 0) * 10) / 10
+              userCount: company.users || 0,
+              projectCount: company.projects || 0,
+              totalHours: Math.round((company.workLogs || 0) / 60 * 10) / 10 // Convert workLogs to hours
             })),
             projects: projectsData.projects.map((project: any) => ({
               id: project.id,
