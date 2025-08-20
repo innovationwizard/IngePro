@@ -131,6 +131,8 @@ export const authOptions: NextAuthOptions = {
           // Get user's current company (most recent active tenant relationship)
           const currentTenant = user.userTenants[0]
           console.log('🏢 Current tenant:', currentTenant ? 'Found' : 'Not found');
+          console.log('👤 User direct role:', user.role);
+          console.log('🏢 Tenant role:', currentTenant?.role);
           
           // If no tenant relationship found (database connection issues), use direct user role
           if (!currentTenant) {
@@ -146,12 +148,15 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
-          console.log('✅ Auth successful with tenant');
+          // Use tenant role if available, otherwise fall back to user's direct role
+          const effectiveRole = currentTenant.role || user.role
+          console.log('✅ Auth successful with effective role:', effectiveRole);
+          
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: currentTenant.role,
+            role: effectiveRole,
             companyId: currentTenant.companyId,
             companySlug: currentTenant.company.slug
           }
