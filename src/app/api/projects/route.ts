@@ -36,21 +36,95 @@ export async function GET(request: NextRequest) {
     
     console.log('GET /api/projects - Session found for user:', session.user?.id, 'role:', session.user?.role)
 
-    console.log('GET /api/projects - Getting Prisma client')
     const prisma = await getPrisma()
-    console.log('GET /api/projects - Prisma client obtained')
     
-    // Simplified query to test basic functionality
-    console.log('GET /api/projects - Testing basic query')
-    const projects = await prisma.project.findMany({
-      take: 10, // Limit to 10 projects for testing
-      include: {
-        company: true
+    // Step 1: Determine current company context
+    let currentCompanyId = session.user?.companyId
+    
+    // If no company in session, try to get from UserTenant (most recent active)
+    if (!currentCompanyId) {
+      console.log('GET /api/projects - No company in session, checking UserTenant')
+      const userTenant = await prisma.userTenant.findFirst({
+        where: {
+          userId: session.user?.id,
+          status: 'ACTIVE'
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { companyId: true }
+      })
+      currentCompanyId = userTenant?.companyId
+    }
+    
+    console.log('GET /api/projects - Current company ID:', currentCompanyId)
+    
+    if (!currentCompanyId) {
+      console.log('GET /api/projects - No company context found')
+      return NextResponse.json({ projects: [] })
+    }
+    
+    // Step 2: Get user's role for current company
+    const userTenant = await prisma.userTenant.findFirst({
+      where: {
+        userId: session.user?.id,
+        companyId: currentCompanyId,
+        status: 'ACTIVE'
       },
-      orderBy: { createdAt: 'desc' }
+      select: { role: true }
     })
     
-    console.log('GET /api/projects - Basic query successful, found', projects.length, 'projects')
+    const userRole = userTenant?.role || 'WORKER'
+    console.log('GET /api/projects - User role for company:', userRole)
+    
+    // Step 3: Branch based on role
+    let projects
+    
+    if (userRole === 'ADMIN' || userRole === 'SUPERUSER') {
+      // ADMIN/SUPERUSER: Return all projects for the current company
+      console.log('GET /api/projects - ADMIN/SUPERUSER: Fetching all projects for company')
+      projects = await prisma.project.findMany({
+        where: {
+          companyId: currentCompanyId
+        },
+        include: {
+          company: true,
+          userProjects: {
+            include: {
+              user: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+    } else {
+      // WORKER/SUPERVISOR: Return only projects they're assigned to
+      console.log('GET /api/projects - WORKER/SUPERVISOR: Fetching assigned projects')
+      projects = await prisma.project.findMany({
+        where: {
+          companyId: currentCompanyId,
+          userProjects: {
+            some: {
+              userId: session.user?.id,
+              status: 'ACTIVE'
+            }
+          }
+        },
+        include: {
+          company: true,
+          userProjects: {
+            where: {
+              userId: session.user?.id,
+              status: 'ACTIVE'
+            },
+            include: {
+              user: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+    }
+    
+    console.log('GET /api/projects - Successfully returning', projects.length, 'projects')
     return NextResponse.json({ projects })
 
   } catch (error) {
@@ -78,26 +152,47 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
 
-    // Check if admin has access to the company
-    if (session.user?.role === 'ADMIN') {
+    // Step 1: Determine current company context
+    let currentCompanyId = session.user?.companyId
+    
+    // If no company in session, try to get from UserTenant (most recent active)
+    if (!currentCompanyId) {
       const userTenant = await prisma.userTenant.findFirst({
         where: {
           userId: session.user?.id,
-          companyId: validatedData.companyId,
           status: 'ACTIVE'
-        }
+        },
+        orderBy: { createdAt: 'desc' },
+        select: { companyId: true }
       })
-      
-      if (!userTenant) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
+      currentCompanyId = userTenant?.companyId
     }
+    
+    // Step 2: Get user's role for current company
+    const userTenant = await prisma.userTenant.findFirst({
+      where: {
+        userId: session.user?.id,
+        companyId: currentCompanyId,
+        status: 'ACTIVE'
+      },
+      select: { role: true }
+    })
+    
+    const userRole = userTenant?.role || 'WORKER'
+    
+    // Step 3: Check permissions
+    if (userRole !== 'ADMIN' && userRole !== 'SUPERUSER') {
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
+    }
+    
+    // Use current company context if no specific company provided
+    const targetCompanyId = validatedData.companyId || currentCompanyId
 
     // Check if project name already exists in the company
     const existingProject = await prisma.project.findFirst({
       where: {
         name: validatedData.name,
-        companyId: validatedData.companyId
+        companyId: targetCompanyId
       }
     })
 
@@ -108,14 +203,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('POST /api/projects - Creating project for company:', validatedData.companyId)
+    console.log('POST /api/projects - Creating project for company:', targetCompanyId)
     
     const project = await prisma.project.create({
       data: {
         name: validatedData.name,
         description: validatedData.description || '',
         status: validatedData.status,
-        companyId: validatedData.companyId
+        companyId: targetCompanyId
       },
       include: {
         company: true
