@@ -15,6 +15,7 @@ interface Project {
     id: string
     name: string
   }
+  userCount: number
   userProjects: Array<{
     id: string
     user: {
@@ -62,14 +63,33 @@ export default function ProjectsPage() {
 
   const fetchProjects = async () => {
     try {
-      console.log('Fetching projects...')
-      const response = await fetch('/api/projects')
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Projects data received:', data)
-        setProjects(data.projects || [])
+      console.log('Fetching projects and stats...')
+      const [projectsRes, statsRes] = await Promise.all([
+        fetch('/api/projects'),
+        fetch('/api/projects/stats')
+      ])
+      
+      if (projectsRes.ok && statsRes.ok) {
+        const [projectsData, statsData] = await Promise.all([
+          projectsRes.json(),
+          statsRes.json()
+        ])
+        
+        console.log('Projects data received:', projectsData)
+        console.log('Stats data received:', statsData)
+        
+        // Merge projects with their stats
+        const projectsWithStats = projectsData.projects.map((project: any) => {
+          const projectStats = statsData.projectStats.find((stats: any) => stats.id === project.id)
+          return {
+            ...project,
+            userCount: projectStats?.userCount || 0
+          }
+        })
+        
+        setProjects(projectsWithStats || [])
       } else {
-        console.error('Error fetching projects:', response.status, response.statusText)
+        console.error('Error fetching data:', projectsRes.status, statsRes.status)
         setProjects([]) // Set empty array on error
       }
     } catch (error) {
@@ -262,7 +282,7 @@ export default function ProjectsPage() {
               <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
                 <div className="flex items-center">
                   <Users className="h-4 w-4 mr-1" />
-                  {project.userProjects?.length || 0} usuarios
+                  {project.userCount || 0} usuarios
                 </div>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
@@ -270,18 +290,11 @@ export default function ProjectsPage() {
                 </div>
               </div>
               
-              {project.userProjects && project.userProjects.length > 0 && (
+              {project.userCount > 0 && (
                 <div className="space-y-1">
-                  {project.userProjects.slice(0, 3).map((userProject) => (
-                    <div key={userProject.id} className="text-xs text-gray-600">
-                      {userProject.user.name} ({userProject.role})
-                    </div>
-                  ))}
-                  {project.userProjects && project.userProjects.length > 3 && (
-                    <div className="text-xs text-gray-500">
-                      +{project.userProjects.length - 3} más
-                    </div>
-                  )}
+                  <div className="text-xs text-gray-600">
+                    {project.userCount} usuario{project.userCount !== 1 ? 's' : ''} asignado{project.userCount !== 1 ? 's' : ''}
+                  </div>
                 </div>
               )}
             </div>
