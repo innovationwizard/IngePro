@@ -56,7 +56,7 @@ export default function ProjectsPage() {
   }
 
   // Check if user has permission
-  if (!['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+  if (!['ADMIN', 'SUPERUSER', 'SUPERVISOR'].includes(session.user?.role || '')) {
     router.push('/dashboard')
     return null
   }
