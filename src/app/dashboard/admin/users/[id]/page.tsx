@@ -538,39 +538,7 @@ export default function UserDetailPage() {
         </div>
       )}
 
-      {isAssignTeamModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Asignar Equipo</h3>
-              <p className="text-gray-600 mb-4">Funcionalidad en desarrollo</p>
-              <button
-                onClick={() => setIsAssignTeamModalOpen(false)}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {isAssignProjectModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Asignar Proyecto</h3>
-              <p className="text-gray-600 mb-4">Funcionalidad en desarrollo</p>
-              <button
-                onClick={() => setIsAssignProjectModalOpen(false)}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
