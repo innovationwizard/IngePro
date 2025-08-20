@@ -286,18 +286,11 @@ export default function ProjectsPage() {
               )}
             </div>
           </div>
-        ))}
-      </div>
-
-      {(!projects || projects.length === 0) && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="text-center py-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No hay proyectos
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Crea tu primer proyecto para comenzar.
-            </p>
+        )) : (
+          <div className="col-span-full text-center py-8">
+            <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay proyectos</h3>
+            <p className="text-gray-500 mb-4">Crea tu primer proyecto para comenzar.</p>
             <button
               onClick={handleCreateProject}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
@@ -305,8 +298,10 @@ export default function ProjectsPage() {
               Crear Proyecto
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+
 
       {/* Create/Edit Project Modal */}
       {isModalOpen && (
