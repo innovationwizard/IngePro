@@ -38,105 +38,18 @@ export async function GET(request: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Step 1: Determine current company context
-    let currentCompanyId = session.user?.companyId
+    // Simple query to get all projects for now
+    console.log('GET /api/projects - Fetching all projects')
     
-    console.log('GET /api/projects - Session company ID:', currentCompanyId)
-    
-    // If no company in session, try to get from UserTenant (most recent active)
-    if (!currentCompanyId) {
-      console.log('GET /api/projects - No company in session, checking UserTenant')
-      const userTenant = await prisma.userTenant.findFirst({
-        where: {
-          userId: session.user?.id,
-          status: 'ACTIVE'
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { companyId: true }
-      })
-      currentCompanyId = userTenant?.companyId
-      console.log('GET /api/projects - UserTenant company ID:', currentCompanyId)
-    }
-    
-    // Step 2: Get user's role for current company
-    let userRole = 'WORKER'
-    
-    if (currentCompanyId) {
-      const userTenant = await prisma.userTenant.findFirst({
-        where: {
-          userId: session.user?.id,
-          companyId: currentCompanyId,
-          status: 'ACTIVE'
-        },
-        select: { role: true }
-      })
-      
-      userRole = userTenant?.role || 'WORKER'
-      console.log('GET /api/projects - User role for company:', userRole)
-    } else {
-      console.log('GET /api/projects - No company context found, using session role:', session.user?.role)
-      userRole = session.user?.role || 'WORKER'
-    }
-    
-    // Step 3: Branch based on role
-    let projects
-    
-    if (userRole === 'ADMIN' || userRole === 'SUPERUSER') {
-      // ADMIN/SUPERUSER: Return all projects for the current company (or all if no company context)
-      console.log('GET /api/projects - ADMIN/SUPERUSER: Fetching projects')
-      const whereClause = currentCompanyId ? { companyId: currentCompanyId } : {}
-      
-      projects = await prisma.project.findMany({
-        where: whereClause,
-        include: {
-          company: true,
-          userProjects: {
-            include: {
-              user: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-    } else {
-      // WORKER/SUPERVISOR: Return only projects they're assigned to
-      console.log('GET /api/projects - WORKER/SUPERVISOR: Fetching assigned projects')
-      const whereClause = currentCompanyId ? {
-        companyId: currentCompanyId,
-        userProjects: {
-          some: {
-            userId: session.user?.id,
-            status: 'ACTIVE'
-          }
-        }
-      } : {
-        userProjects: {
-          some: {
-            userId: session.user?.id,
-            status: 'ACTIVE'
-          }
-        }
-      }
-      
-      projects = await prisma.project.findMany({
-        where: whereClause,
-        include: {
-          company: true,
-          userProjects: {
-            where: {
-              userId: session.user?.id,
-              status: 'ACTIVE'
-            },
-            include: {
-              user: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-    }
+    const projects = await prisma.project.findMany({
+      include: {
+        company: true
+      },
+      orderBy: { createdAt: 'desc' }
+    })
     
     console.log('GET /api/projects - Successfully returning', projects.length, 'projects')
+    
     return NextResponse.json({ projects })
 
   } catch (error) {
@@ -198,7 +111,14 @@ export async function POST(request: NextRequest) {
     }
     
     // Use current company context if no specific company provided
-    const targetCompanyId = validatedData.companyId || currentCompanyId
+    const targetCompanyId = validatedData.companyId || currentCompanyId || ''
+    
+    if (!targetCompanyId) {
+      return NextResponse.json(
+        { error: 'No company context available' },
+        { status: 400 }
+      )
+    }
 
     // Check if project name already exists in the company
     const existingProject = await prisma.project.findFirst({
@@ -242,7 +162,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }
@@ -312,7 +232,7 @@ export async function PUT(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }
