@@ -330,6 +330,151 @@ export default function DashboardPage() {
     )
   }
 
+  // Supervisor Dashboard
+  if (session?.user?.role === 'SUPERVISOR') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Panel de Supervisión
+            </h1>
+            <p className="text-gray-600">
+              {currentTime.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold text-blue-600">
+              {currentTime.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+              })}
+            </div>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <>
+            {/* Key Metrics for Supervisor */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Usuarios Asignados</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Target className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Mis Proyectos</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalProjects || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <Clock className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Horas del Equipo</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalWorkHours || 0}h</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Activity className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Sesiones Activas</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.activeWorkLogs || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Projects Overview for Supervisor */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Target className="h-5 w-5 mr-2" />
+                Mis Proyectos
+              </h2>
+              <div className="space-y-4">
+                {stats?.projects.slice(0, 5).map((project) => (
+                  <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">{project.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {project.company} • {project.userCount} usuarios
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900">{project.totalHours}h</div>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        project.status === 'ACTIVE' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {project.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Activity for Supervisor */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Calendar className="h-5 w-5 mr-2" />
+                Actividad Reciente del Equipo
+              </h2>
+              <div className="space-y-3">
+                {stats?.recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Activity className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">{activity.description}</div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(activity.timestamp).toLocaleString('es-ES')}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
+
   // Worker Dashboard (existing functionality)
   return (
     <div className="space-y-6">
