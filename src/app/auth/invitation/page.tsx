@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { HardHat, Eye, EyeOff } from 'lucide-react'
 
-export default function InvitationPage() {
+function InvitationForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session } = useSession()
@@ -217,5 +217,29 @@ export default function InvitationPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="max-w-md w-full mx-auto p-6">
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center">
+            <HardHat className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Cargando...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function InvitationPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <InvitationForm />
+    </Suspense>
   )
 }
