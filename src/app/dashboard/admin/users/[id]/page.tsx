@@ -49,6 +49,7 @@ export default function UserDetailPage() {
     companyId: '',
     role: 'WORKER' as 'WORKER' | 'SUPERVISOR' | 'ADMIN'
   })
+  const [availableCompanies, setAvailableCompanies] = useState<Array<{id: string, name: string}>>([])
 
   // Check if user is admin
   if (session?.user?.role !== 'ADMIN') {
@@ -78,7 +79,22 @@ export default function UserDetailPage() {
     }
   }
 
+  const fetchAvailableCompanies = async () => {
+    try {
+      const response = await fetch('/api/companies')
+      if (response.ok) {
+        const data = await response.json()
+        setAvailableCompanies(data.companies || [])
+      } else {
+        console.error('Error fetching companies')
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error)
+    }
+  }
+
   const handleOpenAssignCompanyModal = () => {
+    fetchAvailableCompanies() // Fetch companies when opening modal
     setIsAssignCompanyModalOpen(true)
   }
 
@@ -404,8 +420,11 @@ export default function UserDetailPage() {
                     onChange={(e) => setAssignFormData({ ...assignFormData, companyId: e.target.value })}
                   >
                     <option value="">Seleccionar empresa</option>
-                    <option value="cmek5g0qj0000k304uutkp1e5">E 20 Aug</option>
-                    {/* TODO: Fetch available companies dynamically */}
+                    {availableCompanies.map(company => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
