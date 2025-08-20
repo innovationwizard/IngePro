@@ -94,8 +94,11 @@ export default function AdminTenantsPage() {
 
       if (response.ok) {
         setIsAddModalOpen(false)
-        fetchCompanies()
-        setMessage('Empresa creada exitosamente')
+        setMessage('Empresa creada exitosamente. Redirigiendo...')
+        // Refresh the page to update the session and show the new company
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
       } else {
         setMessage(data.error || 'Error al crear empresa')
       }

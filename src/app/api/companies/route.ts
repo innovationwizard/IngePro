@@ -125,25 +125,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create company
-    const company = await prisma.company.create({
-      data: {
-        name: validatedData.name,
-        nameEs: validatedData.nameEs,
-        slug: validatedData.slug,
-        status: validatedData.status,
+    // Create company in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create company
+      const company = await tx.company.create({
+        data: {
+          name: validatedData.name,
+          nameEs: validatedData.nameEs,
+          slug: validatedData.slug,
+          status: validatedData.status,
+        }
+      })
+
+      // If admin is creating the company, associate them with it
+      if (session.user?.role === 'ADMIN') {
+        // Create UserTenant relationship for the admin
+        await tx.userTenant.create({
+          data: {
+            userId: session.user.id,
+            companyId: company.id,
+            role: 'ADMIN',
+            startDate: new Date(),
+          }
+        })
+
+        // Update user's companyId to the new company
+        await tx.user.update({
+          where: { id: session.user.id },
+          data: { companyId: company.id }
+        })
       }
+
+      return company
     })
 
     return NextResponse.json({
       success: true,
       message: 'Company created successfully',
       company: {
-        id: company.id,
-        name: company.name,
-        nameEs: company.nameEs,
-        slug: company.slug,
-        status: company.status
+        id: result.id,
+        name: result.name,
+        nameEs: result.nameEs,
+        slug: result.slug,
+        status: result.status
       }
     })
 
