@@ -290,13 +290,7 @@ export default function ProjectsPage() {
                 </div>
               </div>
               
-              {project.userCount > 0 && (
-                <div className="space-y-1">
-                  <div className="text-xs text-gray-600">
-                    {project.userCount} usuario{project.userCount !== 1 ? 's' : ''} asignado{project.userCount !== 1 ? 's' : ''}
-                  </div>
-                </div>
-              )}
+
             </div>
           </div>
         )) : (
