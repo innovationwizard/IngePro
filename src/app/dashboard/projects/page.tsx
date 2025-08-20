@@ -70,9 +70,11 @@ export default function ProjectsPage() {
         setProjects(data.projects || [])
       } else {
         console.error('Error fetching projects:', response.status, response.statusText)
+        setProjects([]) // Set empty array on error
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
+      setProjects([]) // Set empty array on error
     } finally {
       setIsLoading(false)
     }
@@ -234,7 +236,7 @@ export default function ProjectsPage() {
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
+        {projects && projects.length > 0 ? projects.map((project) => (
           <div key={project.id} className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
@@ -260,7 +262,7 @@ export default function ProjectsPage() {
               <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
                 <div className="flex items-center">
                   <Users className="h-4 w-4 mr-1" />
-                  {project.userProjects.length} usuarios
+                  {project.userProjects?.length || 0} usuarios
                 </div>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
@@ -268,14 +270,14 @@ export default function ProjectsPage() {
                 </div>
               </div>
               
-              {project.userProjects.length > 0 && (
+              {project.userProjects && project.userProjects.length > 0 && (
                 <div className="space-y-1">
                   {project.userProjects.slice(0, 3).map((userProject) => (
                     <div key={userProject.id} className="text-xs text-gray-600">
                       {userProject.user.name} ({userProject.role})
                     </div>
                   ))}
-                  {project.userProjects.length > 3 && (
+                  {project.userProjects && project.userProjects.length > 3 && (
                     <div className="text-xs text-gray-500">
                       +{project.userProjects.length - 3} más
                     </div>
@@ -287,7 +289,7 @@ export default function ProjectsPage() {
         ))}
       </div>
 
-      {projects.length === 0 && (
+      {(!projects || projects.length === 0) && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="text-center py-8">
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -343,11 +345,13 @@ export default function ProjectsPage() {
                     onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
                   >
                     <option value="">Seleccionar empresa</option>
-                    {companies.map(company => (
+                    {companies && companies.length > 0 ? companies.map(company => (
                       <option key={company.id} value={company.id}>
                         {company.name}
                       </option>
-                    ))}
+                    )) : (
+                      <option value="" disabled>No hay empresas disponibles</option>
+                    )}
                   </select>
                 </div>
                 <div>

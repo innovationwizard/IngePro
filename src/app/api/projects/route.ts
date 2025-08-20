@@ -103,7 +103,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    console.log('Returning projects:', projects.length, 'projects for user:', session.user?.id, 'role:', session.user?.role)
     return NextResponse.json({ projects })
 
   } catch (error) {
