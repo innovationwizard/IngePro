@@ -105,7 +105,8 @@ export const authOptions: NextAuthOptions = {
                   orderBy: { startDate: 'desc' },
                   take: 1
                 }
-              }
+              },
+              cacheStrategy: { ttl: 300 } // Cache for 5 minutes
             });
           });
 
