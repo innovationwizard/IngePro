@@ -26,15 +26,23 @@ const updateProjectSchema = z.object({
 // GET - Get projects for the user's companies
 export async function GET(request: NextRequest) {
   try {
+    console.log('GET /api/projects - Starting request')
     const session = await getServerSession(authOptions)
     
     if (!session) {
+      console.log('GET /api/projects - No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    
+    console.log('GET /api/projects - Session found for user:', session.user?.id, 'role:', session.user?.role)
 
+    console.log('GET /api/projects - Getting Prisma client')
     const prisma = await getPrisma()
+    console.log('GET /api/projects - Prisma client obtained')
+    
     const { searchParams } = new URL(request.url)
     const companyId = searchParams.get('companyId')
+    console.log('GET /api/projects - Company ID from params:', companyId)
 
     let projects
 
@@ -103,12 +111,14 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    console.log('GET /api/projects - Successfully returning', projects.length, 'projects')
     return NextResponse.json({ projects })
 
   } catch (error) {
     console.error('Error fetching projects:', error)
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
-      { error: 'Failed to fetch projects' },
+      { error: 'Failed to fetch projects', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

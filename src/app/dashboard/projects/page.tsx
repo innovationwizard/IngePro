@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Building, Users, Calendar } from 'lucide-react'
+import { Plus, Edit, Trash2, Building, Users, Calendar, Target } from 'lucide-react'
 
 interface Project {
   id: string
