@@ -1,49 +1,37 @@
-import { Tenant } from '@/types/admin'
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Plus, Edit, Trash2, Building, Users, Calendar } from 'lucide-react'
 
-// Mock tenants data
-const mockTenants = [
-  {
-    id: '1',
-    name: 'Empresa de Construcción Demo',
-    nameEs: 'Empresa de Construcción Demo',
-    users: 3,
-    projects: 2,
-    status: 'active',
-    createdAt: '2024-01-15',
-  },
-  {
-    id: '2',
-    name: 'Constructora del Norte',
-    nameEs: 'Constructora del Norte',
-    users: 12,
-    projects: 5,
-    status: 'active',
-    createdAt: '2024-01-10',
-  },
-  {
-    id: '3',
-    name: 'Edificaciones Sur',
-    nameEs: 'Edificaciones Sur',
-    users: 8,
-    projects: 3,
-    status: 'inactive',
-    createdAt: '2024-01-05',
-  },
-]
+interface Company {
+  id: string
+  name: string
+  nameEs?: string
+  slug: string
+  status: string
+  createdAt: string
+  users: number
+  projects: number
+  workLogs: number
+}
 
 export default function AdminTenantsPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [tenants, setTenants] = useState(mockTenants)
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [selectedTenant, setSelectedTenant] = useState<any>(null)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [message, setMessage] = useState('')
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    nameEs: '',
+    status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'TRIAL'
+  })
 
   // Check if user is admin
   if (session?.user?.role !== 'ADMIN') {
@@ -51,30 +39,125 @@ export default function AdminTenantsPage() {
     return null
   }
 
-  const handleAddTenant = () => {
+  // Fetch companies on component mount
+  useEffect(() => {
+    fetchCompanies()
+  }, [])
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch('/api/companies')
+      if (response.ok) {
+        const data = await response.json()
+        setCompanies(data.companies)
+      } else {
+        console.error('Failed to fetch companies')
+        setMessage('Error al cargar las empresas')
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error)
+      setMessage('Error de conexión')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAddCompany = () => {
+    setFormData({ name: '', nameEs: '', status: 'ACTIVE' })
     setIsAddModalOpen(true)
   }
 
-  const handleEditTenant = (tenant: Tenant) => {
-    setSelectedTenant(tenant)
+  const handleEditCompany = (company: Company) => {
+    setSelectedCompany(company)
+    setFormData({
+      name: company.name,
+      nameEs: company.nameEs || '',
+      status: company.status as any
+    })
     setIsEditModalOpen(true)
   }
 
-  const handleDeleteTenant = (tenantId: string) => {
-    if (confirm('¿Está seguro de que desea eliminar esta empresa? Esta acción no se puede deshacer.')) {
-      setTenants(tenants.filter(tenant => tenant.id !== tenantId))
+  const handleCreateCompany = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const response = await fetch('/api/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          slug: formData.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-')
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setIsAddModalOpen(false)
+        fetchCompanies()
+        setMessage('Empresa creada exitosamente')
+      } else {
+        setMessage(data.error || 'Error al crear empresa')
+      }
+    } catch (error) {
+      console.error('Error creating company:', error)
+      setMessage('Error de conexión')
+    }
+  }
+
+  const handleUpdateCompany = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedCompany) return
+
+    try {
+      const response = await fetch('/api/companies', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedCompany.id,
+          ...formData
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setIsEditModalOpen(false)
+        setSelectedCompany(null)
+        fetchCompanies()
+        setMessage('Empresa actualizada exitosamente')
+      } else {
+        setMessage(data.error || 'Error al actualizar empresa')
+      }
+    } catch (error) {
+      console.error('Error updating company:', error)
+      setMessage('Error de conexión')
     }
   }
 
   const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      ACTIVE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Activo' },
+      INACTIVE: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Inactivo' },
+      SUSPENDED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Suspendido' },
+      TRIAL: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Prueba' },
+    }
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.INACTIVE
+    
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        status === 'active' 
-          ? 'bg-green-100 text-green-800' 
-          : 'bg-red-100 text-red-800'
-      }`}>
-        {status === 'active' ? 'Activo' : 'Inactivo'}
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+        {config.label}
       </span>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
     )
   }
 
@@ -85,14 +168,22 @@ export default function AdminTenantsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Empresas</h1>
           <p className="text-gray-600">Administrar empresas y organizaciones</p>
         </div>
-        <button
-          onClick={handleAddTenant}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Agregar Empresa</span>
-        </button>
+        {session?.user?.role === 'SUPERUSER' && (
+          <button
+            onClick={handleAddCompany}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Agregar Empresa</span>
+          </button>
+        )}
       </div>
+
+      {message && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
+          {message}
+        </div>
+      )}
 
       <div className="bg-white shadow-sm border rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -123,8 +214,8 @@ export default function AdminTenantsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {tenants.map((tenant) => (
-                <tr key={tenant.id} className="hover:bg-gray-50">
+              {companies.map((company) => (
+                <tr key={company.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
@@ -133,44 +224,38 @@ export default function AdminTenantsPage() {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{tenant.nameEs}</div>
-                        <div className="text-sm text-gray-500">ID: {tenant.id}</div>
+                        <div className="text-sm font-medium text-gray-900">{company.nameEs || company.name}</div>
+                        <div className="text-sm text-gray-500">ID: {company.id}</div>
+                        <div className="text-xs text-gray-400">Slug: {company.slug}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Users className="h-4 w-4 text-gray-400 mr-1" />
-                      <span className="text-sm text-gray-900">{tenant.users}</span>
+                      <span className="text-sm text-gray-900">{company.users}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 text-gray-400 mr-1" />
-                      <span className="text-sm text-gray-900">{tenant.projects}</span>
+                      <span className="text-sm text-gray-900">{company.projects}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(tenant.status)}
+                    {getStatusBadge(company.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(tenant.createdAt).toLocaleDateString('es-ES')}
+                    {new Date(company.createdAt).toLocaleDateString('es-ES')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => handleEditTenant(tenant)}
+                        onClick={() => handleEditCompany(company)}
                         className="text-blue-600 hover:text-blue-900"
                         title="Editar"
                       >
                         <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTenant(tenant.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -181,19 +266,22 @@ export default function AdminTenantsPage() {
         </div>
       </div>
 
-      {/* Add Tenant Modal */}
+      {/* Add Company Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Agregar Empresa</h3>
-              <form className="space-y-4">
+              <form onSubmit={handleCreateCompany} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre de la Empresa</label>
                   <input
                     type="text"
+                    required
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     placeholder="Nombre de la empresa"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div>
@@ -202,13 +290,21 @@ export default function AdminTenantsPage() {
                     type="text"
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     placeholder="Nombre en español"
+                    value={formData.nameEs}
+                    onChange={(e) => setFormData({ ...formData, nameEs: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Estado</label>
-                  <select className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option value="active">Activo</option>
-                    <option value="inactive">Inactivo</option>
+                  <select 
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                  >
+                    <option value="ACTIVE">Activo</option>
+                    <option value="INACTIVE">Inactivo</option>
+                    <option value="SUSPENDED">Suspendido</option>
+                    <option value="TRIAL">Prueba</option>
                   </select>
                 </div>
                 <div className="flex space-x-3">
@@ -232,37 +328,43 @@ export default function AdminTenantsPage() {
         </div>
       )}
 
-      {/* Edit Tenant Modal */}
-      {isEditModalOpen && selectedTenant && (
+      {/* Edit Company Modal */}
+      {isEditModalOpen && selectedCompany && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Empresa</h3>
-              <form className="space-y-4">
+              <form onSubmit={handleUpdateCompany} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre de la Empresa</label>
                   <input
                     type="text"
-                    defaultValue={selectedTenant.name}
+                    required
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre en Español</label>
                   <input
                     type="text"
-                    defaultValue={selectedTenant.nameEs}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={formData.nameEs}
+                    onChange={(e) => setFormData({ ...formData, nameEs: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Estado</label>
                   <select 
-                    defaultValue={selectedTenant.status}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                   >
-                    <option value="active">Activo</option>
-                    <option value="inactive">Inactivo</option>
+                    <option value="ACTIVE">Activo</option>
+                    <option value="INACTIVE">Inactivo</option>
+                    <option value="SUSPENDED">Suspendido</option>
+                    <option value="TRIAL">Prueba</option>
                   </select>
                 </div>
                 <div className="flex space-x-3">
