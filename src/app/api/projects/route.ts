@@ -30,42 +30,48 @@ export async function GET(req: NextRequest) {
 
     const prisma = await getPrisma();
     
-    // Step 1: Get company context from session or UserTenant
-    let companyId = session.user?.companyId;
+    // Step 1: Determine company scope based on role
+    let companyIds: string[] = [];
     
-    if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+    if (session.user.role === 'SUPERUSER') {
+      // SUPERUSER sees all projects - no company filter needed
+      console.log('DEBUG: SUPERUSER - getting all projects');
+    } else if (session.user.role === 'ADMIN') {
+      // ADMIN sees projects from ALL their companies
+      const userTenants = await prisma.userTenant.findMany({
         where: {
           userId: session.user.id,
           status: 'ACTIVE'
         },
-        orderBy: { startDate: 'desc' },
         select: { companyId: true }
       });
-      companyId = userTenant?.companyId;
+      companyIds = userTenants.map(ut => ut.companyId);
+      console.log('DEBUG: ADMIN - companies:', companyIds);
+    } else {
+      // SUPERVISOR/WORKER sees projects from their primary company
+      const primaryCompanyId = session.user?.companyId;
+      if (primaryCompanyId) {
+        companyIds = [primaryCompanyId];
+        console.log('DEBUG: SUPERVISOR/WORKER - company:', primaryCompanyId);
+      }
     }
-    
-    console.log('DEBUG: Company context:', companyId, 'User role:', session.user.role);
     
     // Step 2: Build query based on role
     let whereClause: any = {};
     
-    if (session.user.role === 'SUPERUSER') {
-      // SUPERUSER sees all projects
-      console.log('DEBUG: SUPERUSER - getting all projects');
-    } else if (companyId) {
-      // ADMIN and SUPERVISOR see projects from their company
-      whereClause.companyId = companyId;
-      console.log('DEBUG: Company-scoped query for company:', companyId);
-    } else {
-      // No company context, return empty
-      console.log('DEBUG: No company context, returning empty');
+    if (companyIds.length > 0) {
+      whereClause.companyId = { in: companyIds };
+      console.log('DEBUG: Filtering by companies:', companyIds);
+    } else if (session.user.role !== 'SUPERUSER') {
+      // No companies found for non-SUPERUSER, return empty
+      console.log('DEBUG: No companies found, returning empty');
       return NextResponse.json({
         projects: [],
         debug: { 
-          message: 'No company context',
+          message: 'No companies found',
           projectCount: 0,
-          userRole: session.user.role
+          userRole: session.user.role,
+          companyIds: companyIds
         }
       });
     }
@@ -86,7 +92,7 @@ export async function GET(req: NextRequest) {
         message: 'Role-based query working',
         projectCount: projects.length,
         userRole: session.user.role,
-        companyId: companyId
+        companyIds: companyIds
       }
     });
 
