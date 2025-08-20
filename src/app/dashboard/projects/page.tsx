@@ -62,12 +62,14 @@ export default function ProjectsPage() {
 
   const fetchProjects = async () => {
     try {
+      console.log('Fetching projects...')
       const response = await fetch('/api/projects')
       if (response.ok) {
         const data = await response.json()
+        console.log('Projects data received:', data)
         setProjects(data.projects || [])
       } else {
-        console.error('Error fetching projects')
+        console.error('Error fetching projects:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
@@ -139,7 +141,23 @@ export default function ProjectsPage() {
       if (response.ok) {
         setMessage(data.message)
         setIsModalOpen(false)
-        fetchProjects() // Refresh projects
+        setFormData({
+          id: '',
+          name: '',
+          description: '',
+          companyId: '',
+          status: 'ACTIVE'
+        })
+        
+        // Add the new project to the local state immediately
+        if (data.project && !isEditMode) {
+          setProjects(prevProjects => [data.project, ...prevProjects])
+        }
+        
+        // Also refresh from server to ensure consistency
+        setTimeout(() => {
+          fetchProjects()
+        }, 500)
       } else {
         setMessage(data.error || 'Error al procesar el proyecto')
       }
