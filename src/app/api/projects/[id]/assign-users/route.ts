@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { getPrisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 const assignUsersSchema = z.object({
@@ -19,6 +19,7 @@ export async function POST(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    const prisma = await getPrisma();
     const projectId = params.id;
     const body = await request.json();
     const { userIds, role } = assignUsersSchema.parse(body);

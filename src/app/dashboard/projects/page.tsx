@@ -96,8 +96,8 @@ export default function ProjectsPage() {
     try {
       console.log('Fetching projects and stats...')
       const [projectsRes, statsRes] = await Promise.all([
-        fetch('/api/projects'),
-        fetch('/api/projects/stats')
+        fetch('/api/projects', { credentials: 'include' }),
+        fetch('/api/projects/stats', { credentials: 'include' })
       ])
       
       if (projectsRes.ok && statsRes.ok) {
@@ -133,7 +133,7 @@ export default function ProjectsPage() {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch('/api/companies')
+      const response = await fetch('/api/companies', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setCompanies(data.companies || [])
@@ -147,7 +147,9 @@ export default function ProjectsPage() {
 
   const fetchAvailableUsers = async (companyId: string) => {
     try {
-      const response = await fetch(`/api/users?companyId=${companyId}`);
+      const response = await fetch(`/api/users?companyId=${companyId}`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         // Filter users based on role permissions
@@ -170,7 +172,7 @@ export default function ProjectsPage() {
     setSelectedProject(project);
     setSelectedUsers([]);
     setSelectedRole('WORKER');
-    fetchAvailableUsers(project.company.id);
+    fetchAvailableUsers(project.companyId);
     setIsAssignmentModalOpen(true);
   };
 
@@ -181,6 +183,7 @@ export default function ProjectsPage() {
       const response = await fetch(`/api/projects/${selectedProject.id}/assign-users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           userIds: selectedUsers,
           role: selectedRole
@@ -206,6 +209,7 @@ export default function ProjectsPage() {
       const response = await fetch(`/api/projects/${projectId}/unassign-user`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ userId })
       });
 
@@ -263,6 +267,7 @@ export default function ProjectsPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(body)
       })
 

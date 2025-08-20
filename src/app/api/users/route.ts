@@ -33,36 +33,84 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+    if (!session || !['ADMIN', 'SUPERUSER', 'SUPERVISOR'].includes(session.user?.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const prisma = await getPrisma()
-    const companyId = session.user?.companyId
-
-    // Get users for all companies the admin has access to
-    const adminUserTenants = await prisma.userTenant.findMany({
-      where: {
-        userId: session.user?.id,
-        status: 'ACTIVE'
-      },
-      select: { companyId: true }
-    })
     
-    const adminCompanyIds = adminUserTenants.map(ut => ut.companyId)
+    // Check if a specific companyId is requested
+    const { searchParams } = new URL(request.url)
+    const requestedCompanyId = searchParams.get('companyId')
+    
+    let targetCompanyIds: string[] = []
+    
+    if (requestedCompanyId) {
+      // If a specific company is requested, check if user has access to it
+      if (session.user?.role === 'SUPERUSER') {
+        targetCompanyIds = [requestedCompanyId]
+      } else if (session.user?.role === 'ADMIN') {
+        const adminUserTenant = await prisma.userTenant.findFirst({
+          where: {
+            userId: session.user?.id,
+            companyId: requestedCompanyId,
+            role: 'ADMIN',
+            status: 'ACTIVE'
+          }
+        })
+        if (adminUserTenant) {
+          targetCompanyIds = [requestedCompanyId]
+        }
+      } else if (session.user?.role === 'SUPERVISOR') {
+        const supervisorUserTenant = await prisma.userTenant.findFirst({
+          where: {
+            userId: session.user?.id,
+            companyId: requestedCompanyId,
+            status: 'ACTIVE'
+          }
+        })
+        if (supervisorUserTenant) {
+          targetCompanyIds = [requestedCompanyId]
+        }
+      }
+    } else {
+      // If no specific company requested, get all companies user has access to
+      if (session.user?.role === 'SUPERUSER') {
+        // SUPERUSER can see all companies
+        const allCompanies = await prisma.company.findMany({
+          where: { status: 'ACTIVE' },
+          select: { id: true }
+        })
+        targetCompanyIds = allCompanies.map(c => c.id)
+      } else {
+        // ADMIN/SUPERVISOR see companies they're associated with
+        const userTenants = await prisma.userTenant.findMany({
+          where: {
+            userId: session.user?.id,
+            status: 'ACTIVE'
+          },
+          select: { companyId: true }
+        })
+        targetCompanyIds = userTenants.map(ut => ut.companyId)
+      }
+    }
+    
+    if (targetCompanyIds.length === 0) {
+      return NextResponse.json({ users: [] })
+    }
     
     const users = await prisma.user.findMany({
       where: {
         userTenants: {
           some: {
-            companyId: { in: adminCompanyIds },
+            companyId: { in: targetCompanyIds },
             status: 'ACTIVE'
           }
         }
       },
       include: {
         userTenants: {
-          where: { companyId: companyId },
+          where: { companyId: { in: targetCompanyIds } },
           include: { company: true }
         },
         userTeams: {
