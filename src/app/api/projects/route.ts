@@ -23,43 +23,98 @@ const updateProjectSchema = z.object({
   status: z.enum(['ACTIVE', 'INACTIVE', 'COMPLETED'])
 })
 
-// GET - Get projects for the user's companies
-export async function GET(request: NextRequest) {
+// GET /api/projects?companyId=...&q=...&cursor=...&take=20
+export async function GET(req: NextRequest) {
   try {
-    console.log('GET /api/projects - Starting request')
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      console.log('GET /api/projects - No session found')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
-    console.log('GET /api/projects - Session found for user:', session.user?.id, 'role:', session.user?.role)
 
-    const prisma = await getPrisma()
-    
-    // Simple query to get all projects for now
-    console.log('GET /api/projects - Fetching all projects')
-    
-    const projects = await prisma.project.findMany({
-      include: {
-        company: true
+    const prisma = await getPrisma();
+    const { searchParams } = new URL(req.url);
+
+    const companyId = searchParams.get('companyId') || req.headers.get('x-company-id');
+    if (!companyId) {
+      return NextResponse.json({ error: 'companyId required' }, { status: 400 });
+    }
+
+    const q = searchParams.get('q')?.trim();
+    const take = Math.min(Number(searchParams.get('take') ?? 20), 100);
+    const cursor = searchParams.get('cursor') || undefined;
+
+    // 1) Read membership/role from UserTenant
+    const membership = await prisma.userTenant.findFirst({
+      where: {
+        userId: session.user.id,
+        companyId,
+        status: 'ACTIVE',
+        endDate: null,
       },
-      orderBy: { createdAt: 'desc' }
-    })
-    
-    console.log('GET /api/projects - Successfully returning', projects.length, 'projects')
-    
-    return NextResponse.json({ projects })
+      select: { role: true },
+    });
+
+    // SUPERUSER shortcut (if you keep a global role on the user)
+    const isSuperuser = session.user.role === 'SUPERUSER';
+    const isAdmin = isSuperuser || membership?.role === 'ADMIN';
+
+    // Common filters
+    const baseWhere: any = {
+      companyId,
+      status: 'ACTIVE',
+      ...(q ? { name: { contains: q, mode: 'insensitive' as const } } : {}),
+    };
+
+    // 2) Branch by role
+    let where: any;
+    if (isAdmin) {
+      // Admins: all projects in the company
+      where = baseWhere;
+    } else {
+      // Non-admins: only assigned projects
+      // Minimal path: through UserProject
+      where = {
+        ...baseWhere,
+        userProjects: {
+          some: {
+            userId: session.user.id,
+            status: 'ACTIVE',
+          },
+        },
+      };
+    }
+
+    // 3) Pagination
+    const queryArgs: any = {
+      where,
+      include: {
+        company: true,
+        userProjects: {
+          include: {
+            user: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: take + 1,
+    };
+    if (cursor) queryArgs.cursor = { id: cursor };
+    if (cursor) queryArgs.skip = 1;
+
+    const rows = await prisma.project.findMany(queryArgs);
+
+    const hasNextPage = rows.length > take;
+    const data = hasNextPage ? rows.slice(0, take) : rows;
+    const nextCursor = hasNextPage ? data[data.length - 1].id : null;
+
+    return NextResponse.json({ projects: data, nextCursor });
 
   } catch (error) {
-    console.error('Error fetching projects:', error)
-    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Error fetching projects:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch projects', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to fetch projects' },
       { status: 500 }
-    )
+    );
   }
 }
 
