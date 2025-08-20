@@ -30,10 +30,48 @@ export async function GET(req: NextRequest) {
 
     const prisma = await getPrisma();
     
-    // TEMPORARY: Simple query to get all projects
-    console.log('DEBUG: Simple query - getting all projects');
+    // Step 1: Get company context from session or UserTenant
+    let companyId = session.user?.companyId;
+    
+    if (!companyId) {
+      const userTenant = await prisma.userTenant.findFirst({
+        where: {
+          userId: session.user.id,
+          status: 'ACTIVE'
+        },
+        orderBy: { startDate: 'desc' },
+        select: { companyId: true }
+      });
+      companyId = userTenant?.companyId;
+    }
+    
+    console.log('DEBUG: Company context:', companyId, 'User role:', session.user.role);
+    
+    // Step 2: Build query based on role
+    let whereClause: any = {};
+    
+    if (session.user.role === 'SUPERUSER') {
+      // SUPERUSER sees all projects
+      console.log('DEBUG: SUPERUSER - getting all projects');
+    } else if (companyId) {
+      // ADMIN and SUPERVISOR see projects from their company
+      whereClause.companyId = companyId;
+      console.log('DEBUG: Company-scoped query for company:', companyId);
+    } else {
+      // No company context, return empty
+      console.log('DEBUG: No company context, returning empty');
+      return NextResponse.json({
+        projects: [],
+        debug: { 
+          message: 'No company context',
+          projectCount: 0,
+          userRole: session.user.role
+        }
+      });
+    }
     
     const projects = await prisma.project.findMany({
+      where: whereClause,
       include: {
         company: true
       },
@@ -45,9 +83,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       projects: projects,
       debug: { 
-        message: 'Simple query working',
+        message: 'Role-based query working',
         projectCount: projects.length,
-        userRole: session.user.role
+        userRole: session.user.role,
+        companyId: companyId
       }
     });
 
