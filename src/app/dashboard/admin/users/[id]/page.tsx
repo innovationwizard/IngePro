@@ -42,7 +42,7 @@ export default function UserDetailPage() {
   const [isAssignCompanyModalOpen, setIsAssignCompanyModalOpen] = useState(false)
   const [isAssignTeamModalOpen, setIsAssignTeamModalOpen] = useState(false)
   const [isAssignProjectModalOpen, setIsAssignProjectModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isActionLoading, setIsActionLoading] = useState(false)
   const [message, setMessage] = useState('')
   
   const [assignFormData, setAssignFormData] = useState({
@@ -78,7 +78,7 @@ export default function UserDetailPage() {
     }
   }
 
-  const handleAssignCompany = () => {
+  const handleOpenAssignCompanyModal = () => {
     setIsAssignCompanyModalOpen(true)
   }
 
@@ -92,7 +92,7 @@ export default function UserDetailPage() {
 
   const handleEndAssignment = async (type: string, id: string) => {
     if (confirm(`¿Está seguro de que desea terminar esta asignación?`)) {
-      setIsLoading(true)
+      setIsActionLoading(true)
       try {
         const response = await fetch(`/api/users/${userId}`, {
           method: 'PUT',
@@ -116,14 +116,14 @@ export default function UserDetailPage() {
         console.error('Error ending assignment:', error)
         setMessage('Error de conexión')
       } finally {
-        setIsLoading(false)
+        setIsActionLoading(false)
       }
     }
   }
 
   const handleAssignCompany = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setIsActionLoading(true)
     
     try {
       const response = await fetch(`/api/users/${userId}`, {
@@ -152,7 +152,7 @@ export default function UserDetailPage() {
       console.error('Error assigning user:', error)
       setMessage('Error de conexión')
     } finally {
-      setIsLoading(false)
+      setIsActionLoading(false)
     }
   }
 
@@ -244,7 +244,7 @@ export default function UserDetailPage() {
                 Empresas Actuales
               </h2>
               <button
-                onClick={handleAssignCompany}
+                onClick={handleOpenAssignCompanyModal}
                 className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4" />
@@ -431,10 +431,10 @@ export default function UserDetailPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isActionLoading}
                     className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {isLoading ? 'Asignando...' : 'Asignar'}
+                    {isActionLoading ? 'Asignando...' : 'Asignar'}
                   </button>
                 </div>
               </form>
