@@ -99,12 +99,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new company (superuser only)
+// POST - Create new company (admin and superuser)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user?.role !== 'SUPERUSER') {
+    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
