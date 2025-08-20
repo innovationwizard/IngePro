@@ -44,7 +44,13 @@ export async function GET(
           orderBy: { startDate: 'desc' }
         },
         userProjects: {
-          include: { project: true },
+          include: { 
+            project: {
+              include: {
+                company: true
+              }
+            }
+          },
           orderBy: { startDate: 'desc' }
         }
       }
@@ -103,7 +109,7 @@ export async function GET(
           role: up.role,
           startDate: up.startDate,
           endDate: up.endDate,
-          company: 'N/A' // TODO: Get company from project
+          company: up.project.company?.name || 'N/A'
         }))
     }
 
