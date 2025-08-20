@@ -42,6 +42,13 @@ export default function UserDetailPage() {
   const [isAssignCompanyModalOpen, setIsAssignCompanyModalOpen] = useState(false)
   const [isAssignTeamModalOpen, setIsAssignTeamModalOpen] = useState(false)
   const [isAssignProjectModalOpen, setIsAssignProjectModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  
+  const [assignFormData, setAssignFormData] = useState({
+    companyId: '',
+    role: 'WORKER' as 'WORKER' | 'SUPERVISOR' | 'ADMIN'
+  })
 
   // Check if user is admin
   if (session?.user?.role !== 'ADMIN') {
@@ -83,10 +90,69 @@ export default function UserDetailPage() {
     setIsAssignProjectModalOpen(true)
   }
 
-  const handleEndAssignment = (type: string, id: string) => {
+  const handleEndAssignment = async (type: string, id: string) => {
     if (confirm(`¿Está seguro de que desea terminar esta asignación?`)) {
-      // TODO: Implement assignment ending
-      console.log(`Ending ${type} assignment: ${id}`)
+      setIsLoading(true)
+      try {
+        const response = await fetch(`/api/users/${userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'end-assignment',
+            assignmentId: id,
+            assignmentType: type
+          })
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          setMessage(data.message)
+          fetchUserData() // Refresh user data
+        } else {
+          setMessage(data.error || 'Error al terminar la asignación')
+        }
+      } catch (error) {
+        console.error('Error ending assignment:', error)
+        setMessage('Error de conexión')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  }
+
+  const handleAssignCompany = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'assign-company',
+          assignmentId: '',
+          assignmentType: 'company',
+          companyId: assignFormData.companyId,
+          role: assignFormData.role
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage(data.message)
+        setIsAssignCompanyModalOpen(false)
+        setAssignFormData({ companyId: '', role: 'WORKER' })
+        fetchUserData() // Refresh user data
+      } else {
+        setMessage(data.error || 'Error al asignar usuario')
+      }
+    } catch (error) {
+      console.error('Error assigning user:', error)
+      setMessage('Error de conexión')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -315,19 +381,63 @@ export default function UserDetailPage() {
         </div>
       </div>
 
-      {/* Modals would go here - keeping them simple for now */}
+      {/* Message Display */}
+      {message && (
+        <div className="fixed top-4 right-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg z-50">
+          {message}
+        </div>
+      )}
+
+      {/* Assign Company Modal */}
       {isAssignCompanyModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Asignar Empresa</h3>
-              <p className="text-gray-600 mb-4">Funcionalidad en desarrollo</p>
-              <button
-                onClick={() => setIsAssignCompanyModalOpen(false)}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Cerrar
-              </button>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Asignar a Empresa</h3>
+              <form onSubmit={handleAssignCompany} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Empresa</label>
+                  <select
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={assignFormData.companyId}
+                    onChange={(e) => setAssignFormData({ ...assignFormData, companyId: e.target.value })}
+                  >
+                    <option value="">Seleccionar empresa</option>
+                    <option value="cmek5g0qj0000k304uutkp1e5">E 20 Aug</option>
+                    {/* TODO: Fetch available companies dynamically */}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Rol</label>
+                  <select
+                    required
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    value={assignFormData.role}
+                    onChange={(e) => setAssignFormData({ ...assignFormData, role: e.target.value as any })}
+                  >
+                    <option value="WORKER">Trabajador</option>
+                    <option value="SUPERVISOR">Supervisor</option>
+                    <option value="ADMIN">Administrador</option>
+                  </select>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsAssignCompanyModalOpen(false)}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isLoading ? 'Asignando...' : 'Asignar'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

@@ -2,8 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getPrisma } from '@/lib/prisma'
+import { z } from 'zod'
 
 export const runtime = 'nodejs'
+
+// Validation schema for updating user assignments
+const updateAssignmentSchema = z.object({
+  action: z.enum(['end-assignment', 'assign-company']),
+  assignmentId: z.string(),
+  assignmentType: z.enum(['company', 'team', 'project']),
+  companyId: z.string().optional(),
+  role: z.enum(['WORKER', 'SUPERVISOR', 'ADMIN']).optional(),
+})
 
 // GET - Get detailed user information
 export async function GET(
@@ -138,6 +148,135 @@ export async function GET(
     console.error('Error fetching user details:', error)
     return NextResponse.json(
       { error: 'Failed to fetch user details' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update user assignments (end assignment or assign to company)
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const validatedData = updateAssignmentSchema.parse(body)
+    
+    const prisma = await getPrisma()
+    const userId = params.id
+
+    if (validatedData.action === 'end-assignment') {
+      // End an assignment
+      if (validatedData.assignmentType === 'company') {
+        await prisma.userTenant.update({
+          where: { id: validatedData.assignmentId },
+          data: { 
+            endDate: new Date(),
+            status: 'INACTIVE'
+          }
+        })
+      } else if (validatedData.assignmentType === 'team') {
+        await prisma.userTeam.update({
+          where: { id: validatedData.assignmentId },
+          data: { 
+            endDate: new Date(),
+            status: 'INACTIVE'
+          }
+        })
+      } else if (validatedData.assignmentType === 'project') {
+        await prisma.userProject.update({
+          where: { id: validatedData.assignmentId },
+          data: { 
+            endDate: new Date(),
+            status: 'INACTIVE'
+          }
+        })
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Assignment ended successfully'
+      })
+
+    } else if (validatedData.action === 'assign-company') {
+      // Assign user to a company
+      if (!validatedData.companyId || !validatedData.role) {
+        return NextResponse.json(
+          { error: 'Company ID and role are required' },
+          { status: 400 }
+        )
+      }
+
+      // Check if admin has access to the target company
+      if (session.user?.role === 'ADMIN') {
+        const adminUserTenants = await prisma.userTenant.findMany({
+          where: {
+            userId: session.user?.id,
+            status: 'ACTIVE'
+          },
+          select: { companyId: true }
+        })
+        
+        const adminCompanyIds = adminUserTenants.map(ut => ut.companyId)
+        
+        if (!adminCompanyIds.includes(validatedData.companyId)) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+      }
+
+      // Check if user is already assigned to this company
+      const existingAssignment = await prisma.userTenant.findFirst({
+        where: {
+          userId: userId,
+          companyId: validatedData.companyId,
+          status: 'ACTIVE'
+        }
+      })
+
+      if (existingAssignment) {
+        return NextResponse.json(
+          { error: 'User is already assigned to this company' },
+          { status: 409 }
+        )
+      }
+
+      // Create new assignment
+      await prisma.userTenant.create({
+        data: {
+          userId: userId,
+          companyId: validatedData.companyId,
+          role: validatedData.role,
+          startDate: new Date(),
+          status: 'ACTIVE'
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: 'User assigned to company successfully'
+      })
+    }
+
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+
+  } catch (error) {
+    console.error('Error updating user assignment:', error)
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to update user assignment' },
       { status: 500 }
     )
   }
