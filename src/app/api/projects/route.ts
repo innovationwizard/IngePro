@@ -23,70 +23,77 @@ const updateProjectSchema = z.object({
   status: z.enum(['ACTIVE', 'INACTIVE', 'COMPLETED'])
 })
 
-// GET /api/projects?companyId=...&q=...&cursor=...&take=20
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const prisma = await getPrisma();
     const { searchParams } = new URL(req.url);
 
-    const companyId = searchParams.get('companyId') || req.headers.get('x-company-id');
+    // 0) Resolve companyId from several fallbacks
+    let companyId =
+      searchParams.get('companyId') ||
+      req.headers.get('x-company-id') ||
+      (session as any).currentCompanyId || // if you store it in session
+      null;
+
+    // Fallback to user's primary company or first active membership
     if (!companyId) {
-      return NextResponse.json({ error: 'companyId required' }, { status: 400 });
+      const me = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { companyId: true }, // User.companyId exists and FKs to companies
+      });
+      companyId = me?.companyId ?? undefined;
+
+      if (!companyId) {
+        const firstMembership = await prisma.userTenant.findFirst({
+          where: { userId: session.user.id, status: 'ACTIVE', endDate: null },
+          orderBy: { startDate: 'desc' },
+          select: { companyId: true, role: true },
+        }); // UserTenant carries companyId/role per tenant
+        companyId = firstMembership?.companyId;
+      }
     }
 
+    if (!companyId) return NextResponse.json({ error: 'No company in context' }, { status: 400 });
+
+    // 1) Membership/role for this company (don't 500 if absent)
+    const membership = await prisma.userTenant.findFirst({
+      where: { userId: session.user.id, companyId, status: 'ACTIVE', endDate: null },
+      select: { role: true },
+    });
+
+    // Global role exists on User; tenant role lives in UserTenant
+    const userRow = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    }); // Roles: WORKER, SUPERVISOR, ADMIN, SUPERUSER
+    const isSuperuser = userRow?.role === 'SUPERUSER';
+    const isAdmin = isSuperuser || membership?.role === 'ADMIN';
+
+    // 2) Common filters
     const q = searchParams.get('q')?.trim();
     const take = Math.min(Number(searchParams.get('take') ?? 20), 100);
     const cursor = searchParams.get('cursor') || undefined;
 
-    // 1) Read membership/role from UserTenant
-    const membership = await prisma.userTenant.findFirst({
-      where: {
-        userId: session.user.id,
-        companyId,
-        status: 'ACTIVE',
-        endDate: null,
-      },
-      select: { role: true },
-    });
-
-    // SUPERUSER shortcut (if you keep a global role on the user)
-    const isSuperuser = session.user.role === 'SUPERUSER';
-    const isAdmin = isSuperuser || membership?.role === 'ADMIN';
-
-    // Common filters
     const baseWhere: any = {
       companyId,
-      status: 'ACTIVE',
+      status: 'ACTIVE', // ProjectStatus enum includes ACTIVE
       ...(q ? { name: { contains: q, mode: 'insensitive' as const } } : {}),
     };
 
-    // 2) Branch by role
-    let where: any;
-    if (isAdmin) {
-      // Admins: all projects in the company
-      where = baseWhere;
-    } else {
-      // Non-admins: only assigned projects
-      // Minimal path: through UserProject
-      where = {
-        ...baseWhere,
-        userProjects: {
-          some: {
-            userId: session.user.id,
-            status: 'ACTIVE',
-          },
-        },
-      };
-    }
+    // 3) RBAC: admins see all company projects; others only assigned
+    const where: any = isAdmin
+      ? baseWhere
+      : {
+          ...baseWhere,
+          userProjects: { some: { userId: session.user.id, status: 'ACTIVE' } },
+        }; // UserProject gate; updatedAt is NOT NULL when inserting rows
 
-    // 3) Pagination
-    const queryArgs: any = {
-      where,
+    // 4) Pagination and query
+    const args: any = { 
+      where, 
       include: {
         company: true,
         userProjects: {
@@ -95,19 +102,18 @@ export async function GET(req: NextRequest) {
           }
         }
       },
-      orderBy: { createdAt: 'desc' },
-      take: take + 1,
+      orderBy: { createdAt: 'desc' }, 
+      take: take + 1 
     };
-    if (cursor) queryArgs.cursor = { id: cursor };
-    if (cursor) queryArgs.skip = 1;
+    if (cursor) Object.assign(args, { cursor: { id: cursor }, skip: 1 });
 
-    const rows = await prisma.project.findMany(queryArgs);
+    const rows = await prisma.project.findMany(args); // Projects are tied to companyId via FK
 
-    const hasNextPage = rows.length > take;
-    const data = hasNextPage ? rows.slice(0, take) : rows;
-    const nextCursor = hasNextPage ? data[data.length - 1].id : null;
+    const hasNext = rows.length > take;
+    const data = hasNext ? rows.slice(0, take) : rows;
+    const nextCursor = hasNext ? data[data.length - 1].id : null;
 
-    return NextResponse.json({ projects: data, nextCursor });
+    return NextResponse.json({ projects: data, nextCursor, debug: { isAdmin, companyId } });
 
   } catch (error) {
     console.error('Error fetching projects:', error);

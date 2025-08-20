@@ -63,15 +63,7 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       console.log('Fetching projects...')
-      const companyId = session.user?.companyId
-      if (!companyId) {
-        console.error('No company ID in session')
-        setProjects([])
-        setIsLoading(false)
-        return
-      }
-      
-      const response = await fetch(`/api/projects?companyId=${companyId}`)
+      const response = await fetch('/api/projects')
       if (response.ok) {
         const data = await response.json()
         console.log('Projects data received:', data)

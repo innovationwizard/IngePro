@@ -82,16 +82,9 @@ export default function DashboardPage() {
       }
 
       try {
-        const companyId = session.user?.companyId
-        if (!companyId) {
-          console.error('No company ID in session')
-          setIsLoading(false)
-          return
-        }
-        
         const [companiesRes, projectsRes, workLogsRes] = await Promise.all([
           fetch('/api/companies'),
-          fetch(`/api/projects?companyId=${companyId}`),
+          fetch('/api/projects'),
           fetch('/api/worklog')
         ])
 

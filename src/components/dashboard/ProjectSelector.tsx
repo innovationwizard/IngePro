@@ -29,14 +29,7 @@ export function ProjectSelector() {
       
       try {
         setIsLoading(true)
-        const companyId = session.user?.companyId
-        if (!companyId) {
-          console.error('No company ID in session')
-          setProjects([])
-          return
-        }
-        
-        const response = await fetch(`/api/projects?companyId=${companyId}`)
+        const response = await fetch('/api/projects')
         if (response.ok) {
           const data = await response.json()
           setProjects(data.projects || [])
