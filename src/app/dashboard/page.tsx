@@ -82,17 +82,19 @@ export default function DashboardPage() {
       }
 
       try {
-        const [companiesRes, projectsRes, workLogsRes] = await Promise.all([
+        const [companiesRes, projectsRes, workLogsRes, projectStatsRes] = await Promise.all([
           fetch('/api/companies'),
           fetch('/api/projects'),
-          fetch('/api/worklog')
+          fetch('/api/worklog'),
+          fetch('/api/projects/stats')
         ])
 
-        if (companiesRes.ok && projectsRes.ok && workLogsRes.ok) {
-          const [companiesData, projectsData, workLogsData] = await Promise.all([
+        if (companiesRes.ok && projectsRes.ok && workLogsRes.ok && projectStatsRes.ok) {
+          const [companiesData, projectsData, workLogsData, projectStatsData] = await Promise.all([
             companiesRes.json(),
             projectsRes.json(),
-            workLogsRes.json()
+            workLogsRes.json(),
+            projectStatsRes.json()
           ])
 
           // Calculate stats
@@ -116,14 +118,19 @@ export default function DashboardPage() {
               projectCount: company.projects || 0,
               totalHours: Math.round((company.workLogs || 0) / 60 * 10) / 10 // Convert workLogs to hours
             })),
-            projects: projectsData.projects.map((project: any) => ({
-              id: project.id,
-              name: project.name,
-              company: project.company.name,
-              userCount: project.userProjects?.length || 0,
-              totalHours: Math.round((project.totalHours || 0) * 10) / 10,
-              status: project.status
-            })),
+            projects: projectsData.projects.map((project: any) => {
+              // Find matching stats for this project
+              const projectStats = projectStatsData.projectStats.find((stats: any) => stats.id === project.id)
+              
+              return {
+                id: project.id,
+                name: project.name,
+                company: project.company.name,
+                userCount: projectStats?.userCount || 0,
+                totalHours: Math.round((projectStats?.workLogCount || 0) / 60 * 10) / 10, // Convert workLogs to hours
+                status: project.status
+              }
+            }),
             recentActivity: workLogsData.workLogs.slice(0, 5).map((log: any) => ({
               id: log.id,
               type: 'work_log',
