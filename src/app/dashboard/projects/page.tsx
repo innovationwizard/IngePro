@@ -3,25 +3,27 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Building, Users, Calendar, Target } from 'lucide-react'
+import { Plus, Edit, Trash2, Building, Users, Calendar, Target, Building2 } from 'lucide-react'
 
 interface Project {
   id: string
   name: string
   description: string
   status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  companyId: string
   createdAt: string
   company: {
     id: string
     name: string
   }
   userCount: number
-  userProjects: Array<{
+  users: Array<{
     id: string
     user: {
       id: string
       name: string
       email: string
+      role: string
     }
     role: string
   }>
@@ -32,6 +34,30 @@ interface Company {
   name: string
 }
 
+interface UserProject {
+  id: string;
+  userId: string;
+  projectId: string;
+  role: 'WORKER' | 'SUPERVISOR';
+  startDate: string;
+  endDate?: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+}
+
 export default function ProjectsPage() {
   const { data: session } = useSession()
   const router = useRouter()
@@ -40,6 +66,8 @@ export default function ProjectsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [message, setMessage] = useState('')
   const [formData, setFormData] = useState({
     id: '',
@@ -48,6 +76,9 @@ export default function ProjectsPage() {
     companyId: '',
     status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
   })
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<'WORKER' | 'SUPERVISOR'>('WORKER');
 
   // Check if user is authenticated
   if (!session) {
@@ -113,6 +144,83 @@ export default function ProjectsPage() {
       console.error('Error fetching companies:', error)
     }
   }
+
+  const fetchAvailableUsers = async (companyId: string) => {
+    try {
+      const response = await fetch(`/api/users?companyId=${companyId}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Filter users based on role permissions
+        if (session?.user?.role === 'SUPERVISOR') {
+          // Supervisors can only assign workers
+          setAvailableUsers(data.users.filter((user: User) => user.role === 'WORKER'));
+        } else {
+          // Admins can assign both workers and supervisors
+          setAvailableUsers(data.users.filter((user: User) => 
+            user.role === 'WORKER' || user.role === 'SUPERVISOR'
+          ));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching available users:', error);
+    }
+  };
+
+  const handleOpenAssignmentModal = (project: Project) => {
+    setSelectedProject(project);
+    setSelectedUsers([]);
+    setSelectedRole('WORKER');
+    fetchAvailableUsers(project.company.id);
+    setIsAssignmentModalOpen(true);
+  };
+
+  const handleAssignUsers = async () => {
+    if (!selectedProject || selectedUsers.length === 0) return;
+
+    try {
+      const response = await fetch(`/api/projects/${selectedProject.id}/assign-users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userIds: selectedUsers,
+          role: selectedRole
+        })
+      });
+
+      if (response.ok) {
+        setMessage('Usuarios asignados exitosamente');
+        setIsAssignmentModalOpen(false);
+        // Refresh projects to show updated user counts
+        setTimeout(() => fetchProjects(), 100);
+      } else {
+        const error = await response.json();
+        setMessage(`Error: ${error.message}`);
+      }
+    } catch (error) {
+      setMessage('Error al asignar usuarios');
+    }
+  };
+
+  const handleUnassignUser = async (projectId: string, userId: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}/unassign-user`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+
+      if (response.ok) {
+        setMessage('Usuario desasignado exitosamente');
+        // Refresh projects to show updated user counts
+        setTimeout(() => fetchProjects(), 100);
+      } else {
+        const error = await response.json();
+        setMessage(`Error: ${error.message}`);
+      }
+    } catch (error) {
+      setMessage('Error al desasignar usuario');
+    }
+  };
 
   useEffect(() => {
     fetchProjects()
@@ -232,85 +340,147 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Proyectos</h1>
-          <p className="text-gray-600">Gestión y seguimiento de proyectos</p>
-        </div>
-        <button
-          onClick={handleCreateProject}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Crear Proyecto
-        </button>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Gestión de Proyectos</h1>
+        {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERUSER') && (
+          <button
+            onClick={() => {
+              setIsEditMode(false);
+              setFormData({ id: '', name: '', description: '', companyId: '', status: 'ACTIVE' });
+              setIsModalOpen(true);
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Crear Proyecto
+          </button>
+        )}
       </div>
 
-      {/* Message Display */}
       {message && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
+        <div className={`mb-4 p-3 rounded-lg ${
+          message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+        }`}>
           {message}
         </div>
       )}
 
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects && projects.length > 0 ? projects.map((project) => (
-          <div key={project.id} className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">{project.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{project.description}</p>
-                <div className="flex items-center text-sm text-gray-500 mb-2">
-                  <Building className="h-4 w-4 mr-1" />
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-full mb-4"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      ) : projects && projects.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <div key={project.id} className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{project.name}</h3>
+                  <p className="text-gray-600 text-sm mb-3">{project.description}</p>
+                </div>
+                {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERUSER') && (
+                  <button
+                    onClick={() => {
+                      setIsEditMode(true);
+                      setFormData({
+                        id: project.id,
+                        name: project.name,
+                        description: project.description,
+                        companyId: project.company.id,
+                        status: project.status
+                      });
+                      setSelectedProject(project);
+                      setIsModalOpen(true);
+                    }}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Building2 className="w-4 h-4 mr-2" />
                   {project.company.name}
                 </div>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
-                  {getStatusText(project.status)}
-                </span>
-              </div>
-              <button
-                onClick={() => handleEditProject(project)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-            </div>
-            
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  {project.userCount || 0} usuarios
+                <div className="flex items-center text-sm text-gray-600">
+                  <Target className="w-4 h-4 mr-2" />
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    project.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                    project.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {getStatusText(project.status)}
+                  </span>
                 </div>
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {new Date(project.createdAt).toLocaleDateString('es-ES')}
+                <div className="flex items-center text-sm text-gray-600">
+                  <Users className="w-4 h-4 mr-2" />
+                  {project.userCount} usuario{project.userCount !== 1 ? 's' : ''} asignado{project.userCount !== 1 ? 's' : ''}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Creado: {new Date(project.createdAt).toLocaleDateString()}
                 </div>
               </div>
-              
 
+              {/* Project Members */}
+              {project.users && project.users.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Miembros del Proyecto:</h4>
+                  <div className="space-y-1">
+                    {project.users.map((userProject) => (
+                      <div key={userProject.id} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center">
+                          <span className="text-gray-600">{userProject.user.name}</span>
+                          <span className="ml-2 px-1 py-0.5 bg-gray-100 rounded text-gray-500">
+                            {userProject.role}
+                          </span>
+                        </div>
+                        {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERUSER' || 
+                          (session?.user?.role === 'SUPERVISOR' && userProject.role === 'WORKER')) && (
+                          <button
+                            onClick={() => handleUnassignUser(project.id, userProject.user.id)}
+                            className="text-red-600 hover:text-red-800 text-xs"
+                          >
+                            Desasignar
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Assignment Button */}
+              {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERUSER' || 
+                session?.user?.role === 'SUPERVISOR') && (
+                <button
+                  onClick={() => handleOpenAssignmentModal(project)}
+                  className="w-full bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 text-sm"
+                >
+                  Gestionar Asignaciones
+                </button>
+              )}
             </div>
-          </div>
-        )) : (
-          <div className="col-span-full text-center py-8">
-            <Target className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay proyectos</h3>
-            <p className="text-gray-500 mb-4">Crea tu primer proyecto para comenzar.</p>
-            <button
-              onClick={handleCreateProject}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-            >
-              Crear Proyecto
-            </button>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <Target className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay proyectos</h3>
+          <p className="text-gray-600">Crea tu primer proyecto para comenzar.</p>
+        </div>
+      )}
 
-
-
-      {/* Create/Edit Project Modal */}
+      {/* Project Create/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -386,6 +556,77 @@ export default function ProjectsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assignment Modal */}
+      {isAssignmentModalOpen && selectedProject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">
+              Asignar Usuarios a: {selectedProject.name}
+            </h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rol de Asignación
+              </label>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value as 'WORKER' | 'SUPERVISOR')}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              >
+                <option value="WORKER">Trabajador</option>
+                {session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERUSER' ? (
+                  <option value="SUPERVISOR">Supervisor</option>
+                ) : null}
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Usuarios
+              </label>
+              <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2">
+                {availableUsers.map((user) => (
+                  <label key={user.id} className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      value={user.id}
+                      checked={selectedUsers.includes(user.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedUsers([...selectedUsers, user.id]);
+                        } else {
+                          setSelectedUsers(selectedUsers.filter(id => id !== user.id));
+                        }
+                      }}
+                      className="mr-2"
+                    />
+                    <span className="text-sm">
+                      {user.name} ({user.email}) - {user.role}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsAssignmentModalOpen(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAssignUsers}
+                disabled={selectedUsers.length === 0}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                Asignar Usuarios
+              </button>
             </div>
           </div>
         </div>

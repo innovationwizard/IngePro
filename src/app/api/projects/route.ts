@@ -79,7 +79,20 @@ export async function GET(req: NextRequest) {
     const projects = await prisma.project.findMany({
       where: whereClause,
       include: {
-        company: true
+        company: true,
+        users: {
+          where: { status: 'ACTIVE' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true
+              }
+            }
+          }
+        }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -153,11 +166,19 @@ export async function POST(request: NextRequest) {
     }
     
     // Use current company context if no specific company provided
-    const targetCompanyId = validatedData.companyId || currentCompanyId || ''
+    const targetCompanyId = validatedData.companyId || currentCompanyId
     
     if (!targetCompanyId) {
       return NextResponse.json(
         { error: 'No company context available' },
+        { status: 400 }
+      )
+    }
+    
+    // TypeScript guard to ensure targetCompanyId is string
+    if (typeof targetCompanyId !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid company context' },
         { status: 400 }
       )
     }
