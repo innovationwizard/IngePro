@@ -29,96 +29,32 @@ export async function GET(req: NextRequest) {
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const prisma = await getPrisma();
-    const { searchParams } = new URL(req.url);
-
-    // 0) Resolve companyId from several fallbacks
-    let companyId =
-      searchParams.get('companyId') ||
-      req.headers.get('x-company-id') ||
-      (session as any).currentCompanyId || // if you store it in session
-      null;
-
-    // Fallback to user's primary company or first active membership
-    if (!companyId) {
-      const me = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { companyId: true }, // User.companyId exists and FKs to companies
-      });
-      companyId = me?.companyId ?? undefined;
-
-      if (!companyId) {
-        const firstMembership = await prisma.userTenant.findFirst({
-          where: { userId: session.user.id, status: 'ACTIVE', endDate: null },
-          orderBy: { startDate: 'desc' },
-          select: { companyId: true, role: true },
-        }); // UserTenant carries companyId/role per tenant
-        companyId = firstMembership?.companyId;
-      }
-    }
-
-    if (!companyId) return NextResponse.json({ error: 'No company in context' }, { status: 400 });
-
-    // 1) Membership/role for this company (don't 500 if absent)
-    const membership = await prisma.userTenant.findFirst({
-      where: { userId: session.user.id, companyId, status: 'ACTIVE', endDate: null },
-      select: { role: true },
-    });
-
-    // Global role exists on User; tenant role lives in UserTenant
-    const userRow = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    }); // Roles: WORKER, SUPERVISOR, ADMIN, SUPERUSER
-    const isSuperuser = userRow?.role === 'SUPERUSER';
-    const isAdmin = isSuperuser || membership?.role === 'ADMIN';
-
-    // 2) Common filters
-    const q = searchParams.get('q')?.trim();
-    const take = Math.min(Number(searchParams.get('take') ?? 20), 100);
-    const cursor = searchParams.get('cursor') || undefined;
-
-    const baseWhere: any = {
-      companyId,
-      status: 'ACTIVE', // ProjectStatus enum includes ACTIVE
-      ...(q ? { name: { contains: q, mode: 'insensitive' as const } } : {}),
-    };
-
-    // 3) RBAC: admins see all company projects; others only assigned
-    const where: any = isAdmin
-      ? baseWhere
-      : {
-          ...baseWhere,
-          userProjects: { some: { userId: session.user.id, status: 'ACTIVE' } },
-        }; // UserProject gate; updatedAt is NOT NULL when inserting rows
-
-    // 4) Pagination and query
-    const args: any = { 
-      where, 
+    
+    // TEMPORARY: Simple query to get all projects
+    console.log('DEBUG: Simple query - getting all projects');
+    
+    const projects = await prisma.project.findMany({
       include: {
-        company: true,
-        userProjects: {
-          include: {
-            user: true
-          }
-        }
+        company: true
       },
-      orderBy: { createdAt: 'desc' }, 
-      take: take + 1 
-    };
-    if (cursor) Object.assign(args, { cursor: { id: cursor }, skip: 1 });
-
-    const rows = await prisma.project.findMany(args); // Projects are tied to companyId via FK
-
-    const hasNext = rows.length > take;
-    const data = hasNext ? rows.slice(0, take) : rows;
-    const nextCursor = hasNext ? data[data.length - 1].id : null;
-
-    return NextResponse.json({ projects: data, nextCursor, debug: { isAdmin, companyId } });
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    console.log('DEBUG: Found projects:', projects.length);
+    
+    return NextResponse.json({
+      projects: projects,
+      debug: { 
+        message: 'Simple query working',
+        projectCount: projects.length,
+        userRole: session.user.role
+      }
+    });
 
   } catch (error) {
     console.error('Error fetching projects:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch projects' },
+      { error: 'Failed to fetch projects', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
