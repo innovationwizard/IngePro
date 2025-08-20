@@ -156,6 +156,13 @@ export default function ProjectsPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Users API response data:', data);
+        console.log('Raw users array:', data.users);
+        console.log('User details:', data.users.map((user: User) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        })));
         
         // Filter users based on role permissions
         if (session?.user?.role === 'SUPERVISOR') {
@@ -169,6 +176,8 @@ export default function ProjectsPage() {
             user.role === 'WORKER' || user.role === 'SUPERVISOR'
           );
           console.log('Filtered users for ADMIN:', filteredUsers);
+          console.log('Filtering criteria: WORKER or SUPERVISOR');
+          console.log('Users that passed filter:', filteredUsers.map((u: User) => ({ name: u.name, role: u.role })));
           setAvailableUsers(filteredUsers);
         }
       } else {

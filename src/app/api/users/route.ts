@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
         ? user.userTenants.find(ut => ut.companyId === requestedCompanyId)
         : user.userTenants[0];
       
-      return {
+      const formattedUser = {
         id: user.id,
         name: user.name,
         email: user.email,
@@ -149,7 +149,18 @@ export async function GET(request: NextRequest) {
         currentProjects: user.userProjects.map(up => up.project.name),
         hasPassword: !!user.password
       };
+      
+      console.log('Formatted user:', {
+        id: formattedUser.id,
+        name: formattedUser.name,
+        role: formattedUser.role,
+        userTenants: user.userTenants.map(ut => ({ companyId: ut.companyId, role: ut.role }))
+      });
+      
+      return formattedUser;
     })
+    
+    console.log('Final formatted users:', formattedUsers.map(u => ({ id: u.id, name: u.name, role: u.role })));
 
     return NextResponse.json({ users: formattedUsers })
   } catch (error) {
