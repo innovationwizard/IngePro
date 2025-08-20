@@ -26,6 +26,8 @@ const signupSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    console.log('🚀 Starting signup process...');
+    
     // Parse and validate request body
     const body = await request.json();
     console.log('📥 Received signup data:', body);
@@ -33,37 +35,47 @@ export async function POST(request: Request) {
     const validatedData = signupSchema.parse(body);
     console.log('✅ Validated data:', validatedData);
     
+    console.log('🔌 Attempting to get Prisma client...');
     // Get Prisma client with AWS Proxy
     const prisma = await getPrisma();
     console.log('🔌 Database connection established');
     
+    console.log('🔍 Checking for existing company...');
     // Check if company slug already exists
     const existingCompany = await prisma.company.findUnique({
       where: { slug: validatedData.companySlug }
     });
     
     if (existingCompany) {
+      console.log('❌ Company slug already exists');
       return NextResponse.json(
         { error: 'Company slug already exists' },
         { status: 409 }
       );
     }
+    console.log('✅ Company slug is available');
     
+    console.log('🔍 Checking for existing user...');
     // Check if user email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.userEmail }
     });
     
     if (existingUser) {
+      console.log('❌ User email already exists');
       return NextResponse.json(
         { error: 'User email already exists' },
         { status: 409 }
       );
     }
+    console.log('✅ User email is available');
     
+    console.log('🔐 Hashing password...');
     // Hash the password
     const hashedPassword = await hash(validatedData.userPassword, 12);
+    console.log('✅ Password hashed');
     
+    console.log('💾 Starting database transaction...');
     // Create company and user in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create company
