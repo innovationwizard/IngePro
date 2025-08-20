@@ -96,8 +96,11 @@ export async function GET(request: NextRequest) {
     }
     
     if (targetCompanyIds.length === 0) {
+      console.log('No target company IDs found, returning empty users array');
       return NextResponse.json({ users: [] })
     }
+    
+    console.log('Target company IDs:', targetCompanyIds);
     
     const users = await prisma.user.findMany({
       where: {
@@ -124,19 +127,29 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' }
     })
+    
+    console.log('Found users:', users.length);
+    console.log('Users with userTenants:', users.map(u => ({ id: u.id, name: u.name, userTenants: u.userTenants.length })));
 
-    const formattedUsers = users.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      status: user.status,
-      role: user.userTenants[0]?.role || user.role,
-      createdAt: user.createdAt,
-      currentCompany: user.userTenants[0]?.company.name || 'Unknown',
-      currentTeams: user.userTeams.map(ut => ut.team.name),
-      currentProjects: user.userProjects.map(up => up.project.name),
-      hasPassword: !!user.password
-    }))
+    const formattedUsers = users.map(user => {
+      // Find the user tenant for the requested company (if specific company requested)
+      const relevantUserTenant = requestedCompanyId 
+        ? user.userTenants.find(ut => ut.companyId === requestedCompanyId)
+        : user.userTenants[0];
+      
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        status: user.status,
+        role: relevantUserTenant?.role || user.role,
+        createdAt: user.createdAt,
+        currentCompany: relevantUserTenant?.company.name || 'Unknown',
+        currentTeams: user.userTeams.map(ut => ut.team.name),
+        currentProjects: user.userProjects.map(up => up.project.name),
+        hasPassword: !!user.password
+      };
+    })
 
     return NextResponse.json({ users: formattedUsers })
   } catch (error) {
@@ -273,7 +286,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }
@@ -350,7 +363,7 @@ export async function PUT(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }

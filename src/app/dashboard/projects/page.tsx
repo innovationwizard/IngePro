@@ -147,21 +147,34 @@ export default function ProjectsPage() {
 
   const fetchAvailableUsers = async (companyId: string) => {
     try {
+      console.log('Fetching available users for company:', companyId);
       const response = await fetch(`/api/users?companyId=${companyId}`, {
         credentials: 'include'
       });
+      console.log('Users API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('Users API response data:', data);
+        
         // Filter users based on role permissions
         if (session?.user?.role === 'SUPERVISOR') {
           // Supervisors can only assign workers
-          setAvailableUsers(data.users.filter((user: User) => user.role === 'WORKER'));
+          const filteredUsers = data.users.filter((user: User) => user.role === 'WORKER');
+          console.log('Filtered users for SUPERVISOR:', filteredUsers);
+          setAvailableUsers(filteredUsers);
         } else {
           // Admins can assign both workers and supervisors
-          setAvailableUsers(data.users.filter((user: User) => 
+          const filteredUsers = data.users.filter((user: User) => 
             user.role === 'WORKER' || user.role === 'SUPERVISOR'
-          ));
+          );
+          console.log('Filtered users for ADMIN:', filteredUsers);
+          setAvailableUsers(filteredUsers);
         }
+      } else {
+        console.error('Users API error:', response.status, response.statusText);
+        const errorData = await response.json();
+        console.error('Users API error details:', errorData);
       }
     } catch (error) {
       console.error('Error fetching available users:', error);
@@ -169,10 +182,18 @@ export default function ProjectsPage() {
   };
 
   const handleOpenAssignmentModal = (project: Project) => {
+    console.log('Opening assignment modal for project:', project);
+    console.log('Project company ID:', project.companyId);
+    console.log('Project company object:', project.company);
+    
+    // Use companyId if available, otherwise fall back to company.id
+    const companyId = project.companyId || project.company.id;
+    console.log('Using company ID for user fetch:', companyId);
+    
     setSelectedProject(project);
     setSelectedUsers([]);
     setSelectedRole('WORKER');
-    fetchAvailableUsers(project.companyId);
+    fetchAvailableUsers(companyId);
     setIsAssignmentModalOpen(true);
   };
 
