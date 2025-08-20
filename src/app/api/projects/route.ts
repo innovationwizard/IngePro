@@ -40,88 +40,23 @@ export async function GET(request: NextRequest) {
     const prisma = await getPrisma()
     console.log('GET /api/projects - Prisma client obtained')
     
-    const { searchParams } = new URL(request.url)
-    const companyId = searchParams.get('companyId')
-    console.log('GET /api/projects - Company ID from params:', companyId)
-
-    let projects
-
-    if (session.user?.role === 'SUPERUSER') {
-      // SUPERUSER can see all projects
-      projects = await prisma.project.findMany({
-        include: {
-          company: true,
-          userProjects: {
-            include: {
-              user: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-    } else if (session.user?.role === 'ADMIN') {
-      // ADMIN can see projects from their companies
-      const userTenants = await prisma.userTenant.findMany({
-        where: {
-          userId: session.user?.id,
-          status: 'ACTIVE'
-        },
-        select: { companyId: true }
-      })
-      
-      const adminCompanyIds = userTenants.map(ut => ut.companyId)
-      console.log('GET /api/projects - ADMIN userTenants:', userTenants)
-      console.log('GET /api/projects - ADMIN company IDs:', adminCompanyIds)
-      
-      projects = await prisma.project.findMany({
-        where: {
-          companyId: {
-            in: adminCompanyIds
-          },
-          ...(companyId && { companyId })
-        },
-        include: {
-          company: true,
-          userProjects: {
-            include: {
-              user: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-      
-      console.log('GET /api/projects - ADMIN found projects:', projects.length)
-      projects.forEach(p => console.log('Project:', p.name, 'Company:', p.company.name, 'CompanyID:', p.companyId))
-    } else {
-      // WORKER/SUPERVISOR can see projects they're assigned to
-      projects = await prisma.project.findMany({
-        where: {
-          userProjects: {
-            some: {
-              userId: session.user?.id,
-              status: 'ACTIVE'
-            }
-          }
-        },
-        include: {
-          company: true,
-          userProjects: {
-            include: {
-              user: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-    }
-
-    console.log('GET /api/projects - Successfully returning', projects.length, 'projects')
+    // Simplified query to test basic functionality
+    console.log('GET /api/projects - Testing basic query')
+    const projects = await prisma.project.findMany({
+      take: 10, // Limit to 10 projects for testing
+      include: {
+        company: true
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+    
+    console.log('GET /api/projects - Basic query successful, found', projects.length, 'projects')
     return NextResponse.json({ projects })
 
   } catch (error) {
     console.error('Error fetching projects:', error)
     console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return NextResponse.json(
       { error: 'Failed to fetch projects', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
