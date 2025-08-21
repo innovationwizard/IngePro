@@ -57,24 +57,33 @@ export async function POST(
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Get the progress update with task and materials
+    // Get the progress update with task and project context
     const progressUpdate = await prisma.taskProgressUpdate.findFirst({
       where: {
         id: progressUpdateId,
-        task: {
-          project: {
-            companyId: companyId
-          }
+        project: {
+          companyId: companyId
         }
       },
       include: {
         task: {
           include: {
-            taskMaterials: {
+            category: true
+          }
+        },
+        project: {
+          include: {
+            materials: {
               include: {
                 material: true
               }
             }
+          }
+        },
+        worker: {
+          select: {
+            id: true,
+            name: true
           }
         },
         materialConsumptions: {
@@ -102,25 +111,25 @@ export async function POST(
     // Validate materials if modifying
     if (validatedData.action === 'MODIFY') {
       if (validatedData.modifiedMaterialConsumptions) {
-        const taskMaterialIds = progressUpdate.task.taskMaterials.map(tm => tm.materialId)
+        const projectMaterialIds = progressUpdate.project.materials.map(pm => pm.materialId)
         const consumptionMaterialIds = validatedData.modifiedMaterialConsumptions.map(mc => mc.materialId)
         
-        const invalidMaterials = consumptionMaterialIds.filter(id => !taskMaterialIds.includes(id))
+        const invalidMaterials = consumptionMaterialIds.filter(id => !projectMaterialIds.includes(id))
         if (invalidMaterials.length > 0) {
           return NextResponse.json({ 
-            error: 'Some materials are not associated with this task' 
+            error: 'Some materials are not available in this project' 
           }, { status: 400 })
         }
       }
 
       if (validatedData.modifiedMaterialLosses) {
-        const taskMaterialIds = progressUpdate.task.taskMaterials.map(tm => tm.materialId)
+        const projectMaterialIds = progressUpdate.project.materials.map(pm => pm.materialId)
         const lossMaterialIds = validatedData.modifiedMaterialLosses.map(ml => ml.materialId)
         
-        const invalidMaterials = lossMaterialIds.filter(id => !taskMaterialIds.includes(id))
+        const invalidMaterials = lossMaterialIds.filter(id => !projectMaterialIds.includes(id))
         if (invalidMaterials.length > 0) {
           return NextResponse.json({ 
-            error: 'Some materials are not associated with this task' 
+            error: 'Some materials are not available in this project' 
           }, { status: 400 })
         }
       }
@@ -259,27 +268,27 @@ export async function GET(
     const progressUpdate = await prisma.taskProgressUpdate.findFirst({
       where: {
         id: progressUpdateId,
-        task: {
-          project: {
-            companyId: companyId
-          }
+        project: {
+          companyId: companyId
         }
       },
       include: {
-        user: {
+        worker: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        project: {
           select: {
             id: true,
             name: true,
-            role: true
+            nameEs: true
           }
         },
         task: {
           include: {
-            taskMaterials: {
-              include: {
-                material: true
-              }
-            }
+            category: true
           }
         },
         materialConsumptions: {

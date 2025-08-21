@@ -17,28 +17,22 @@ interface Task {
     id: string
     name: string
   }
-  project: {
-    id: string
-    name: string
-  }
   progressUnit: string
-  status: string
-  taskMaterials: Array<{
-    material: {
-      id: string
-      name: string
-      unit: string
-    }
-  }>
   progressUpdates: Array<{
     id: string
     amountCompleted: number
+    status: string
     additionalAttributes?: string
     validationStatus: string
     createdAt: string
-    user: {
+    worker: {
       id: string
       name: string
+    }
+    project: {
+      id: string
+      name: string
+      nameEs?: string
     }
     materialConsumptions: Array<{
       material: {
@@ -94,14 +88,14 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
         // Initialize modified materials
         setModifiedMaterialConsumptions(
           pendingUpdate.materialConsumptions.map(consumption => ({
-            materialId: task.taskMaterials.find(m => m.material.name === consumption.material.name)?.material.id || '',
+            materialId: consumption.material.name, // Use material name as ID for now
             quantity: consumption.quantity
           }))
         )
         
         setModifiedMaterialLosses(
           pendingUpdate.materialLosses.map(loss => ({
-            materialId: task.taskMaterials.find(m => m.material.name === loss.material.name)?.material.id || '',
+            materialId: loss.material.name, // Use material name as ID for now
             quantity: loss.quantity
           }))
         )
@@ -167,15 +161,15 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
   }
 
   const addModifiedMaterialConsumption = () => {
-    const availableMaterials = task.taskMaterials.filter(material => 
-      !modifiedMaterialConsumptions.some(consumption => consumption.materialId === material.material.id)
+    const availableMaterials = selectedUpdate.materialConsumptions.filter(material => 
+      !modifiedMaterialConsumptions.some(consumption => consumption.materialId === material.material.name)
     )
     
     if (availableMaterials.length > 0) {
       setModifiedMaterialConsumptions(prev => [
         ...prev,
         {
-          materialId: availableMaterials[0].material.id,
+          materialId: availableMaterials[0].material.name,
           quantity: 0
         }
       ])
@@ -193,15 +187,15 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
   }
 
   const addModifiedMaterialLoss = () => {
-    const availableMaterials = task.taskMaterials.filter(material => 
-      !modifiedMaterialLosses.some(loss => loss.materialId === material.material.id)
+    const availableMaterials = selectedUpdate.materialLosses.filter(material => 
+      !modifiedMaterialLosses.some(loss => loss.materialId === material.material.name)
     )
     
     if (availableMaterials.length > 0) {
       setModifiedMaterialLosses(prev => [
         ...prev,
         {
-          materialId: availableMaterials[0].material.id,
+          materialId: availableMaterials[0].material.name,
           quantity: 0
         }
       ])
@@ -260,10 +254,10 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Proyecto</p>
-                  <p className="text-sm">{task.project.name}</p>
+                  <p className="text-sm">{selectedUpdate.project.nameEs || selectedUpdate.project.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>
+                  <p className="text-sm font-medium text-gray-500">Unidad de Medida</p>
                   <p className="text-sm">{task.progressUnit}</p>
                 </div>
               </div>
@@ -279,11 +273,15 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Trabajador</p>
-                  <p className="text-sm">{selectedUpdate.user.name}</p>
+                  <p className="text-sm">{selectedUpdate.worker.name}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Fecha</p>
                   <p className="text-sm">{new Date(selectedUpdate.createdAt).toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Estado</p>
+                  <p className="text-sm">{selectedUpdate.status}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Cantidad Completada</p>
@@ -384,7 +382,7 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
                   </div>
 
                   {/* Modified Material Consumptions */}
-                  {task.taskMaterials.length > 0 && (
+                  {selectedUpdate.materialConsumptions.length > 0 && (
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-sm font-medium text-gray-700">
@@ -404,12 +402,12 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
                       {modifiedMaterialConsumptions.length > 0 ? (
                         <div className="space-y-3">
                           {modifiedMaterialConsumptions.map((consumption, index) => {
-                            const material = task.taskMaterials.find(m => m.material.id === consumption.materialId)?.material
+                            const material = selectedUpdate.materialConsumptions.find(m => m.material.name === consumption.materialId)
                             return (
                               <div key={index} className="flex gap-2 items-center p-3 border rounded-lg">
                                 <div className="flex-1">
-                                  <p className="text-sm font-medium">{material?.name}</p>
-                                  <p className="text-xs text-gray-500">{material?.unit}</p>
+                                  <p className="text-sm font-medium">{material?.material.name}</p>
+                                  <p className="text-xs text-gray-500">{material?.material.unit}</p>
                                 </div>
                                 <Input
                                   type="number"
@@ -439,7 +437,7 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
                   )}
 
                   {/* Modified Material Losses */}
-                  {task.taskMaterials.length > 0 && (
+                  {selectedUpdate.materialLosses.length > 0 && (
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-sm font-medium text-gray-700">
@@ -459,12 +457,12 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
                       {modifiedMaterialLosses.length > 0 ? (
                         <div className="space-y-3">
                           {modifiedMaterialLosses.map((loss, index) => {
-                            const material = task.taskMaterials.find(m => m.material.id === loss.materialId)?.material
+                            const material = selectedUpdate.materialLosses.find(m => m.material.name === loss.materialId)
                             return (
                               <div key={index} className="flex gap-2 items-center p-3 border rounded-lg">
                                 <div className="flex-1">
-                                  <p className="text-sm font-medium">{material?.name}</p>
-                                  <p className="text-xs text-gray-500">{material?.unit}</p>
+                                  <p className="text-sm font-medium">{material?.material.name}</p>
+                                  <p className="text-xs text-gray-500">{material?.material.unit}</p>
                                 </div>
                                 <Input
                                   type="number"
