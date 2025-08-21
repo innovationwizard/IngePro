@@ -125,37 +125,37 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Assign Task: {task.name}</DialogTitle>
+          <DialogTitle>Asignar Tarea: {task.name}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Task Info */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Task Information</CardTitle>
+              <CardTitle className="text-lg">Información de la Tarea</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Category</p>
+                  <p className="text-sm font-medium text-gray-500">Categoría</p>
                   <p className="text-sm">{task.category.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Project</p>
+                  <p className="text-sm font-medium text-gray-500">Proyecto</p>
                   <p className="text-sm">{task.project.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Progress Unit</p>
+                  <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>
                   <p className="text-sm">{task.progressUnit}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Status</p>
+                  <p className="text-sm font-medium text-gray-500">Estado</p>
                   <p className="text-sm">{task.status}</p>
                 </div>
               </div>
               {task.description && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Description</p>
+                  <p className="text-sm font-medium text-gray-500">Descripción</p>
                   <p className="text-sm">{task.description}</p>
                 </div>
               )}
@@ -165,7 +165,7 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
           {/* Currently Assigned */}
           {currentlyAssignedUsers.length > 0 && (
             <div>
-              <h4 className="font-medium mb-2">Currently Assigned</h4>
+              <h4 className="font-medium mb-2">Actualmente Asignados</h4>
               <div className="flex flex-wrap gap-2">
                 {currentlyAssignedUsers.map((user) => (
                   <Badge key={user.id} variant="outline">
@@ -178,10 +178,10 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
 
           {/* User Selection */}
           <div>
-            <h4 className="font-medium mb-2">Select Workers to Assign</h4>
+            <h4 className="font-medium mb-2">Seleccionar Trabajadores para Asignar</h4>
             <Input
               type="text"
-              placeholder="Search workers..."
+              placeholder="Buscar trabajadores..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="mb-4"
@@ -207,7 +207,7 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
                         <p className="font-medium text-sm">{user.name}</p>
                         <p className="text-xs text-gray-500">{user.email}</p>
                         {isCurrentlyAssigned && (
-                          <p className="text-xs text-blue-600">Currently assigned</p>
+                          <p className="text-xs text-blue-600">Actualmente asignado</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -256,7 +256,7 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Assigning...' : 'Assign Task'}
+              {loading ? 'Asignando...' : 'Asignar Tarea'}
             </Button>
           </div>
         </form>

@@ -142,62 +142,62 @@ export default function MaterialManager({ materials, onMaterialCreated }: Materi
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Materials</h3>
+                 <h3 className="text-lg font-medium">Materiales</h3>
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Material
+                             <Plus className="w-4 h-4 mr-2" />
+               Agregar Material
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Material</DialogTitle>
+              <DialogTitle>Crear Nuevo Material</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Material Name *
+                  Nombre del Material *
                 </label>
                 <Input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter material name"
+                  placeholder="Ingresa el nombre del material"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Spanish Name
+                  Nombre en Español
                 </label>
                 <Input
                   type="text"
                   value={formData.nameEs}
                   onChange={(e) => setFormData(prev => ({ ...prev, nameEs: e.target.value }))}
-                  placeholder="Enter Spanish name (optional)"
+                  placeholder="Ingresa el nombre en español (opcional)"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Unit *
+                  Unidad *
                 </label>
                 <Input
                   type="text"
                   value={formData.unit}
                   onChange={(e) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
-                  placeholder="e.g., cubic centimeters, units, liters"
+                  placeholder="ej., centímetros cúbicos, unidades, litros"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  Descripción
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter description (optional)"
+                  placeholder="Ingresa la descripción (opcional)"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
                 />
@@ -208,13 +208,13 @@ export default function MaterialManager({ materials, onMaterialCreated }: Materi
                   variant="outline"
                   onClick={() => setShowCreateModal(false)}
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   type="submit"
                   disabled={loading || !formData.name || !formData.unit}
                 >
-                  {loading ? 'Creating...' : 'Create Material'}
+                  {loading ? 'Creando...' : 'Crear Material'}
                 </Button>
               </div>
             </form>
@@ -270,7 +270,7 @@ export default function MaterialManager({ materials, onMaterialCreated }: Materi
 
       {materials.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No materials found</p>
+          <p className="text-gray-500">No se encontraron materiales</p>
         </div>
       )}
 
@@ -278,7 +278,7 @@ export default function MaterialManager({ materials, onMaterialCreated }: Materi
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Material</DialogTitle>
+                         <DialogTitle>Editar Material</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
             <div>
@@ -340,7 +340,7 @@ export default function MaterialManager({ materials, onMaterialCreated }: Materi
                 type="submit"
                 disabled={loading || !formData.name || !formData.unit}
               >
-                {loading ? 'Updating...' : 'Update Material'}
+                                  {loading ? 'Actualizando...' : 'Actualizar Material'}
               </Button>
             </div>
           </form>

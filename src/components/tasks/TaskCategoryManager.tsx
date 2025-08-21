@@ -142,50 +142,50 @@ export default function TaskCategoryManager({ categories, onCategoryCreated }: T
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Task Categories</h3>
+                 <h3 className="text-lg font-medium">Categorías de Tareas</h3>
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Category
+                             <Plus className="w-4 h-4 mr-2" />
+               Agregar Categoría
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Category</DialogTitle>
+              <DialogTitle>Crear Nueva Categoría</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category Name *
+                  Nombre de la Categoría *
                 </label>
                 <Input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter category name"
+                  placeholder="Ingresa el nombre de la categoría"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Spanish Name
+                  Nombre en Español
                 </label>
                 <Input
                   type="text"
                   value={formData.nameEs}
                   onChange={(e) => setFormData(prev => ({ ...prev, nameEs: e.target.value }))}
-                  placeholder="Enter Spanish name (optional)"
+                  placeholder="Ingresa el nombre en español (opcional)"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  Descripción
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter description (optional)"
+                  placeholder="Ingresa la descripción (opcional)"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
                 />
@@ -196,13 +196,13 @@ export default function TaskCategoryManager({ categories, onCategoryCreated }: T
                   variant="outline"
                   onClick={() => setShowCreateModal(false)}
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   type="submit"
                   disabled={loading || !formData.name}
                 >
-                  {loading ? 'Creating...' : 'Create Category'}
+                  {loading ? 'Creando...' : 'Crear Categoría'}
                 </Button>
               </div>
             </form>
@@ -220,7 +220,7 @@ export default function TaskCategoryManager({ categories, onCategoryCreated }: T
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="font-medium">{category.name}</h4>
                     <Badge variant="outline">
-                      {category._count.tasks} tasks
+                      {category._count.tasks} tareas
                     </Badge>
                   </div>
                   {category.nameEs && (
@@ -259,7 +259,7 @@ export default function TaskCategoryManager({ categories, onCategoryCreated }: T
 
       {categories.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No categories found</p>
+          <p className="text-gray-500">No se encontraron categorías</p>
         </div>
       )}
 
@@ -267,7 +267,7 @@ export default function TaskCategoryManager({ categories, onCategoryCreated }: T
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
+                         <DialogTitle>Editar Categoría</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
             <div>
@@ -317,7 +317,7 @@ export default function TaskCategoryManager({ categories, onCategoryCreated }: T
                 type="submit"
                 disabled={loading || !formData.name}
               >
-                {loading ? 'Updating...' : 'Update Category'}
+                                  {loading ? 'Actualizando...' : 'Actualizar Categoría'}
               </Button>
             </div>
           </form>

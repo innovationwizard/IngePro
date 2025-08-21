@@ -131,7 +131,7 @@ export default function TasksPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">Cargando...</div>
       </div>
     )
   }
@@ -147,22 +147,22 @@ export default function TasksPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Task Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Gestión de Tareas</h1>
         <p className="text-gray-600 mt-2">
-          Manage tasks, categories, and materials for your construction projects
+          Gestiona tareas, categorías y materiales para tus proyectos de construcción
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="create">Create Task</TabsTrigger>
+            <TabsTrigger value="create">Crear Tarea</TabsTrigger>
           )}
           {isAdmin && (
             <>
-              <TabsTrigger value="categories">Categories</TabsTrigger>
-              <TabsTrigger value="materials">Materials</TabsTrigger>
+              <TabsTrigger value="categories">Categorías</TabsTrigger>
+              <TabsTrigger value="materials">Materiales</TabsTrigger>
             </>
           )}
         </TabsList>
@@ -170,7 +170,7 @@ export default function TasksPage() {
         <TabsContent value="tasks" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Tasks</CardTitle>
+              <CardTitle>Tareas</CardTitle>
             </CardHeader>
             <CardContent>
               <TaskList 
@@ -186,7 +186,7 @@ export default function TasksPage() {
           <TabsContent value="create" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Create New Task</CardTitle>
+                <CardTitle>Crear Nueva Tarea</CardTitle>
               </CardHeader>
               <CardContent>
                 <TaskForm 
@@ -204,7 +204,7 @@ export default function TasksPage() {
             <TabsContent value="categories" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Task Categories</CardTitle>
+                  <CardTitle>Categorías de Tareas</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <TaskCategoryManager 
@@ -218,7 +218,7 @@ export default function TasksPage() {
             <TabsContent value="materials" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Materials</CardTitle>
+                  <CardTitle>Materiales</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <MaterialManager 

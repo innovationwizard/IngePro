@@ -186,37 +186,37 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Log Progress: {task.name}</DialogTitle>
+          <DialogTitle>Registrar Progreso: {task.name}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Task Info */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Task Information</CardTitle>
+              <CardTitle className="text-lg">Información de la Tarea</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Category</p>
+                  <p className="text-sm font-medium text-gray-500">Categoría</p>
                   <p className="text-sm">{task.category.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Project</p>
+                  <p className="text-sm font-medium text-gray-500">Proyecto</p>
                   <p className="text-sm">{task.project.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Progress Unit</p>
+                  <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>
                   <p className="text-sm">{task.progressUnit}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Status</p>
+                  <p className="text-sm font-medium text-gray-500">Estado</p>
                   <p className="text-sm">{task.status}</p>
                 </div>
               </div>
               {task.description && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Description</p>
+                  <p className="text-sm font-medium text-gray-500">Descripción</p>
                   <p className="text-sm">{task.description}</p>
                 </div>
               )}
@@ -226,7 +226,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
           {/* Progress Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Amount Completed ({task.progressUnit}) *
+              Cantidad Completada ({task.progressUnit}) *
             </label>
             <Input
               type="number"
@@ -234,7 +234,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
               min="0"
               value={formData.amountCompleted}
               onChange={(e) => setFormData(prev => ({ ...prev, amountCompleted: e.target.value }))}
-              placeholder={`Enter amount completed in ${task.progressUnit}`}
+              placeholder={`Ingresa la cantidad completada en ${task.progressUnit}`}
               required
             />
           </div>
@@ -242,18 +242,18 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
           {/* Additional Attributes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional Attributes (Optional)
+              Atributos Adicionales (Opcional)
             </label>
             <Input
               type="text"
               value={formData.additionalAttributes}
               onChange={(e) => setFormData(prev => ({ ...prev, additionalAttributes: e.target.value }))}
-              placeholder="e.g., room A, north wall, etc."
+              placeholder="ej., habitación A, pared norte, etc."
               maxLength={100}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {formData.additionalAttributes.length}/100 characters
-            </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                {formData.additionalAttributes.length}/100 caracteres
+              </p>
           </div>
 
           {/* Material Consumptions */}
@@ -261,7 +261,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Material Consumption
+                  Consumo de Materiales
                 </label>
                 <Button
                   type="button"
@@ -271,7 +271,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
                   disabled={getAvailableMaterials('consumption').length === 0}
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Add Consumption
+                  Agregar Consumo
                 </Button>
               </div>
               
@@ -291,7 +291,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
                           min="0"
                           value={consumption.quantity}
                           onChange={(e) => updateMaterialConsumption(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          placeholder="Quantity"
+                          placeholder="Cantidad"
                           className="w-24"
                         />
                         <Button
@@ -307,7 +307,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">No material consumption logged</p>
+                <p className="text-sm text-gray-500">No se registró consumo de materiales</p>
               )}
             </div>
           )}
@@ -317,7 +317,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Material Loss
+                  Pérdida de Materiales
                 </label>
                 <Button
                   type="button"
@@ -327,7 +327,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
                   disabled={getAvailableMaterials('loss').length === 0}
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Add Loss
+                  Agregar Pérdida
                 </Button>
               </div>
               
@@ -347,7 +347,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
                           min="0"
                           value={loss.quantity}
                           onChange={(e) => updateMaterialLoss(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          placeholder="Quantity"
+                          placeholder="Cantidad"
                           className="w-24"
                         />
                         <Button
@@ -363,7 +363,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">No material loss logged</p>
+                <p className="text-sm text-gray-500">No se registró pérdida de materiales</p>
               )}
             </div>
           )}
@@ -375,13 +375,13 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              Cancelar
             </Button>
             <Button
               type="submit"
               disabled={loading || !formData.amountCompleted || parseFloat(formData.amountCompleted) <= 0}
             >
-              {loading ? 'Logging...' : 'Log Progress'}
+              {loading ? 'Registrando...' : 'Registrar Progreso'}
             </Button>
           </div>
         </form>

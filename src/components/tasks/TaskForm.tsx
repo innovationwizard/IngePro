@@ -120,44 +120,44 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Task Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Task Name *
-          </label>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">
+           Nombre de la Tarea *
+         </label>
           <Input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="Enter task name"
+                         placeholder="Ingresa el nombre de la tarea"
             required
           />
         </div>
 
         {/* Progress Unit */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Progress Unit *
-          </label>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">
+           Unidad de Progreso *
+         </label>
           <Input
             type="text"
             value={formData.progressUnit}
             onChange={(e) => setFormData(prev => ({ ...prev, progressUnit: e.target.value }))}
-            placeholder="e.g., linear meters, square meters, units"
+                         placeholder="ej., metros lineales, metros cuadrados, unidades"
             required
           />
         </div>
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category *
-          </label>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">
+           Categoría *
+         </label>
           <Select
             value={formData.categoryId}
             onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a category" />
+              <SelectValue placeholder="Selecciona una categoría" />
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
@@ -171,16 +171,16 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
 
         {/* Project */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Project *
-          </label>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">
+           Proyecto *
+         </label>
           <Select
             value={formData.projectId}
             onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a project" />
+              <SelectValue placeholder="Selecciona un proyecto" />
             </SelectTrigger>
             <SelectContent>
               {projects.map((project) => (
@@ -195,13 +195,13 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Description
-        </label>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+           Descripción
+         </label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          placeholder="Enter task description"
+                     placeholder="Ingresa la descripción de la tarea"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           rows={3}
         />
@@ -209,9 +209,9 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
 
       {/* Materials */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Required Materials
-        </label>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+           Materiales Requeridos
+         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {materials.map((material) => (
             <div
@@ -242,9 +242,9 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
       {/* Selected Materials Summary */}
       {selectedMaterials.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Selected Materials ({selectedMaterials.length})
-          </label>
+                   <label className="block text-sm font-medium text-gray-700 mb-2">
+           Materiales Seleccionados ({selectedMaterials.length})
+         </label>
           <div className="flex flex-wrap gap-2">
             {selectedMaterials.map((material) => (
               <Badge key={material.id} variant="outline" className="flex items-center gap-1">
@@ -269,7 +269,7 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
           disabled={loading || !formData.name || !formData.categoryId || !formData.projectId || !formData.progressUnit}
           className="min-w-[120px]"
         >
-          {loading ? 'Creating...' : 'Create Task'}
+                     {loading ? 'Creando...' : 'Crear Tarea'}
         </Button>
       </div>
     </form>

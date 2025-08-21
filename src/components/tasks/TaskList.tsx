@@ -82,16 +82,16 @@ const taskStatusColors = {
 }
 
 const taskStatusLabels = {
-  'NOT_STARTED': 'Not Started',
-  'IN_PROGRESS': 'In Progress',
-  'COMPLETED': 'Completed',
-  'OBSTACLE_PERMIT': 'Waiting for Permit',
-  'OBSTACLE_DECISION': 'Waiting for Decision',
-  'OBSTACLE_INSPECTION': 'Waiting for Inspection',
-  'OBSTACLE_MATERIALS': 'Waiting for Materials',
-  'OBSTACLE_EQUIPMENT': 'Waiting for Equipment',
-  'OBSTACLE_WEATHER': 'Weather Delay',
-  'OBSTACLE_OTHER': 'Other Obstacle',
+  'NOT_STARTED': 'No Iniciado',
+  'IN_PROGRESS': 'En Progreso',
+  'COMPLETED': 'Completado',
+  'OBSTACLE_PERMIT': 'Esperando Permiso',
+  'OBSTACLE_DECISION': 'Esperando Decisión',
+  'OBSTACLE_INSPECTION': 'Esperando Inspección',
+  'OBSTACLE_MATERIALS': 'Esperando Materiales',
+  'OBSTACLE_EQUIPMENT': 'Esperando Equipos',
+  'OBSTACLE_WEATHER': 'Retraso por Clima',
+  'OBSTACLE_OTHER': 'Otro Obstáculo',
 }
 
 export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListProps) {
@@ -155,7 +155,7 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
       <div className="flex gap-4">
         <div className="flex-1">
           <Input
-            placeholder="Search tasks, categories, or projects..."
+            placeholder="Buscar tareas, categorías o proyectos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -165,7 +165,7 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="all">Todos los Estados</SelectItem>
             {Object.entries(taskStatusLabels).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
@@ -200,25 +200,25 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Category</p>
+                    <p className="text-sm font-medium text-gray-500">Categoría</p>
                     <p className="text-sm">{task.category.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Project</p>
+                    <p className="text-sm font-medium text-gray-500">Proyecto</p>
                     <p className="text-sm">{task.project.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Progress Unit</p>
+                    <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>
                     <p className="text-sm">{task.progressUnit}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Progress</p>
+                    <p className="text-sm font-medium text-gray-500">Progreso Total</p>
                     <p className="text-sm font-semibold">{totalProgress.toFixed(2)} {task.progressUnit}</p>
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-500 mb-2">Assigned Workers</p>
+                  <p className="text-sm font-medium text-gray-500 mb-2">Trabajadores Asignados</p>
                   <div className="flex flex-wrap gap-2">
                     {task.assignedUsers.length > 0 ? (
                       task.assignedUsers.map((assignment) => (
@@ -227,54 +227,54 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                         </Badge>
                       ))
                     ) : (
-                      <p className="text-sm text-gray-500">No workers assigned</p>
+                      <p className="text-sm text-gray-500">Sin trabajadores asignados</p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex gap-2">
                   {(userRole === 'ADMIN' || userRole === 'SUPERVISOR') && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAssignTask(task)}
-                    >
-                      {isAssigned ? 'Reassign' : 'Assign'}
-                    </Button>
+                                         <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={() => handleAssignTask(task)}
+                     >
+                       {isAssigned ? 'Reasignar' : 'Asignar'}
+                     </Button>
                   )}
                   
                   {canLogProgress && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleLogProgress(task)}
-                    >
-                      Log Progress
-                    </Button>
+                                         <Button
+                       size="sm"
+                       onClick={() => handleLogProgress(task)}
+                     >
+                       Registrar Progreso
+                     </Button>
                   )}
 
                   {canValidate && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleValidateProgress(task)}
-                    >
-                      Validate ({pendingUpdates.length})
-                    </Button>
+                                         <Button
+                       variant="secondary"
+                       size="sm"
+                       onClick={() => handleValidateProgress(task)}
+                     >
+                       Validar ({pendingUpdates.length})
+                     </Button>
                   )}
 
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        View Details
-                      </Button>
+                                         <Button variant="ghost" size="sm">
+                     Ver Detalles
+                   </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl">
                       <DialogHeader>
                         <DialogTitle>{task.name}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
-                        <div>
-                          <h4 className="font-medium mb-2">Progress Updates</h4>
+                                                 <div>
+                           <h4 className="font-medium mb-2">Actualizaciones de Progreso</h4>
                           <div className="space-y-2 max-h-64 overflow-y-auto">
                             {task.progressUpdates.length > 0 ? (
                               task.progressUpdates.map((update) => (
@@ -298,8 +298,8 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                                       {update.validationStatus}
                                     </Badge>
                                   </div>
-                                  <p className="text-sm">
-                                    Completed: {update.amountCompleted} {task.progressUnit}
+                                                                     <p className="text-sm">
+                                     Completado: {update.amountCompleted} {task.progressUnit}
                                     {update.additionalAttributes && (
                                       <span className="text-gray-600 ml-2">
                                         ({update.additionalAttributes})
@@ -309,8 +309,8 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                                   {(update.materialConsumptions.length > 0 || update.materialLosses.length > 0) && (
                                     <div className="mt-2 text-sm">
                                       {update.materialConsumptions.length > 0 && (
-                                        <div>
-                                          <span className="font-medium">Consumed:</span>
+                                                                                 <div>
+                                           <span className="font-medium">Consumido:</span>
                                           {update.materialConsumptions.map((consumption, index) => (
                                             <span key={index} className="ml-1">
                                               {consumption.quantity} {consumption.material.unit} {consumption.material.name}
@@ -320,8 +320,8 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                                         </div>
                                       )}
                                       {update.materialLosses.length > 0 && (
-                                        <div>
-                                          <span className="font-medium">Lost:</span>
+                                                                                 <div>
+                                           <span className="font-medium">Perdido:</span>
                                           {update.materialLosses.map((loss, index) => (
                                             <span key={index} className="ml-1">
                                               {loss.quantity} {loss.material.unit} {loss.material.name}
@@ -335,7 +335,7 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                                 </div>
                               ))
                             ) : (
-                              <p className="text-gray-500">No progress updates yet</p>
+                              <p className="text-gray-500">Aún no hay actualizaciones de progreso</p>
                             )}
                           </div>
                         </div>
@@ -350,9 +350,9 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
       </div>
 
       {filteredTasks.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No tasks found</p>
-        </div>
+               <div className="text-center py-8">
+         <p className="text-gray-500">No se encontraron tareas</p>
+       </div>
       )}
 
       {/* Modals */}
