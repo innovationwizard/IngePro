@@ -31,5 +31,4 @@ export interface UserAssignment {
   company: string
   startDate: string
   endDate: string | null
-  role?: string
 }

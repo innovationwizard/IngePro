@@ -8,7 +8,6 @@ import { ArrowLeft, Plus, Calendar, Building, Users, Target, Mail, Clock } from 
 interface UserAssignment {
   id: string
   name: string
-  role: string
   startDate: string
   endDate: string | null
   company?: string
@@ -46,14 +45,12 @@ export default function UserDetailPage() {
   const [message, setMessage] = useState('')
   
   const [assignFormData, setAssignFormData] = useState({
-    companyId: '',
-    role: 'WORKER' as 'WORKER' | 'SUPERVISOR' | 'ADMIN'
+    companyId: ''
   })
   const [availableCompanies, setAvailableCompanies] = useState<Array<{id: string, name: string}>>([])
   
   const [assignProjectFormData, setAssignProjectFormData] = useState({
-    projectId: '',
-    role: 'WORKER' as 'WORKER' | 'SUPERVISOR'
+    projectId: ''
   })
   const [availableProjects, setAvailableProjects] = useState<Array<{id: string, name: string, company: {name: string}}>>([])
 
@@ -170,8 +167,7 @@ export default function UserDetailPage() {
           action: 'assign-company',
           assignmentId: '',
           assignmentType: 'company',
-          companyId: assignFormData.companyId,
-          role: assignFormData.role
+          companyId: assignFormData.companyId
         })
       })
 
@@ -180,7 +176,7 @@ export default function UserDetailPage() {
       if (response.ok) {
         setMessage(data.message)
         setIsAssignCompanyModalOpen(false)
-        setAssignFormData({ companyId: '', role: 'WORKER' })
+        setAssignFormData({ companyId: '' })
         fetchUserData() // Refresh user data
       } else {
         setMessage(data.error || 'Error al asignar usuario')
@@ -205,8 +201,7 @@ export default function UserDetailPage() {
           action: 'assign-project',
           assignmentId: '',
           assignmentType: 'project',
-          projectId: assignProjectFormData.projectId,
-          role: assignProjectFormData.role
+          projectId: assignProjectFormData.projectId
         })
       })
 
@@ -215,7 +210,7 @@ export default function UserDetailPage() {
       if (response.ok) {
         setMessage(data.message)
         setIsAssignProjectModalOpen(false)
-        setAssignProjectFormData({ projectId: '', role: 'WORKER' })
+        setAssignProjectFormData({ projectId: '' })
         fetchUserData() // Refresh user data
       } else {
         setMessage(data.error || 'Error al asignar proyecto')
@@ -369,7 +364,7 @@ export default function UserDetailPage() {
                   <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <div className="font-medium">{project.name}</div>
-                      <div className="text-sm text-gray-500">Rol: {user.role} | Empresa: {project.company}</div>
+                      <div className="text-sm text-gray-500">Empresa: {project.company}</div>
                       <div className="text-xs text-gray-400">
                         Desde: {new Date(project.startDate).toLocaleDateString('es-ES')}
                       </div>
@@ -397,20 +392,19 @@ export default function UserDetailPage() {
               Historial
             </h2>
             <div className="space-y-3">
-              {user.history.length > 0 ? (
-                user.history.map((entry, index) => (
-                  <div key={index} className="p-3 border rounded-lg">
-                    <div className="font-medium">{entry.name}</div>
-                    <div className="text-sm text-gray-500">Rol: {entry.role}</div>
-                    <div className="text-xs text-gray-400">
-                      {new Date(entry.startDate).toLocaleDateString('es-ES')} - 
-                      {entry.endDate ? new Date(entry.endDate).toLocaleDateString('es-ES') : 'Actual'}
+                              {user.history.length > 0 ? (
+                  user.history.map((entry, index) => (
+                    <div key={index} className="p-3 border rounded-lg">
+                      <div className="font-medium">{entry.name}</div>
+                      <div className="text-xs text-gray-400">
+                        {new Date(entry.startDate).toLocaleDateString('es-ES')} - 
+                        {entry.endDate ? new Date(entry.endDate).toLocaleDateString('es-ES') : 'Actual'}
+                      </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">No hay historial disponible</p>
-              )}
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No hay historial disponible</p>
+                )}
             </div>
           </div>
         </div>
@@ -446,19 +440,7 @@ export default function UserDetailPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Rol</label>
-                  <select
-                    required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    value={assignFormData.role}
-                    onChange={(e) => setAssignFormData({ ...assignFormData, role: e.target.value as any })}
-                  >
-                    <option value="WORKER">Trabajador</option>
-                    <option value="SUPERVISOR">Supervisor</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
-                </div>
+
                 <div className="flex space-x-3">
                   <button
                     type="button"
@@ -504,18 +486,7 @@ export default function UserDetailPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Rol</label>
-                  <select
-                    required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    value={assignProjectFormData.role}
-                    onChange={(e) => setAssignProjectFormData({ ...assignProjectFormData, role: e.target.value as any })}
-                  >
-                    <option value="WORKER">Trabajador</option>
-                    <option value="SUPERVISOR">Supervisor</option>
-                  </select>
-                </div>
+
                 <div className="flex space-x-3">
                   <button
                     type="button"

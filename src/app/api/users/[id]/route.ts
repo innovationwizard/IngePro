@@ -13,7 +13,6 @@ const updateAssignmentSchema = z.object({
   assignmentType: z.enum(['company', 'team', 'project']),
   companyId: z.string().optional(),
   projectId: z.string().optional(),
-  role: z.enum(['WORKER', 'SUPERVISOR', 'ADMIN']).optional(),
 })
 
 // GET - Get detailed user information
@@ -87,7 +86,6 @@ export async function GET(
         .map(ut => ({
           id: ut.id,
           name: ut.company.name,
-          role: ut.role,
           startDate: ut.startDate,
           endDate: ut.endDate
         })),
@@ -96,7 +94,6 @@ export async function GET(
         .map(ut => ({
           id: ut.id,
           name: ut.team.name,
-          role: 'MEMBER',
           startDate: ut.startDate,
           endDate: ut.endDate,
           company: 'N/A' // TODO: Get company from team
@@ -106,7 +103,6 @@ export async function GET(
         .map(up => ({
           id: up.id,
           name: up.project.name,
-          role: up.role,
           startDate: up.startDate,
           endDate: up.endDate,
           company: up.project.company?.name || 'N/A'
@@ -118,21 +114,18 @@ export async function GET(
       ...user.userTenants.map(ut => ({
         id: ut.id,
         name: ut.company.name,
-        role: ut.role,
         startDate: ut.startDate,
         endDate: ut.endDate
       })),
       ...user.userTeams.map(ut => ({
         id: ut.id,
         name: ut.team.name,
-        role: 'MEMBER',
         startDate: ut.startDate,
         endDate: ut.endDate
       })),
       ...user.userProjects.map(up => ({
         id: up.id,
         name: up.project.name,
-        role: up.role,
         startDate: up.startDate,
         endDate: up.endDate
       }))
@@ -213,9 +206,9 @@ export async function PUT(
 
     } else if (validatedData.action === 'assign-company') {
       // Assign user to a company
-      if (!validatedData.companyId || !validatedData.role) {
+      if (!validatedData.companyId) {
         return NextResponse.json(
-          { error: 'Company ID and role are required' },
+          { error: 'Company ID is required' },
           { status: 400 }
         )
       }
@@ -258,7 +251,6 @@ export async function PUT(
         data: {
           userId: userId,
           companyId: validatedData.companyId,
-          role: validatedData.role,
           startDate: new Date(),
           status: 'ACTIVE'
         }
@@ -270,9 +262,9 @@ export async function PUT(
       })
     } else if (validatedData.action === 'assign-project') {
       // Assign user to a project
-      if (!validatedData.projectId || !validatedData.role) {
+      if (!validatedData.projectId) {
         return NextResponse.json(
-          { error: 'Project ID and role are required' },
+          { error: 'Project ID is required' },
           { status: 400 }
         )
       }
@@ -322,7 +314,6 @@ export async function PUT(
         data: {
           userId: userId,
           projectId: validatedData.projectId,
-          role: validatedData.role,
           startDate: new Date(),
           status: 'ACTIVE'
         }

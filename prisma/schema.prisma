@@ -104,9 +104,6 @@ model UserTenant {
   startDate DateTime  @default(now())
   endDate   DateTime? // null = currently active
 
-  // Role at this company
-  role Role @default(WORKER)
-
   // Status
   status UserTenantStatus @default(ACTIVE)
 
@@ -150,9 +147,6 @@ model UserProject {
   // Time tracking
   startDate DateTime  @default(now())
   endDate   DateTime? // null = currently active
-
-  // Role in this project
-  role Role @default(WORKER)
 
   // Status
   status UserProjectStatus @default(ACTIVE)
