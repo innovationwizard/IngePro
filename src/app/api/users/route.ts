@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
         name: user.name,
         email: user.email,
         status: user.status,
-        role: relevantUserTenant?.role || user.role,
+        role: user.role,
         createdAt: user.createdAt,
         currentCompany: relevantUserTenant?.company.name || 'Unknown',
         currentTeams: user.userTeams.map(ut => ut.team.name),
