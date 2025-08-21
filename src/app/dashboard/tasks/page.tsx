@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import TaskList from '@/components/tasks/TaskList'
 import TaskForm from '@/components/tasks/TaskForm'
 import TaskCategoryManager from '@/components/tasks/TaskCategoryManager'
-import MaterialManager from '@/components/tasks/MaterialManager'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -47,20 +47,13 @@ interface TaskCategory {
   }
 }
 
-interface Material {
-  id: string
-  name: string
-  nameEs?: string
-  description?: string
-  unit: string
-}
+
 
 export default function TasksPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [tasks, setTasks] = useState<Task[]>([])
   const [categories, setCategories] = useState<TaskCategory[]>([])
-  const [materials, setMaterials] = useState<Material[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('tasks')
 
@@ -74,7 +67,6 @@ export default function TasksPage() {
 
     fetchTasks()
     fetchCategories()
-    fetchMaterials()
   }, [session, status, router])
 
   const fetchTasks = async () => {
@@ -103,17 +95,7 @@ export default function TasksPage() {
     }
   }
 
-  const fetchMaterials = async () => {
-    try {
-      const response = await fetch('/api/materials')
-      if (response.ok) {
-        const data = await response.json()
-        setMaterials(data.materials)
-      }
-    } catch (error) {
-      console.error('Error fetching materials:', error)
-    }
-  }
+
 
   const handleTaskCreated = () => {
     fetchTasks()
@@ -124,9 +106,7 @@ export default function TasksPage() {
     fetchCategories()
   }
 
-  const handleMaterialCreated = () => {
-    fetchMaterials()
-  }
+
 
   if (status === 'loading' || loading) {
     return (
@@ -154,16 +134,13 @@ export default function TasksPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="create">Crear Tarea</TabsTrigger>
           )}
           {isAdmin && (
-            <>
-              <TabsTrigger value="categories">Categorías</TabsTrigger>
-              <TabsTrigger value="materials">Materiales</TabsTrigger>
-            </>
+            <TabsTrigger value="categories">Categorías</TabsTrigger>
           )}
         </TabsList>
 
@@ -191,7 +168,6 @@ export default function TasksPage() {
               <CardContent>
                 <TaskForm 
                   categories={categories}
-                  materials={materials}
                   onTaskCreated={handleTaskCreated}
                 />
               </CardContent>
@@ -215,19 +191,7 @@ export default function TasksPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="materials" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Materiales</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MaterialManager 
-                    materials={materials}
-                    onMaterialCreated={handleMaterialCreated}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
+
           </>
         )}
       </Tabs>

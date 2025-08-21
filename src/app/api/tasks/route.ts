@@ -11,8 +11,7 @@ const taskSchema = z.object({
   name: z.string().min(2, 'Task name must be at least 2 characters'),
   description: z.string().optional(),
   categoryId: z.string().min(1, 'Category is required'),
-  projectId: z.string().min(1, 'Project is required'),
-  progressUnit: z.string().min(1, 'Progress unit is required'),
+  progressUnit: z.string().min(1, 'Unit of measure is required'),
   materialIds: z.array(z.string()).optional(), // Array of material IDs
 })
 
@@ -51,65 +50,88 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('categoryId')
     const status = searchParams.get('status')
 
-    // Build where clause
-    const whereClause: any = {
-      project: {
-        companyId: companyId
-      }
-    }
-
-    if (projectId) {
-      whereClause.projectId = projectId
-    }
+    // Build where clause - tasks are universal
+    const whereClause: any = {}
 
     if (categoryId) {
       whereClause.categoryId = categoryId
     }
 
-    if (status) {
-      whereClause.status = status
-    }
-
     // If user is WORKER, only show tasks assigned to them
     if (session.user?.role === 'WORKER') {
-      whereClause.assignedUsers = {
-        some: {
-          userId: session.user?.id,
-          status: 'ACTIVE'
+      // Get tasks assigned to this worker through TaskWorkerAssignment
+      const workerAssignments = await prisma.taskWorkerAssignment.findMany({
+        where: {
+          workerId: session.user?.id,
+          project: {
+            companyId: companyId
+          }
+        },
+        include: {
+          task: {
+            include: {
+              category: true
+            }
+          }
         }
-      }
+      })
+      
+      // Return only assigned tasks for workers
+      return NextResponse.json({ 
+        tasks: workerAssignments.map(assignment => ({
+          id: assignment.task.id,
+          name: assignment.task.name,
+          description: assignment.task.description,
+          category: assignment.task.category,
+          progressUnit: assignment.task.progressUnit,
+          projectId: assignment.projectId,
+          assignedAt: assignment.assignedAt,
+          assignedBy: assignment.assignedBy
+        }))
+      })
     }
 
     const tasks = await prisma.task.findMany({
       where: whereClause,
       include: {
         category: true,
-        project: {
-          select: {
-            id: true,
-            name: true,
-            nameEs: true
+        projectAssignments: {
+          include: {
+            project: {
+              select: {
+                id: true,
+                name: true,
+                nameEs: true
+              }
+            }
           }
         },
-        assignedUsers: {
+        workerAssignments: {
           include: {
-            user: {
+            worker: {
               select: {
                 id: true,
                 name: true,
                 role: true
               }
+            },
+            project: {
+              select: {
+                id: true,
+                name: true
+              }
             }
-          }
-        },
-        taskMaterials: {
-          include: {
-            material: true
           }
         },
         progressUpdates: {
           include: {
-            user: {
+            worker: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            project: {
               select: {
                 id: true,
                 name: true
@@ -182,23 +204,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify project belongs to user's company
-    const project = await prisma.project.findFirst({
-      where: {
-        id: validatedData.projectId,
-        companyId: companyId
-      }
-    })
-
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-    }
-
-    // Verify category belongs to user's company
+    // Verify category exists (universal)
     const category = await prisma.taskCategory.findFirst({
       where: {
         id: validatedData.categoryId,
-        companyId: companyId
+        status: 'ACTIVE'
       }
     })
 
@@ -208,39 +218,18 @@ export async function POST(request: NextRequest) {
 
     // Create task with materials in transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create the task
+      // Create the task (universal, no project)
       const task = await tx.task.create({
         data: {
           name: validatedData.name,
           description: validatedData.description,
           categoryId: validatedData.categoryId,
-          projectId: validatedData.projectId,
           progressUnit: validatedData.progressUnit,
         }
       })
 
-      // Add materials to task if provided
-      if (validatedData.materialIds && validatedData.materialIds.length > 0) {
-        // Verify all materials belong to the company
-        const materials = await tx.material.findMany({
-          where: {
-            id: { in: validatedData.materialIds },
-            companyId: companyId
-          }
-        })
-
-        if (materials.length !== validatedData.materialIds.length) {
-          throw new Error('Some materials not found')
-        }
-
-        // Create task-material relationships
-        await tx.taskMaterial.createMany({
-          data: validatedData.materialIds.map(materialId => ({
-            taskId: task.id,
-            materialId: materialId
-          }))
-        })
-      }
+      // Note: Materials are no longer linked to tasks directly
+      // They are assigned to projects and consumed by workers during progress updates
 
       return task
     })

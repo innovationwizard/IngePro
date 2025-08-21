@@ -26,7 +26,7 @@ model User {
   userTeams    UserTeam[]
   userProjects UserProject[]
   workLogs     WorkLog[]
-  userTasks    UserTask[]
+  workerAssignments TaskWorkerAssignment[]
   progressUpdates TaskProgressUpdate[]
 
   // Audit trail
@@ -52,8 +52,6 @@ model Company {
   workLogs   WorkLog[]
   Team       Team[]
   UserTenant UserTenant[]
-  taskCategories TaskCategory[]
-  materials  Material[]
 
   @@map("companies")
 }
@@ -92,7 +90,10 @@ model Project {
   users    UserProject[]
   teams    ProjectTeam[]
   workLogs WorkLog[]
-  tasks    Task[]
+  taskAssignments TaskProjectAssignment[]
+  workerAssignments TaskWorkerAssignment[]
+  materials ProjectMaterial[]
+  progressUpdates TaskProgressUpdate[]
 
   @@map("Project")
 }
@@ -268,14 +269,12 @@ enum UserProjectStatus {
   COMPLETED
 }
 
-// Task Management Models
+// Universal Task Management Models (no company/project dependencies)
 model TaskCategory {
   id          String   @id @default(cuid())
   name        String   // e.g., "Sello de juntas"
   nameEs      String?  // Spanish name
   description String?
-  companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
   status      TaskCategoryStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -288,27 +287,22 @@ model TaskCategory {
 
 model Task {
   id          String   @id @default(cuid())
-  name        String   // Specific task name
+  name        String   // Universal task name
   description String?
   categoryId  String
   category    TaskCategory @relation(fields: [categoryId], references: [id])
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
   
   // Progress tracking
   progressUnit String  // e.g., "linear meters", "square meters", "units"
   
-  // Task state
-  status      TaskStatus @default(NOT_STARTED)
+  // Universal tasks have no status - they just exist
   
-  // Assignment
-  assignedUsers UserTask[]
+  // Assignment relationships
+  projectAssignments TaskProjectAssignment[]
+  workerAssignments TaskWorkerAssignment[]
   
   // Progress updates
   progressUpdates TaskProgressUpdate[]
-  
-  // Materials for this task
-  taskMaterials TaskMaterial[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -316,37 +310,25 @@ model Task {
   @@map("Task")
 }
 
-model UserTask {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id])
-  
-  // Assignment tracking
-  assignedAt DateTime @default(now())
-  assignedBy String   // User ID who assigned the task
-  
-  // Status
-  status    UserTaskStatus @default(ACTIVE)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  @@unique([userId, taskId])
-  @@map("UserTask")
-}
 
 model TaskProgressUpdate {
   id        String   @id @default(cuid())
   taskId    String
   task      Task     @relation(fields: [taskId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  workerId  String
+  worker    User     @relation(fields: [workerId], references: [id])
+  assignmentId String
+  assignment TaskWorkerAssignment @relation(fields: [assignmentId], references: [id])
   
   // Progress data
   amountCompleted Float    // e.g., 5.5 linear meters
   additionalAttributes String? // e.g., "room A", "north wall"
+  
+  // Status stamp (used by worker)
+  status      TaskStatus
   
   // Material consumption and loss
   materialConsumptions MaterialConsumption[]
@@ -374,31 +356,71 @@ model Material {
   nameEs      String?  // Spanish name
   description String?
   unit        String   // e.g., "cubic centimeters", "units", "liters"
-  companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
   status      MaterialStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  taskMaterials TaskMaterial[]
+  projectMaterials ProjectMaterial[]
   consumptions  MaterialConsumption[]
   losses        MaterialLoss[]
 
   @@map("Material")
 }
 
-model TaskMaterial {
+// Assignment Tables
+model TaskProjectAssignment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  
+  // Assignment tracking
+  assignedAt DateTime @default(now())
+  assignedBy String   // User ID who assigned the task to project
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([taskId, projectId])
+  @@map("TaskProjectAssignment")
+}
+
+model TaskWorkerAssignment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  workerId  String
+  worker    User     @relation(fields: [workerId], references: [id])
+  
+  // Assignment tracking
+  assignedAt DateTime @default(now())
+  assignedBy String   // User ID who assigned the task to worker
+  
+  // Progress updates for this assignment
+  progressUpdates TaskProgressUpdate[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([taskId, projectId, workerId])
+  @@map("TaskWorkerAssignment")
+}
+
+model ProjectMaterial {
   id         String   @id @default(cuid())
-  taskId     String
-  task       Task     @relation(fields: [taskId], references: [id])
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id])
   materialId String
   material   Material @relation(fields: [materialId], references: [id])
-  
+
   createdAt  DateTime @default(now())
 
-  @@unique([taskId, materialId])
-  @@map("TaskMaterial")
+  @@unique([projectId, materialId])
+  @@map("ProjectMaterial")
 }
 
 model MaterialConsumption {
@@ -448,11 +470,7 @@ enum TaskStatus {
   OBSTACLE_OTHER
 }
 
-enum UserTaskStatus {
-  ACTIVE
-  INACTIVE
-  COMPLETED
-}
+
 
 enum ValidationStatus {
   PENDING

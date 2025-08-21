@@ -4,9 +4,6 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { X } from 'lucide-react'
 
 interface TaskCategory {
   id: string
@@ -15,53 +12,23 @@ interface TaskCategory {
   description?: string
 }
 
-interface Material {
-  id: string
-  name: string
-  nameEs?: string
-  description?: string
-  unit: string
-}
 
-interface Project {
-  id: string
-  name: string
-  nameEs?: string
-}
+
+
 
 interface TaskFormProps {
   categories: TaskCategory[]
-  materials: Material[]
   onTaskCreated: () => void
 }
 
-export default function TaskForm({ categories, materials, onTaskCreated }: TaskFormProps) {
-  const [projects, setProjects] = useState<Project[]>([])
+export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     categoryId: '',
-    projectId: '',
-    progressUnit: '',
-    materialIds: [] as string[]
+    progressUnit: ''
   })
-
-  useEffect(() => {
-    fetchProjects()
-  }, [])
-
-  const fetchProjects = async () => {
-    try {
-      const response = await fetch('/api/projects')
-      if (response.ok) {
-        const data = await response.json()
-        setProjects(data.projects)
-      }
-    } catch (error) {
-      console.error('Error fetching projects:', error)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,9 +52,7 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
           name: '',
           description: '',
           categoryId: '',
-          projectId: '',
-          progressUnit: '',
-          materialIds: []
+          progressUnit: ''
         })
       } else {
         const error = await response.json()
@@ -102,18 +67,7 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
     }
   }
 
-  const handleMaterialToggle = (materialId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      materialIds: prev.materialIds.includes(materialId)
-        ? prev.materialIds.filter(id => id !== materialId)
-        : [...prev.materialIds, materialId]
-    }))
-  }
 
-  const selectedMaterials = materials.filter(material => 
-    formData.materialIds.includes(material.id)
-  )
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -169,28 +123,7 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
           </Select>
         </div>
 
-        {/* Project */}
-        <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-2">
-           Proyecto *
-         </label>
-          <Select
-            value={formData.projectId}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
-            required
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecciona un proyecto" />
-            </SelectTrigger>
-            <SelectContent>
-              {projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  {project.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+
       </div>
 
       {/* Description */}
@@ -207,66 +140,20 @@ export default function TaskForm({ categories, materials, onTaskCreated }: TaskF
         />
       </div>
 
-      {/* Materials */}
-      <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-2">
-           Materiales Requeridos
-         </label>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {materials.map((material) => (
-            <div
-              key={material.id}
-              className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                formData.materialIds.includes(material.id)
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-              onClick={() => handleMaterialToggle(material.id)}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-sm">{material.name}</p>
-                  <p className="text-xs text-gray-500">{material.unit}</p>
-                </div>
-                {formData.materialIds.includes(material.id) && (
-                  <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Note: Materials are assigned to projects, not to individual tasks */}
+      <div className="bg-blue-50 p-4 rounded-lg">
+        <p className="text-sm text-blue-700">
+          <strong>Nota:</strong> Los materiales se asignan a los proyectos, no a las tareas individuales. 
+          Las tareas son conceptos universales que pueden ser reutilizados en diferentes proyectos.
+        </p>
       </div>
 
-      {/* Selected Materials Summary */}
-      {selectedMaterials.length > 0 && (
-        <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-2">
-           Materiales Seleccionados ({selectedMaterials.length})
-         </label>
-          <div className="flex flex-wrap gap-2">
-            {selectedMaterials.map((material) => (
-              <Badge key={material.id} variant="outline" className="flex items-center gap-1">
-                {material.name} ({material.unit})
-                <button
-                  type="button"
-                  onClick={() => handleMaterialToggle(material.id)}
-                  className="ml-1 hover:text-red-500"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Submit Button */}
       <div className="flex justify-end">
         <Button
           type="submit"
-          disabled={loading || !formData.name || !formData.categoryId || !formData.projectId || !formData.progressUnit}
+          disabled={loading || !formData.name || !formData.categoryId || !formData.progressUnit}
           className="min-w-[120px]"
         >
                      {loading ? 'Creando...' : 'Crear Tarea'}
