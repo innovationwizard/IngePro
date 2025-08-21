@@ -444,7 +444,7 @@ export default function ProjectsPage() {
                         <div className="flex items-center">
                           <span className="text-gray-600">{userProject.user.name}</span>
                           <span className="ml-2 px-1 py-0.5 bg-gray-100 rounded text-gray-500">
-                            {userProject.role}
+                            {userProject.user.role}
                           </span>
                         </div>
                         {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERUSER' || 
