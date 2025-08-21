@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         data: { role: role || 'ADMIN' }
       })
 
-      // Update UserTenant role if exists
+              // UserTenant no longer stores role
       await prisma.userTenant.updateMany({
         where: { 
           userId: updatedUser.id,

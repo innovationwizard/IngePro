@@ -154,13 +154,13 @@ export default function DebugPage() {
                   </div>
                 </div>
 
-                {(userData.role !== 'ADMIN' || userData.userTenants.some((tenant: any) => tenant.role !== 'ADMIN')) && (
+                {(userData.role !== 'ADMIN') && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <h3 className="font-medium text-yellow-800 mb-2">Role Issue Detected</h3>
                     <p className="text-yellow-700 mb-4">
                       {userData.role !== 'ADMIN' 
                         ? `Your database role is "${userData.role}" but you should be an ADMIN.`
-                        : `Your database role is ADMIN but your tenant role is "${userData.userTenants[0]?.role || 'UNKNOWN'}" which is causing the session to show WORKER.`
+                        : `Your database role is ADMIN but there might be a session caching issue.`
                       }
                       Click the button below to fix this.
                     </p>

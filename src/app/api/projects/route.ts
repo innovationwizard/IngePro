@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     const prisma = await getPrisma()
 
     // Step 1: Determine current company context
-    let currentCompanyId = session.user?.companyId
+    let currentCompanyId: string | undefined = session.user?.companyId
     
     // If no company in session, try to get from UserTenant (most recent active)
     if (!currentCompanyId) {
@@ -146,20 +146,11 @@ export async function POST(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         select: { companyId: true }
       })
-      currentCompanyId = userTenant?.companyId
+      currentCompanyId = userTenant?.companyId || undefined
     }
     
-    // Step 2: Get user's role for current company
-    const userTenant = await prisma.userTenant.findFirst({
-      where: {
-        userId: session.user?.id,
-        companyId: currentCompanyId,
-        status: 'ACTIVE'
-      },
-      select: { role: true }
-    })
-    
-    const userRole = userTenant?.role || 'WORKER'
+    // Step 2: Get user's role from session
+    const userRole = (session.user?.role as string) || 'WORKER'
     
     // Step 3: Check permissions
     if (userRole !== 'ADMIN' && userRole !== 'SUPERUSER') {

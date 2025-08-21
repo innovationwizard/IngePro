@@ -290,11 +290,11 @@ export default function AdminTenantsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Nombre en Español</label>
+                  <label className="block text-sm font-medium text-gray-700">Nombre corto</label>
                   <input
                     type="text"
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    placeholder="Nombre en español"
+                    placeholder="Nombre corto"
                     value={formData.nameEs}
                     onChange={(e) => setFormData({ ...formData, nameEs: e.target.value })}
                   />
@@ -351,7 +351,7 @@ export default function AdminTenantsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Nombre en Español</label>
+                  <label className="block text-sm font-medium text-gray-700">Nombre corto</label>
                   <input
                     type="text"
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"

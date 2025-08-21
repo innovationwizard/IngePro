@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
           where: {
             userId: session.user?.id,
             companyId: requestedCompanyId,
-            role: 'ADMIN',
             status: 'ACTIVE'
           }
         })
@@ -154,7 +153,7 @@ export async function GET(request: NextRequest) {
         id: formattedUser.id,
         name: formattedUser.name,
         role: formattedUser.role,
-        userTenants: user.userTenants.map(ut => ({ companyId: ut.companyId, role: ut.role }))
+        userTenants: user.userTenants.map(ut => ({ companyId: ut.companyId }))
       });
       
       return formattedUser;
@@ -243,7 +242,6 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           companyId: adminCompanyId,
-          role: validatedData.role,
           startDate: new Date(),
         }
       })
@@ -334,17 +332,7 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    // Update UserTenant role if role changed
-    if (validatedData.role) {
-      await prisma.userTenant.updateMany({
-        where: { 
-          userId: validatedData.id,
-          companyId: session.user?.companyId,
-          status: 'ACTIVE'
-        },
-        data: { role: validatedData.role }
-      })
-    }
+    // Role is now only stored in User table, no need to update UserTenant
 
     // Create audit log
     await prisma.auditLog.create({
