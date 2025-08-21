@@ -17,8 +17,10 @@ import {
   XCircle,
   Download,
   FileText,
-  BarChart3
+  BarChart3,
+  FileDown
 } from 'lucide-react'
+import { generateProgressHistoryPDF, PDFExportOptions } from '@/lib/pdfExport'
 
 interface Project {
   id: string
@@ -84,6 +86,7 @@ interface ProgressHistoryProps {
   projects: Project[]
   tasks: Task[]
   userRole: string
+  companyName?: string
 }
 
 export default function ProgressHistory({ projects, tasks, userRole }: ProgressHistoryProps) {
@@ -184,6 +187,90 @@ export default function ProgressHistory({ projects, tasks, userRole }: ProgressH
     document.body.removeChild(link)
   }
 
+  const exportToPDF = () => {
+    if (!progressUpdates.length || !summary) return
+
+    // Prepare data for PDF export
+    const pdfProgressUpdates = progressUpdates.map(update => ({
+      id: update.id,
+      task: {
+        name: update.task.nameEs || update.task.name,
+        category: {
+          name: update.task.category.nameEs || update.task.category.name
+        }
+      },
+      project: {
+        name: update.project.nameEs || update.project.name
+      },
+      worker: {
+        name: update.worker.name,
+        id: update.worker.id
+      },
+      amountCompleted: update.amountCompleted,
+      status: update.status,
+      validationStatus: update.validationStatus,
+      createdAt: update.createdAt,
+      additionalAttributes: update.additionalAttributes,
+      materialConsumptions: update.materialConsumptions.map(mc => ({
+        material: {
+          name: mc.material.nameEs || mc.material.name,
+          unit: mc.material.unit
+        },
+        quantity: mc.quantity
+      })),
+      materialLosses: update.materialLosses.map(ml => ({
+        material: {
+          name: ml.material.nameEs || ml.material.name,
+          unit: ml.material.unit
+        },
+        quantity: ml.quantity
+      })),
+      totalConsumption: update.totalConsumption,
+      totalLoss: update.totalLoss
+    }))
+
+    const pdfSummary = {
+      totalUpdates: summary.totalUpdates,
+      totalAmountCompleted: summary.totalAmountCompleted,
+      totalConsumption: summary.totalConsumption,
+      totalLoss: summary.totalLoss,
+      pendingValidation: summary.pendingValidation,
+      validatedUpdates: summary.validatedUpdates,
+      rejectedUpdates: summary.rejectedUpdates
+    }
+
+    const pdfProjectSummaries = projectSummary.map(project => ({
+      project: {
+        name: project.project.nameEs || project.project.name
+      },
+      totalUpdates: project.totalUpdates,
+      totalAmount: project.totalAmount,
+      totalConsumption: project.totalConsumption,
+      totalLoss: project.totalLoss,
+      pendingValidation: project.pendingValidation,
+      validatedUpdates: project.validatedUpdates,
+      rejectedUpdates: project.rejectedUpdates
+    }))
+
+    // Create date range string
+    let dateRange = ''
+    if (filters.startDate || filters.endDate) {
+      const start = filters.startDate ? new Date(filters.startDate).toLocaleDateString() : 'Inicio'
+      const end = filters.endDate ? new Date(filters.endDate).toLocaleDateString() : 'Actual'
+      dateRange = `${start} - ${end}`
+    }
+
+    const pdfOptions: PDFExportOptions = {
+      title: 'Reporte de Historial de Progreso',
+      subtitle: 'Seguimiento de Tareas y Materiales',
+      companyName: companyName || 'IngePro - Gestión de Construcción',
+      dateRange: dateRange || undefined,
+      isAnonymized: isAnonymized
+    }
+
+    generateProgressHistoryPDF(pdfProgressUpdates, pdfSummary, pdfProjectSummaries, pdfOptions)
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'NOT_STARTED': return 'bg-gray-100 text-gray-800'
@@ -228,6 +315,10 @@ export default function ProgressHistory({ projects, tasks, userRole }: ProgressH
           <Button variant="outline" onClick={exportToCSV}>
             <Download className="w-4 h-4 mr-2" />
             Exportar CSV
+          </Button>
+          <Button variant="outline" onClick={exportToPDF}>
+            <FileDown className="w-4 h-4 mr-2" />
+            Exportar PDF
           </Button>
         </div>
       </div>
