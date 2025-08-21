@@ -9,6 +9,7 @@ import TaskCategoryManager from '@/components/tasks/TaskCategoryManager'
 import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
 import ProgressHistory from '@/components/tasks/ProgressHistory'
 import AdvancedAnalytics from '@/components/analytics/AdvancedAnalytics'
+import InventoryManager from '@/components/inventory/InventoryManager'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -199,7 +200,7 @@ export default function TasksPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="create">Crear Tarea</TabsTrigger>
@@ -209,6 +210,9 @@ export default function TasksPage() {
           )}
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="consumption">Consumo de Materiales</TabsTrigger>
+          )}
+          {(isAdmin || isSupervisor) && (
+            <TabsTrigger value="inventory">Inventario</TabsTrigger>
           )}
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="history">Historial de Progreso</TabsTrigger>
@@ -278,6 +282,19 @@ export default function TasksPage() {
                       // Refresh data if needed
                       console.log('Material consumption recorded')
                     }}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="inventory" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gestión de Inventario</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <InventoryManager 
+                    materials={materials}
                   />
                 </CardContent>
               </Card>

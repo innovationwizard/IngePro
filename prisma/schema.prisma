@@ -357,6 +357,10 @@ model Material {
   nameEs      String?  // Spanish name
   description String?
   unit        String   // e.g., "cubic centimeters", "units", "liters"
+  unitCost    Float?   // Cost per unit
+  minStockLevel Float? // Minimum stock level for reorder alerts
+  maxStockLevel Float? // Maximum stock level for storage optimization
+  currentStock Float   @default(0) // Current available stock
   status      MaterialStatus @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -365,6 +369,8 @@ model Material {
   projectMaterials ProjectMaterial[]
   consumptions  MaterialConsumption[]
   losses        MaterialLoss[]
+  inventoryMovements InventoryMovement[]
+  reorderRequests   ReorderRequest[]
 
   @@map("Material")
 }
@@ -458,6 +464,65 @@ model MaterialLoss {
   @@map("MaterialLoss")
 }
 
+// Inventory Management Models
+model InventoryMovement {
+  id          String   @id @default(cuid())
+  materialId  String
+  material    Material @relation(fields: [materialId], references: [id])
+  
+  // Movement details
+  type        InventoryMovementType
+  quantity    Float    // Positive for additions, negative for reductions
+  unitCost    Float?   // Cost at the time of movement
+  totalCost   Float?   // Total cost of this movement
+  
+  // Reference information
+  reference   String?  // Purchase order, invoice, etc.
+  notes       String?  // Additional notes
+  
+  // User tracking
+  recordedBy  String?  // User ID who recorded this movement
+  
+  // Timestamps
+  recordedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("InventoryMovement")
+}
+
+model ReorderRequest {
+  id          String   @id @default(cuid())
+  materialId  String
+  material    Material @relation(fields: [materialId], references: [id])
+  
+  // Request details
+  requestedQuantity Float
+  requestedBy      String   // User ID who requested reorder
+  requestedAt      DateTime @default(now())
+  
+  // Approval workflow
+  approvedBy       String?  // User ID who approved
+  approvedAt       DateTime?
+  rejectedBy       String?  // User ID who rejected
+  rejectedAt       DateTime?
+  rejectionReason  String?
+  
+  // Order tracking
+  orderNumber      String?  // Purchase order number
+  orderedAt        DateTime?
+  receivedAt       DateTime?
+  
+  // Status
+  status           ReorderRequestStatus @default(PENDING)
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("ReorderRequest")
+}
+
 // Enums for Task Management
 enum TaskCategoryStatus {
   ACTIVE
@@ -488,4 +553,23 @@ enum ValidationStatus {
 enum MaterialStatus {
   ACTIVE
   INACTIVE
+  DISCONTINUED
+}
+
+enum InventoryMovementType {
+  PURCHASE
+  SALE
+  TRANSFER
+  ADJUSTMENT
+  LOSS
+  RETURN
+}
+
+enum ReorderRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ORDERED
+  RECEIVED
+  CANCELLED
 }
