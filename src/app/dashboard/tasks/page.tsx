@@ -7,6 +7,7 @@ import TaskList from '@/components/tasks/TaskList'
 import TaskForm from '@/components/tasks/TaskForm'
 import TaskCategoryManager from '@/components/tasks/TaskCategoryManager'
 import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
+import ProgressHistory from '@/components/tasks/ProgressHistory'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -176,7 +177,7 @@ export default function TasksPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="create">Crear Tarea</TabsTrigger>
@@ -186,6 +187,9 @@ export default function TasksPage() {
           )}
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="consumption">Consumo de Materiales</TabsTrigger>
+          )}
+          {(isAdmin || isSupervisor) && (
+            <TabsTrigger value="history">Historial de Progreso</TabsTrigger>
           )}
         </TabsList>
 
@@ -249,6 +253,21 @@ export default function TasksPage() {
                       // Refresh data if needed
                       console.log('Material consumption recorded')
                     }}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="history" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Historial de Progreso</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ProgressHistory 
+                    projects={projects}
+                    tasks={tasks}
+                    userRole={session.user?.role || ''}
                   />
                 </CardContent>
               </Card>
