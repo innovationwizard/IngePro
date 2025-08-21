@@ -10,6 +10,7 @@ import MaterialConsumptionTracker from '@/components/materials/MaterialConsumpti
 import ProgressHistory from '@/components/tasks/ProgressHistory'
 import AdvancedAnalytics from '@/components/analytics/AdvancedAnalytics'
 import InventoryManager from '@/components/inventory/InventoryManager'
+import AIInsights from '@/components/ai-insights/AIInsights'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -200,7 +201,7 @@ export default function TasksPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="create">Crear Tarea</TabsTrigger>
@@ -219,6 +220,9 @@ export default function TasksPage() {
           )}
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="analytics">Análisis Avanzado</TabsTrigger>
+          )}
+          {(isAdmin || isSupervisor) && (
+            <TabsTrigger value="ai-insights">Insights de IA</TabsTrigger>
           )}
         </TabsList>
 
@@ -324,6 +328,19 @@ export default function TasksPage() {
                   <AdvancedAnalytics 
                     projects={projects}
                     workers={workers}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="ai-insights" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Insights de IA</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AIInsights 
+                    projects={projects}
                   />
                 </CardContent>
               </Card>
