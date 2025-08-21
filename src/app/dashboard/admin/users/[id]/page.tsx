@@ -328,7 +328,7 @@ export default function UserDetailPage() {
                   <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <div className="font-medium">{company.name}</div>
-                      <div className="text-sm text-gray-500">Rol: {company.role}</div>
+                      <div className="text-sm text-gray-500">Rol: {user.role}</div>
                       <div className="text-xs text-gray-400">
                         Desde: {new Date(company.startDate).toLocaleDateString('es-ES')}
                       </div>
@@ -369,7 +369,7 @@ export default function UserDetailPage() {
                   <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <div className="font-medium">{project.name}</div>
-                      <div className="text-sm text-gray-500">Rol: {project.role} | Empresa: {project.company}</div>
+                      <div className="text-sm text-gray-500">Rol: {user.role} | Empresa: {project.company}</div>
                       <div className="text-xs text-gray-400">
                         Desde: {new Date(project.startDate).toLocaleDateString('es-ES')}
                       </div>
