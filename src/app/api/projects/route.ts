@@ -20,6 +20,7 @@ const createProjectSchema = z.object({
 const updateProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
+  companyId: z.string().min(1, 'Company ID is required'),
   status: z.enum(['ACTIVE', 'INACTIVE', 'COMPLETED'])
 })
 
@@ -252,7 +253,7 @@ export async function PUT(request: NextRequest) {
     
     const prisma = await getPrisma()
 
-    // Check if admin has access to the project's company
+    // Check if admin has access to both the current and new company (if changing)
     if (session.user?.role === 'ADMIN') {
       const project = await prisma.project.findUnique({
         where: { id },
@@ -263,7 +264,8 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Project not found' }, { status: 404 })
       }
 
-      const userTenant = await prisma.userTenant.findFirst({
+      // Check access to current company
+      const currentCompanyAccess = await prisma.userTenant.findFirst({
         where: {
           userId: session.user?.id,
           companyId: project.companyId,
@@ -271,8 +273,23 @@ export async function PUT(request: NextRequest) {
         }
       })
       
-      if (!userTenant) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      if (!currentCompanyAccess) {
+        return NextResponse.json({ error: 'Unauthorized to current company' }, { status: 401 })
+      }
+
+      // If changing companies, check access to new company
+      if (validatedData.companyId && validatedData.companyId !== project.companyId) {
+        const newCompanyAccess = await prisma.userTenant.findFirst({
+          where: {
+            userId: session.user?.id,
+            companyId: validatedData.companyId,
+            status: 'ACTIVE'
+          }
+        })
+        
+        if (!newCompanyAccess) {
+          return NextResponse.json({ error: 'Unauthorized to new company' }, { status: 401 })
+        }
       }
     }
 
