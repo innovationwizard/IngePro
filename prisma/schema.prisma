@@ -94,6 +94,7 @@ model Project {
   workerAssignments TaskWorkerAssignment[]
   materials ProjectMaterial[]
   progressUpdates TaskProgressUpdate[]
+  materialConsumptions MaterialConsumption[]
 
   @@map("Project")
 }
@@ -425,13 +426,19 @@ model ProjectMaterial {
 
 model MaterialConsumption {
   id                    String   @id @default(cuid())
-  taskProgressUpdateId  String
-  taskProgressUpdate    TaskProgressUpdate @relation(fields: [taskProgressUpdateId], references: [id])
+  taskProgressUpdateId  String?  // Optional for manual tracking
+  taskProgressUpdate    TaskProgressUpdate? @relation(fields: [taskProgressUpdateId], references: [id])
   materialId            String
   material              Material @relation(fields: [materialId], references: [id])
-  
+  projectId             String?  // For project-level tracking
+  project               Project? @relation(fields: [projectId], references: [id])
+
   quantity              Float    // Amount consumed
-  
+  type                  String   @default("CONSUMPTION") // CONSUMPTION or LOSS
+  notes                 String?  // Additional notes
+  recordedAt            DateTime @default(now())
+  recordedBy            String?  // User ID who recorded this
+
   createdAt             DateTime @default(now())
 
   @@map("MaterialConsumption")

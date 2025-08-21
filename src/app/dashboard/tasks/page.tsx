@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import TaskList from '@/components/tasks/TaskList'
 import TaskForm from '@/components/tasks/TaskForm'
 import TaskCategoryManager from '@/components/tasks/TaskCategoryManager'
+import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -47,6 +48,19 @@ interface TaskCategory {
   }
 }
 
+interface Project {
+  id: string
+  name: string
+  nameEs?: string
+}
+
+interface Material {
+  id: string
+  name: string
+  nameEs?: string
+  unit: string
+}
+
 
 
 export default function TasksPage() {
@@ -54,6 +68,8 @@ export default function TasksPage() {
   const router = useRouter()
   const [tasks, setTasks] = useState<Task[]>([])
   const [categories, setCategories] = useState<TaskCategory[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [materials, setMaterials] = useState<Material[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('tasks')
 
@@ -67,6 +83,8 @@ export default function TasksPage() {
 
     fetchTasks()
     fetchCategories()
+    fetchProjects()
+    fetchMaterials()
   }, [session, status, router])
 
   const fetchTasks = async () => {
@@ -92,6 +110,30 @@ export default function TasksPage() {
       }
     } catch (error) {
       console.error('Error fetching categories:', error)
+    }
+  }
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('/api/projects')
+      if (response.ok) {
+        const data = await response.json()
+        setProjects(data.projects)
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error)
+    }
+  }
+
+  const fetchMaterials = async () => {
+    try {
+      const response = await fetch('/api/materials')
+      if (response.ok) {
+        const data = await response.json()
+        setMaterials(data.materials)
+      }
+    } catch (error) {
+      console.error('Error fetching materials:', error)
     }
   }
 
@@ -134,13 +176,16 @@ export default function TasksPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="create">Crear Tarea</TabsTrigger>
           )}
           {isAdmin && (
             <TabsTrigger value="categories">Categorías</TabsTrigger>
+          )}
+          {(isAdmin || isSupervisor) && (
+            <TabsTrigger value="consumption">Consumo de Materiales</TabsTrigger>
           )}
         </TabsList>
 
@@ -191,7 +236,23 @@ export default function TasksPage() {
               </Card>
             </TabsContent>
 
-
+            <TabsContent value="consumption" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Seguimiento de Consumo de Materiales</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MaterialConsumptionTracker 
+                    projects={projects}
+                    materials={materials}
+                    onConsumptionRecorded={() => {
+                      // Refresh data if needed
+                      console.log('Material consumption recorded')
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
           </>
         )}
       </Tabs>
