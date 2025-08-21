@@ -8,6 +8,7 @@ import TaskForm from '@/components/tasks/TaskForm'
 import TaskCategoryManager from '@/components/tasks/TaskCategoryManager'
 import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
 import ProgressHistory from '@/components/tasks/ProgressHistory'
+import AdvancedAnalytics from '@/components/analytics/AdvancedAnalytics'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -62,6 +63,11 @@ interface Material {
   unit: string
 }
 
+interface Worker {
+  id: string
+  name: string
+}
+
 
 
 export default function TasksPage() {
@@ -71,6 +77,7 @@ export default function TasksPage() {
   const [categories, setCategories] = useState<TaskCategory[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [materials, setMaterials] = useState<Material[]>([])
+  const [workers, setWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('tasks')
 
@@ -86,6 +93,7 @@ export default function TasksPage() {
     fetchCategories()
     fetchProjects()
     fetchMaterials()
+    fetchWorkers()
   }, [session, status, router])
 
   const fetchTasks = async () => {
@@ -138,6 +146,20 @@ export default function TasksPage() {
     }
   }
 
+  const fetchWorkers = async () => {
+    try {
+      const response = await fetch('/api/users')
+      if (response.ok) {
+        const data = await response.json()
+        // Filter only WORKER users
+        const workerUsers = data.users.filter((user: any) => user.role === 'WORKER')
+        setWorkers(workerUsers)
+      }
+    } catch (error) {
+      console.error('Error fetching workers:', error)
+    }
+  }
+
 
 
   const handleTaskCreated = () => {
@@ -177,7 +199,7 @@ export default function TasksPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="create">Crear Tarea</TabsTrigger>
@@ -190,6 +212,9 @@ export default function TasksPage() {
           )}
           {(isAdmin || isSupervisor) && (
             <TabsTrigger value="history">Historial de Progreso</TabsTrigger>
+          )}
+          {(isAdmin || isSupervisor) && (
+            <TabsTrigger value="analytics">Análisis Avanzado</TabsTrigger>
           )}
         </TabsList>
 
@@ -268,6 +293,20 @@ export default function TasksPage() {
                     projects={projects}
                     tasks={tasks}
                     userRole={session.user?.role || ''}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Análisis Avanzado</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AdvancedAnalytics 
+                    projects={projects}
+                    workers={workers}
                   />
                 </CardContent>
               </Card>
