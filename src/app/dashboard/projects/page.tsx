@@ -167,18 +167,12 @@ export default function ProjectsPage() {
         // Filter users based on role permissions
         if (session?.user?.role === 'SUPERVISOR') {
           // Supervisors can only assign workers
-          const filteredUsers = data.users.filter((user: User) => user.role === 'WORKER');
-          console.log('Filtered users for SUPERVISOR:', filteredUsers);
-          setAvailableUsers(filteredUsers);
+          setAvailableUsers(data.users.filter((user: User) => user.role === 'WORKER'));
         } else {
           // Admins can assign both workers and supervisors
-          const filteredUsers = data.users.filter((user: User) => 
+          setAvailableUsers(data.users.filter((user: User) => 
             user.role === 'WORKER' || user.role === 'SUPERVISOR'
-          );
-          console.log('Filtered users for ADMIN:', filteredUsers);
-          console.log('Filtering criteria: WORKER or SUPERVISOR');
-          console.log('Users that passed filter:', filteredUsers.map((u: User) => ({ name: u.name, role: u.role })));
-          setAvailableUsers(filteredUsers);
+          ));
         }
       } else {
         console.error('Users API error:', response.status, response.statusText);
