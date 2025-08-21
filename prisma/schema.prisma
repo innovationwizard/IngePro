@@ -26,6 +26,8 @@ model User {
   userTeams    UserTeam[]
   userProjects UserProject[]
   workLogs     WorkLog[]
+  userTasks    UserTask[]
+  progressUpdates TaskProgressUpdate[]
 
   // Audit trail
   auditLogs AuditLog[]
@@ -50,6 +52,8 @@ model Company {
   workLogs   WorkLog[]
   Team       Team[]
   UserTenant UserTenant[]
+  taskCategories TaskCategory[]
+  materials  Material[]
 
   @@map("companies")
 }
@@ -88,6 +92,7 @@ model Project {
   users    UserProject[]
   teams    ProjectTeam[]
   workLogs WorkLog[]
+  tasks    Task[]
 
   @@map("Project")
 }
@@ -261,4 +266,201 @@ enum UserProjectStatus {
   ACTIVE
   INACTIVE
   COMPLETED
+}
+
+// Task Management Models
+model TaskCategory {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Sello de juntas"
+  nameEs      String?  // Spanish name
+  description String?
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  status      TaskCategoryStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  tasks Task[]
+
+  @@map("TaskCategory")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  name        String   // Specific task name
+  description String?
+  categoryId  String
+  category    TaskCategory @relation(fields: [categoryId], references: [id])
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  
+  // Progress tracking
+  progressUnit String  // e.g., "linear meters", "square meters", "units"
+  
+  // Task state
+  status      TaskStatus @default(NOT_STARTED)
+  
+  // Assignment
+  assignedUsers UserTask[]
+  
+  // Progress updates
+  progressUpdates TaskProgressUpdate[]
+  
+  // Materials for this task
+  taskMaterials TaskMaterial[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("Task")
+}
+
+model UserTask {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  
+  // Assignment tracking
+  assignedAt DateTime @default(now())
+  assignedBy String   // User ID who assigned the task
+  
+  // Status
+  status    UserTaskStatus @default(ACTIVE)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, taskId])
+  @@map("UserTask")
+}
+
+model TaskProgressUpdate {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  // Progress data
+  amountCompleted Float    // e.g., 5.5 linear meters
+  additionalAttributes String? // e.g., "room A", "north wall"
+  
+  // Material consumption and loss
+  materialConsumptions MaterialConsumption[]
+  materialLosses       MaterialLoss[]
+  
+  // Photos (future feature)
+  photos     String[] // Array of S3 URLs
+  
+  // Validation
+  validatedBy    String?  // Supervisor user ID
+  validatedAt    DateTime?
+  validationStatus ValidationStatus @default(PENDING)
+  validationComments String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("TaskProgressUpdate")
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Adhesive", "Bricks"
+  nameEs      String?  // Spanish name
+  description String?
+  unit        String   // e.g., "cubic centimeters", "units", "liters"
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  status      MaterialStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  taskMaterials TaskMaterial[]
+  consumptions  MaterialConsumption[]
+  losses        MaterialLoss[]
+
+  @@map("Material")
+}
+
+model TaskMaterial {
+  id         String   @id @default(cuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id])
+  materialId String
+  material   Material @relation(fields: [materialId], references: [id])
+  
+  createdAt  DateTime @default(now())
+
+  @@unique([taskId, materialId])
+  @@map("TaskMaterial")
+}
+
+model MaterialConsumption {
+  id                    String   @id @default(cuid())
+  taskProgressUpdateId  String
+  taskProgressUpdate    TaskProgressUpdate @relation(fields: [taskProgressUpdateId], references: [id])
+  materialId            String
+  material              Material @relation(fields: [materialId], references: [id])
+  
+  quantity              Float    // Amount consumed
+  
+  createdAt             DateTime @default(now())
+
+  @@map("MaterialConsumption")
+}
+
+model MaterialLoss {
+  id                    String   @id @default(cuid())
+  taskProgressUpdateId  String
+  taskProgressUpdate    TaskProgressUpdate @relation(fields: [taskProgressUpdateId], references: [id])
+  materialId            String
+  material              Material @relation(fields: [materialId], references: [id])
+  
+  quantity              Float    // Amount lost/wasted
+  
+  createdAt             DateTime @default(now())
+
+  @@map("MaterialLoss")
+}
+
+// Enums for Task Management
+enum TaskCategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  OBSTACLE_PERMIT
+  OBSTACLE_DECISION
+  OBSTACLE_INSPECTION
+  OBSTACLE_MATERIALS
+  OBSTACLE_EQUIPMENT
+  OBSTACLE_WEATHER
+  OBSTACLE_OTHER
+}
+
+enum UserTaskStatus {
+  ACTIVE
+  INACTIVE
+  COMPLETED
+}
+
+enum ValidationStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+}
+
+enum MaterialStatus {
+  ACTIVE
+  INACTIVE
 }

@@ -10,7 +10,8 @@ import {
   FolderOpen,
   Building,
   Settings,
-  LogOut
+  LogOut,
+  CheckSquare
 } from 'lucide-react'
 
 export default function Sidebar() {
@@ -38,6 +39,12 @@ export default function Sidebar() {
       name: 'Panel Principal',
       href: '/dashboard',
       icon: Home,
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Gestión de Tareas',
+      href: '/dashboard/tasks',
+      icon: CheckSquare,
       roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
