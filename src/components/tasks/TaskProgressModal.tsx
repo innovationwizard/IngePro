@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, X } from 'lucide-react'
+
 
 interface Task {
   id: string
@@ -16,17 +16,19 @@ interface Task {
     id: string
     name: string
   }
-  project: {
-    id: string
-    name: string
-  }
   progressUnit: string
-  status: string
-  taskMaterials: Array<{
-    material: {
+  projectAssignments?: Array<{
+    project: {
       id: string
       name: string
-      unit: string
+      nameEs?: string
+    }
+  }>
+  workerAssignments?: Array<{
+    project: {
+      id: string
+      name: string
+      nameEs?: string
     }
   }>
 }
@@ -51,7 +53,9 @@ interface TaskProgressModalProps {
 export default function TaskProgressModal({ task, open, onOpenChange, onSuccess }: TaskProgressModalProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
+    projectId: '',
     amountCompleted: '',
+    status: 'IN_PROGRESS' as 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'OBSTACLE_PERMIT' | 'OBSTACLE_DECISION' | 'OBSTACLE_INSPECTION' | 'OBSTACLE_MATERIALS' | 'OBSTACLE_EQUIPMENT' | 'OBSTACLE_WEATHER' | 'OBSTACLE_OTHER',
     additionalAttributes: '',
     materialConsumptions: [] as MaterialConsumption[],
     materialLosses: [] as MaterialLoss[]
@@ -68,7 +72,9 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          projectId: formData.projectId,
           amountCompleted: parseFloat(formData.amountCompleted),
+          status: formData.status,
           additionalAttributes: formData.additionalAttributes || undefined,
           materialConsumptions: formData.materialConsumptions.length > 0 ? formData.materialConsumptions : undefined,
           materialLosses: formData.materialLosses.length > 0 ? formData.materialLosses : undefined,
@@ -82,7 +88,9 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
         onOpenChange(false)
         // Reset form
         setFormData({
+          projectId: '',
           amountCompleted: '',
+          status: 'IN_PROGRESS',
           additionalAttributes: '',
           materialConsumptions: [],
           materialLosses: []
@@ -100,87 +108,13 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
     }
   }
 
-  const addMaterialConsumption = () => {
-    if (task.taskMaterials.length === 0) return
-    
-    const availableMaterials = task.taskMaterials.filter(material => 
-      !formData.materialConsumptions.some(consumption => consumption.materialId === material.material.id)
-    )
-    
-    if (availableMaterials.length > 0) {
-      setFormData(prev => ({
-        ...prev,
-        materialConsumptions: [
-          ...prev.materialConsumptions,
-          {
-            materialId: availableMaterials[0].material.id,
-            quantity: 0
-          }
-        ]
-      }))
-    }
-  }
 
-  const removeMaterialConsumption = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      materialConsumptions: prev.materialConsumptions.filter((_, i) => i !== index)
-    }))
-  }
 
-  const updateMaterialConsumption = (index: number, field: 'materialId' | 'quantity', value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      materialConsumptions: prev.materialConsumptions.map((consumption, i) => 
-        i === index ? { ...consumption, [field]: value } : consumption
-      )
-    }))
-  }
 
-  const addMaterialLoss = () => {
-    if (task.taskMaterials.length === 0) return
-    
-    const availableMaterials = task.taskMaterials.filter(material => 
-      !formData.materialLosses.some(loss => loss.materialId === material.material.id)
-    )
-    
-    if (availableMaterials.length > 0) {
-      setFormData(prev => ({
-        ...prev,
-        materialLosses: [
-          ...prev.materialLosses,
-          {
-            materialId: availableMaterials[0].material.id,
-            quantity: 0
-          }
-        ]
-      }))
-    }
-  }
 
-  const removeMaterialLoss = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      materialLosses: prev.materialLosses.filter((_, i) => i !== index)
-    }))
-  }
 
-  const updateMaterialLoss = (index: number, field: 'materialId' | 'quantity', value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      materialLosses: prev.materialLosses.map((loss, i) => 
-        i === index ? { ...loss, [field]: value } : loss
-      )
-    }))
-  }
 
-  const getAvailableMaterials = (type: 'consumption' | 'loss') => {
-    const usedMaterials = type === 'consumption' 
-      ? formData.materialConsumptions.map(c => c.materialId)
-      : formData.materialLosses.map(l => l.materialId)
-    
-    return task.taskMaterials.filter(material => !usedMaterials.includes(material.material.id))
-  }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -202,16 +136,8 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
                   <p className="text-sm">{task.category.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Proyecto</p>
-                  <p className="text-sm">{task.project.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>
+                  <p className="text-sm font-medium text-gray-500">Unidad de Medida</p>
                   <p className="text-sm">{task.progressUnit}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Estado</p>
-                  <p className="text-sm">{task.status}</p>
                 </div>
               </div>
               {task.description && (
@@ -222,6 +148,49 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
               )}
             </CardContent>
           </Card>
+
+          {/* Project Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Proyecto *
+            </label>
+            <select
+              value={formData.projectId}
+              onChange={(e) => setFormData(prev => ({ ...prev, projectId: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="">Selecciona un proyecto</option>
+              {task.workerAssignments?.map((assignment) => (
+                <option key={assignment.project.id} value={assignment.project.id}>
+                  {assignment.project.nameEs || assignment.project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Estado de la Tarea *
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="IN_PROGRESS">En Progreso</option>
+              <option value="COMPLETED">Completada</option>
+              <option value="OBSTACLE_PERMIT">Obstáculo - Permisos</option>
+              <option value="OBSTACLE_DECISION">Obstáculo - Decisiones</option>
+              <option value="OBSTACLE_INSPECTION">Obstáculo - Inspecciones</option>
+              <option value="OBSTACLE_MATERIALS">Obstáculo - Materiales</option>
+              <option value="OBSTACLE_EQUIPMENT">Obstáculo - Equipos</option>
+              <option value="OBSTACLE_WEATHER">Obstáculo - Clima</option>
+              <option value="OBSTACLE_OTHER">Obstáculo - Otro</option>
+            </select>
+          </div>
 
           {/* Progress Amount */}
           <div>
@@ -256,117 +225,15 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
               </p>
           </div>
 
-          {/* Material Consumptions */}
-          {task.taskMaterials.length > 0 && (
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Consumo de Materiales
-                </label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addMaterialConsumption}
-                  disabled={getAvailableMaterials('consumption').length === 0}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Agregar Consumo
-                </Button>
-              </div>
-              
-              {formData.materialConsumptions.length > 0 ? (
-                <div className="space-y-3">
-                  {formData.materialConsumptions.map((consumption, index) => {
-                    const material = task.taskMaterials.find(m => m.material.id === consumption.materialId)?.material
-                    return (
-                      <div key={index} className="flex gap-2 items-center p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{material?.name}</p>
-                          <p className="text-xs text-gray-500">{material?.unit}</p>
-                        </div>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={consumption.quantity}
-                          onChange={(e) => updateMaterialConsumption(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          placeholder="Cantidad"
-                          className="w-24"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeMaterialConsumption(index)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No se registró consumo de materiales</p>
-              )}
-            </div>
-          )}
+          {/* Note: Materials are tracked at project level, not task level */}
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <p className="text-sm text-blue-700">
+              <strong>Nota:</strong> Los materiales se asignan y rastrean a nivel de proyecto, no de tarea individual. 
+              El consumo y pérdida de materiales se registra automáticamente desde el inventario del proyecto.
+            </p>
+          </div>
 
-          {/* Material Losses */}
-          {task.taskMaterials.length > 0 && (
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Pérdida de Materiales
-                </label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addMaterialLoss}
-                  disabled={getAvailableMaterials('loss').length === 0}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Agregar Pérdida
-                </Button>
-              </div>
-              
-              {formData.materialLosses.length > 0 ? (
-                <div className="space-y-3">
-                  {formData.materialLosses.map((loss, index) => {
-                    const material = task.taskMaterials.find(m => m.material.id === loss.materialId)?.material
-                    return (
-                      <div key={index} className="flex gap-2 items-center p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{material?.name}</p>
-                          <p className="text-xs text-gray-500">{material?.unit}</p>
-                        </div>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={loss.quantity}
-                          onChange={(e) => updateMaterialLoss(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          placeholder="Cantidad"
-                          className="w-24"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeMaterialLoss(index)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No se registró pérdida de materiales</p>
-              )}
-            </div>
-          )}
+
 
           {/* Actions */}
           <div className="flex justify-end gap-2">
@@ -379,7 +246,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
             </Button>
             <Button
               type="submit"
-              disabled={loading || !formData.amountCompleted || parseFloat(formData.amountCompleted) <= 0}
+              disabled={loading || !formData.projectId || !formData.amountCompleted || parseFloat(formData.amountCompleted) <= 0}
             >
               {loading ? 'Registrando...' : 'Registrar Progreso'}
             </Button>

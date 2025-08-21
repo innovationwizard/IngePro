@@ -8,7 +8,9 @@ export const runtime = 'nodejs'
 
 // Validation schema for progress update
 const progressUpdateSchema = z.object({
+  projectId: z.string().min(1, 'Project ID is required'),
   amountCompleted: z.number().positive('Amount completed must be positive'),
+  status: z.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'OBSTACLE_PERMIT', 'OBSTACLE_DECISION', 'OBSTACLE_INSPECTION', 'OBSTACLE_MATERIALS', 'OBSTACLE_EQUIPMENT', 'OBSTACLE_WEATHER', 'OBSTACLE_OTHER']),
   additionalAttributes: z.string().max(100, 'Additional attributes must be 100 characters or less').optional(),
   materialConsumptions: z.array(z.object({
     materialId: z.string(),
@@ -57,54 +59,59 @@ export async function POST(
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the task exists and is assigned to the user
-    const task = await prisma.task.findFirst({
+    // Verify the task exists and is assigned to the user for this project
+    const workerAssignment = await prisma.taskWorkerAssignment.findFirst({
       where: {
-        id: taskId,
+        taskId: taskId,
+        projectId: validatedData.projectId,
+        workerId: session.user?.id,
         project: {
           companyId: companyId
-        },
-        assignedUsers: {
-          some: {
-            userId: session.user?.id,
-            status: 'ACTIVE'
-          }
         }
       },
       include: {
-        taskMaterials: {
+        task: {
           include: {
-            material: true
+            category: true
+          }
+        },
+        project: {
+          include: {
+            materials: {
+              include: {
+                material: true
+              }
+            }
           }
         }
       }
     })
 
-    if (!task) {
-      return NextResponse.json({ error: 'Task not found or not assigned to you' }, { status: 404 })
+    if (!workerAssignment) {
+      return NextResponse.json({ error: 'Task not found or not assigned to you for this project' }, { status: 404 })
     }
 
-    // Verify materials belong to the task if provided
+    // Verify materials belong to the project if provided
     if (validatedData.materialConsumptions) {
-      const taskMaterialIds = task.taskMaterials.map(tm => tm.materialId)
+      const projectMaterialIds = workerAssignment.project.materials.map(pm => pm.materialId)
       const consumptionMaterialIds = validatedData.materialConsumptions.map(mc => mc.materialId)
       
-      const invalidMaterials = consumptionMaterialIds.filter(id => !taskMaterialIds.includes(id))
+      const invalidMaterials = consumptionMaterialIds.filter(id => !projectMaterialIds.includes(id))
       if (invalidMaterials.length > 0) {
         return NextResponse.json({ 
-          error: 'Some materials are not associated with this task' 
+          error: 'Some materials are not available in this project' 
         }, { status: 400 })
       }
     }
 
     if (validatedData.materialLosses) {
-      const taskMaterialIds = task.taskMaterials.map(tm => tm.materialId)
+      const projectMaterialIds = workerAssignment.project.materials.map(pm => pm.materialId)
       const lossMaterialIds = validatedData.materialLosses.map(ml => ml.materialId)
       
-      const invalidMaterials = lossMaterialIds.filter(id => !taskMaterialIds.includes(id))
+      const invalidMaterials = lossMaterialIds.filter(id => !projectMaterialIds.includes(id))
       if (invalidMaterials.length > 0) {
         return NextResponse.json({ 
-          error: 'Some materials are not associated with this task' 
+          error: 'Some materials are not available in this project' 
         }, { status: 400 })
       }
     }
@@ -115,8 +122,11 @@ export async function POST(
       const progressUpdate = await tx.taskProgressUpdate.create({
         data: {
           taskId: taskId,
-          userId: session.user?.id || '',
+          projectId: validatedData.projectId,
+          workerId: session.user?.id || '',
+          assignmentId: workerAssignment.id,
           amountCompleted: validatedData.amountCompleted,
+          status: validatedData.status,
           additionalAttributes: validatedData.additionalAttributes,
           photos: validatedData.photos || [],
         }
@@ -204,31 +214,42 @@ export async function GET(
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the task belongs to the user's company
-    const task = await prisma.task.findFirst({
+    // Verify the task exists and get project assignments
+    const taskAssignments = await prisma.taskProjectAssignment.findMany({
       where: {
-        id: taskId,
+        taskId: taskId,
         project: {
           companyId: companyId
+        }
+      },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            nameEs: true
+          }
         }
       }
     })
 
-    if (!task) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    if (taskAssignments.length === 0) {
+      return NextResponse.json({ error: 'Task not found in your company' }, { status: 404 })
     }
 
-    // If user is WORKER, verify they are assigned to the task
+    // If user is WORKER, verify they are assigned to the task in at least one project
     if (session.user?.role === 'WORKER') {
-      const assignment = await prisma.userTask.findFirst({
+      const workerAssignment = await prisma.taskWorkerAssignment.findFirst({
         where: {
           taskId: taskId,
-          userId: session.user?.id,
-          status: 'ACTIVE'
+          workerId: session.user?.id,
+          project: {
+            companyId: companyId
+          }
         }
       })
 
-      if (!assignment) {
+      if (!workerAssignment) {
         return NextResponse.json({ error: 'Task not assigned to you' }, { status: 403 })
       }
     }
@@ -236,11 +257,18 @@ export async function GET(
     const progressUpdates = await prisma.taskProgressUpdate.findMany({
       where: { taskId: taskId },
       include: {
-        user: {
+        worker: {
           select: {
             id: true,
             name: true,
             role: true
+          }
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+            nameEs: true
           }
         },
         materialConsumptions: {

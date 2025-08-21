@@ -19,14 +19,21 @@ interface Task {
     id: string
     name: string
   }
-  project: {
-    id: string
-    name: string
-  }
   progressUnit: string
-  status: string
-  assignedUsers: Array<{
-    user: {
+  projectAssignments?: Array<{
+    project: {
+      id: string
+      name: string
+      nameEs?: string
+    }
+  }>
+  workerAssignments?: Array<{
+    project: {
+      id: string
+      name: string
+      nameEs?: string
+    }
+    worker: {
       id: string
       name: string
       role: string
@@ -35,12 +42,18 @@ interface Task {
   progressUpdates: Array<{
     id: string
     amountCompleted: number
+    status: string
     additionalAttributes?: string
     validationStatus: string
     createdAt: string
-    user: {
+    worker: {
       id: string
       name: string
+    }
+    project: {
+      id: string
+      name: string
+      nameEs?: string
     }
     materialConsumptions: Array<{
       material: {
@@ -55,7 +68,8 @@ interface Task {
         unit: string
       }
       quantity: number
-    }>
+      }
+    >
   }>
   _count: {
     progressUpdates: number
@@ -180,7 +194,7 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
         {filteredTasks.map((task) => {
           const totalProgress = getTotalProgress(task)
           const pendingUpdates = getPendingUpdates(task)
-          const isAssigned = task.assignedUsers.length > 0
+          const isAssigned = task.workerAssignments && task.workerAssignments.length > 0
           const canLogProgress = userRole === 'WORKER' && isAssigned
           const canValidate = (userRole === 'ADMIN' || userRole === 'SUPERVISOR') && pendingUpdates.length > 0
 
@@ -192,9 +206,7 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                     <CardTitle className="text-lg">{task.name}</CardTitle>
                     <p className="text-sm text-gray-600 mt-1">{task.description}</p>
                   </div>
-                  <Badge className={taskStatusColors[task.status as keyof typeof taskStatusColors]}>
-                    {taskStatusLabels[task.status as keyof typeof taskStatusLabels]}
-                  </Badge>
+
                 </div>
               </CardHeader>
               <CardContent>
@@ -204,11 +216,16 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                     <p className="text-sm">{task.category.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Proyecto</p>
-                    <p className="text-sm">{task.project.name}</p>
+                    <p className="text-sm font-medium text-gray-500">Proyectos</p>
+                    <p className="text-sm">
+                      {task.projectAssignments && task.projectAssignments.length > 0 
+                        ? `${task.projectAssignments.length} proyecto(s)`
+                        : 'Sin proyectos asignados'
+                      }
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>
+                    <p className="text-sm font-medium text-gray-500">Unidad de Medida</p>
                     <p className="text-sm">{task.progressUnit}</p>
                   </div>
                   <div>
@@ -220,10 +237,10 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                 <div className="mb-4">
                   <p className="text-sm font-medium text-gray-500 mb-2">Trabajadores Asignados</p>
                   <div className="flex flex-wrap gap-2">
-                    {task.assignedUsers.length > 0 ? (
-                      task.assignedUsers.map((assignment) => (
-                        <Badge key={assignment.user.id} variant="outline">
-                          {assignment.user.name}
+                    {task.workerAssignments && task.workerAssignments.length > 0 ? (
+                      task.workerAssignments.map((assignment) => (
+                        <Badge key={assignment.worker.id} variant="outline">
+                          {assignment.worker.name} ({assignment.project.nameEs || assignment.project.name})
                         </Badge>
                       ))
                     ) : (
@@ -281,9 +298,9 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                                 <div key={update.id} className="border rounded p-3">
                                   <div className="flex justify-between items-start mb-2">
                                     <div>
-                                      <p className="font-medium">{update.user.name}</p>
+                                      <p className="font-medium">{update.worker.name}</p>
                                       <p className="text-sm text-gray-600">
-                                        {new Date(update.createdAt).toLocaleString()}
+                                        {update.project.nameEs || update.project.name} • {new Date(update.createdAt).toLocaleString()}
                                       </p>
                                     </div>
                                     <Badge 
