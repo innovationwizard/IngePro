@@ -13,7 +13,7 @@ const taskCategorySchema = z.object({
   description: z.string().optional(),
 })
 
-// GET - List task categories for the company
+// GET - List all task categories (universal)
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -24,27 +24,8 @@ export async function GET(request: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Get user's company context
-    let companyId = session.user?.companyId
-    
-    if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
-        where: {
-          userId: session.user?.id,
-          status: 'ACTIVE'
-        },
-        orderBy: { startDate: 'desc' }
-      })
-      companyId = userTenant?.companyId
-    }
-
-    if (!companyId) {
-      return NextResponse.json({ error: 'No company context available' }, { status: 400 })
-    }
-
     const taskCategories = await prisma.taskCategory.findMany({
       where: {
-        companyId: companyId,
         status: 'ACTIVE'
       },
       include: {
@@ -68,7 +49,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new task category
+// POST - Create new task category (universal)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -82,28 +63,9 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
-    let companyId = session.user?.companyId
-    
-    if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
-        where: {
-          userId: session.user?.id,
-          status: 'ACTIVE'
-        },
-        orderBy: { startDate: 'desc' }
-      })
-      companyId = userTenant?.companyId
-    }
-
-    if (!companyId) {
-      return NextResponse.json({ error: 'No company context available' }, { status: 400 })
-    }
-
-    // Check if category name already exists in this company
+    // Check if category name already exists globally
     const existingCategory = await prisma.taskCategory.findFirst({
       where: {
-        companyId: companyId,
         name: validatedData.name,
         status: 'ACTIVE'
       }
@@ -121,7 +83,6 @@ export async function POST(request: NextRequest) {
         name: validatedData.name,
         nameEs: validatedData.nameEs,
         description: validatedData.description,
-        companyId: companyId,
       }
     })
 
@@ -136,7 +97,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }
@@ -148,7 +109,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update task category
+// PUT - Update task category (universal)
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -163,29 +124,11 @@ export async function PUT(request: NextRequest) {
     
     const prisma = await getPrisma()
 
-    // Get user's company context
-    let companyId = session.user?.companyId
-    
-    if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
-        where: {
-          userId: session.user?.id,
-          status: 'ACTIVE'
-        },
-        orderBy: { startDate: 'desc' }
-      })
-      companyId = userTenant?.companyId
-    }
-
-    if (!companyId) {
-      return NextResponse.json({ error: 'No company context available' }, { status: 400 })
-    }
-
-    // Verify the task category belongs to the user's company
+    // Verify the task category exists
     const existingCategory = await prisma.taskCategory.findFirst({
       where: {
         id: id,
-        companyId: companyId
+        status: 'ACTIVE'
       }
     })
 
@@ -197,7 +140,6 @@ export async function PUT(request: NextRequest) {
     if (validatedData.name && validatedData.name !== existingCategory.name) {
       const nameConflict = await prisma.taskCategory.findFirst({
         where: {
-          companyId: companyId,
           name: validatedData.name,
           status: 'ACTIVE',
           id: { not: id }
@@ -228,7 +170,7 @@ export async function PUT(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }
