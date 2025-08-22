@@ -42,3 +42,24 @@ body {
   max-width: 100%;
   overflow-x: hidden;
 }
+
+/* Mobile tabs improvements */
+@media (max-width: 640px) {
+  .tabs-list-mobile {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    padding: 0.25rem;
+  }
+  
+  .tabs-list-mobile::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tabs-list-mobile > * {
+    flex-shrink: 0;
+    min-width: fit-content;
+  }
+}

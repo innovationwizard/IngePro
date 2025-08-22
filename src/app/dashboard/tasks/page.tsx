@@ -192,37 +192,37 @@ export default function TasksPage() {
   const isWorker = session.user?.role === 'WORKER'
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-4 sm:p-6 max-w-full overflow-x-hidden">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Gestión de Tareas</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestión de Tareas</h1>
+        <p className="text-gray-600 mt-2 text-sm sm:text-base">
           Gestiona tareas, categorías y materiales para tus proyectos de construcción
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
-          <TabsTrigger value="tasks">Tareas</TabsTrigger>
+        <TabsList className="flex w-full gap-1 sm:gap-2 p-1 sm:p-2 tabs-list-mobile overflow-x-auto min-h-[3rem] bg-gray-100 rounded-lg shadow-sm">
+          <TabsTrigger value="tasks" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="create">Crear Tarea</TabsTrigger>
+            <TabsTrigger value="create" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Crear Tarea</TabsTrigger>
           )}
           {isAdmin && (
-            <TabsTrigger value="categories">Categorías</TabsTrigger>
+            <TabsTrigger value="categories" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Categorías</TabsTrigger>
           )}
           {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="consumption">Consumo de Materiales</TabsTrigger>
+            <TabsTrigger value="consumption" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Consumo</TabsTrigger>
           )}
           {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="inventory">Inventario</TabsTrigger>
+            <TabsTrigger value="inventory" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Inventario</TabsTrigger>
           )}
           {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="history">Historial de Progreso</TabsTrigger>
+            <TabsTrigger value="history" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Historial</TabsTrigger>
           )}
           {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="analytics">Análisis Avanzado</TabsTrigger>
+            <TabsTrigger value="analytics" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Análisis</TabsTrigger>
           )}
           {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="ai-insights">Insights de IA</TabsTrigger>
+            <TabsTrigger value="ai-insights" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">IA</TabsTrigger>
           )}
         </TabsList>
 
