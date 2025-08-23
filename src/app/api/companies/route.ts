@@ -149,6 +149,7 @@ export async function POST(request: NextRequest) {
               personId: session.user.id,
               companyId: company.id,
               startDate: new Date(),
+              status: 'ACTIVE'
             }
           })
 

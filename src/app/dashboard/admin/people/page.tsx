@@ -79,6 +79,52 @@ export default function AdminPeoplePage() {
     setIsEditModalOpen(true)
   }
 
+  const handleDebugUser = async () => {
+    try {
+      const response = await fetch('/api/debug/user')
+      if (response.ok) {
+        const data = await response.json()
+        console.log('🔍 Debug user data:', data)
+        
+        if (data.personTenants.length === 0) {
+          // No company associations found, try to fix
+          const companyResponse = await fetch('/api/companies')
+          if (companyResponse.ok) {
+            const companyData = await companyResponse.json()
+            if (companyData.companies.length > 0) {
+              const company = companyData.companies[0]
+              const fixResponse = await fetch('/api/debug/user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action: 'fix-association',
+                  companyId: company.id
+                })
+              })
+              
+              if (fixResponse.ok) {
+                const fixData = await fixResponse.json()
+                alert(`Company association fixed! ${fixData.message}`)
+                // Refresh the page to see the users
+                window.location.reload()
+              } else {
+                alert('Failed to fix company association')
+              }
+            } else {
+              alert('No companies found to associate with')
+            }
+          }
+        } else {
+          alert(`User has ${data.personTenants.length} company associations. Check console for details.`)
+        }
+      } else {
+        console.error('Failed to debug user')
+      }
+    } catch (error) {
+      console.error('Error debugging user:', error)
+    }
+  }
+
   const handleCreatePerson = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -197,13 +243,21 @@ export default function AdminPeoplePage() {
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Personas</h1>
           <p className="text-gray-600">Invitar y gestionar personas de la empresa</p>
         </div>
-        <button
-          onClick={handleAddPerson}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Invitar Persona</span>
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={handleAddPerson}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Invitar Persona</span>
+          </button>
+          <button
+            onClick={handleDebugUser}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2"
+          >
+            <span>🔍 Debug Usuario</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white shadow-sm border rounded-lg">

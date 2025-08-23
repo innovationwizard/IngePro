@@ -101,6 +101,24 @@ export async function GET(request: NextRequest) {
     
     console.log('Target company IDs:', targetCompanyIds);
     
+    // Debug: Check if there are any people at all
+    const allPeople = await prisma.people.findMany({
+      select: { id: true, name: true, email: true }
+    })
+    console.log('Total people in database:', allPeople.length);
+    
+    // Debug: Check PersonTenants records
+    const allPersonTenants = await prisma.personTenants.findMany({
+      where: { companyId: { in: targetCompanyIds } },
+      include: { person: { select: { id: true, name: true } } }
+    })
+    console.log('PersonTenants for target companies:', allPersonTenants.map(pt => ({
+      personId: pt.personId,
+      personName: pt.person.name,
+      companyId: pt.companyId,
+      status: pt.status
+    })));
+    
     const people = await prisma.people.findMany({
       where: {
         personTenants: {

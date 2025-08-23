@@ -1,3 +1,6 @@
+// src/app/api/debug/user/route.ts
+// Debug endpoint to check and fix user company associations
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -9,52 +12,48 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No session found' }, { status: 401 })
+    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const prisma = await getPrisma()
-    const email = session.user.email
-
-    // Get person with all relationships
-    const person = await prisma.people.findUnique({
-      where: { email },
+    
+    // Get user's current company associations
+    const personTenants = await prisma.personTenants.findMany({
+      where: { 
+        personId: session.user.id,
+        status: 'ACTIVE'
+      },
       include: {
-        personTenants: {
-          include: { company: true }
-        }
-      }
+        company: true
+      },
+      orderBy: { startDate: 'desc' }
     })
 
-    if (!person) {
-      return NextResponse.json({ error: 'Person not found' }, { status: 404 })
-    }
+    // Get user's direct companyId (legacy field)
+    const user = await prisma.people.findUnique({
+      where: { id: session.user.id },
+      select: { companyId: true }
+    })
 
     return NextResponse.json({
-      person: {
-        id: person.id,
-        email: person.email,
-        name: person.name,
-        role: person.role,
-        status: person.status,
-        companyId: person.companyId,
-        personTenants: person.personTenants.map(pt => ({
-          id: pt.id,
-          role: pt.role,
-          status: pt.status,
-          companyId: pt.companyId,
-          companyName: pt.company.name,
-          companySlug: pt.company.slug,
-          startDate: pt.startDate,
-          endDate: pt.endDate
-        }))
-      }
+      userId: session.user.id,
+      userRole: session.user.role,
+      sessionCompanyId: session.user.companyId,
+      databaseCompanyId: user?.companyId,
+      personTenants: personTenants.map(pt => ({
+        id: pt.id,
+        companyId: pt.companyId,
+        companyName: pt.company.name,
+        startDate: pt.startDate,
+        status: pt.status
+      }))
     })
 
   } catch (error) {
-    console.error('Debug person error:', error)
+    console.error('Error in debug endpoint:', error)
     return NextResponse.json(
-      { error: 'Failed to get person debug info' },
+      { error: 'Failed to debug user' },
       { status: 500 }
     )
   }
@@ -64,50 +63,56 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'No session found' }, { status: 401 })
+    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { action, role } = body
+    const { action, companyId } = body
 
-    const prisma = await getPrisma()
-    const email = session.user.email
-
-    if (action === 'fix-role') {
-      // Update person's direct role
-      const updatedPerson = await prisma.people.update({
-        where: { email },
-        data: { role: role || 'ADMIN' }
-      })
-
-              // PersonTenants no longer stores role
-      await prisma.personTenants.updateMany({
-        where: { 
-          personId: updatedPerson.id,
+    if (action === 'fix-association' && companyId) {
+      const prisma = await getPrisma()
+      
+      // Check if association already exists
+      const existingAssociation = await prisma.personTenants.findFirst({
+        where: {
+          personId: session.user.id,
+          companyId: companyId,
           status: 'ACTIVE'
-        },
-        data: { role: role || 'ADMIN' }
-      })
-
-      return NextResponse.json({
-        success: true,
-        message: `Role updated to ${role || 'ADMIN'}`,
-        person: {
-          id: updatedPerson.id,
-          email: updatedPerson.email,
-          name: updatedPerson.name,
-          role: updatedPerson.role
         }
       })
+
+      if (!existingAssociation) {
+        // Create the missing association
+        const newAssociation = await prisma.personTenants.create({
+          data: {
+            personId: session.user.id,
+            companyId: companyId,
+            startDate: new Date(),
+            status: 'ACTIVE'
+          }
+        })
+
+        return NextResponse.json({
+          success: true,
+          message: 'Company association created',
+          association: newAssociation
+        })
+      } else {
+        return NextResponse.json({
+          success: true,
+          message: 'Association already exists',
+          association: existingAssociation
+        })
+      }
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 
   } catch (error) {
-    console.error('Debug person error:', error)
+    console.error('Error in debug endpoint:', error)
     return NextResponse.json(
-      { error: 'Failed to update person' },
+      { error: 'Failed to fix association' },
       { status: 500 }
     )
   }
