@@ -77,7 +77,7 @@ export default function SuperUserPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">SuperUser Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">AI Overlord Dashboard</h1>
         <p className="text-gray-600">System-wide administration and development tools</p>
       </div>
 
