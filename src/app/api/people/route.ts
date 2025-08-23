@@ -99,26 +99,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ people: [] })
     }
     
-    console.log('Target company IDs:', targetCompanyIds);
-    
-    // Debug: Check if there are any people at all
-    const allPeople = await prisma.people.findMany({
-      select: { id: true, name: true, email: true }
-    })
-    console.log('Total people in database:', allPeople.length);
-    
-    // Debug: Check PersonTenants records
-    const allPersonTenants = await prisma.personTenants.findMany({
-      where: { companyId: { in: targetCompanyIds } },
-      include: { person: { select: { id: true, name: true } } }
-    })
-    console.log('PersonTenants for target companies:', allPersonTenants.map(pt => ({
-      personId: pt.personId,
-      personName: pt.person.name,
-      companyId: pt.companyId,
-      status: pt.status
-    })));
-    
     const people = await prisma.people.findMany({
       where: {
         personTenants: {
@@ -144,9 +124,6 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' }
     })
-    
-    console.log('Found people:', people.length);
-    console.log('People with personTenants:', people.map(p => ({ id: p.id, name: p.name, personTenants: p.personTenants.length })));
 
     const formattedPeople = people.map(person => {
       // Find the person tenant for the requested company (if specific company requested)
@@ -167,17 +144,8 @@ export async function GET(request: NextRequest) {
         hasPassword: !!person.password
       };
       
-      console.log('Formatted person:', {
-        id: formattedPerson.id,
-        name: formattedPerson.name,
-        role: formattedPerson.role,
-        personTenants: person.personTenants.map(ut => ({ companyId: ut.companyId }))
-      });
-      
       return formattedPerson;
     })
-    
-    console.log('Final formatted people:', formattedPeople.map(p => ({ id: p.id, name: p.name, role: p.role })));
 
     return NextResponse.json({ people: formattedPeople })
   } catch (error) {

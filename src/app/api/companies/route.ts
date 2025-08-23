@@ -153,8 +153,12 @@ export async function POST(request: NextRequest) {
             }
           })
 
-          // Don't update person's companyId - keep them associated with all their companies
-          // The person can switch between companies using the PersonTenant relationships
+          // Update the admin's direct companyId to the newly created company
+          // This ensures the session stays in sync with their active company
+          await tx.people.update({
+            where: { id: session.user.id },
+            data: { companyId: company.id }
+          })
         }
 
         return company

@@ -118,8 +118,6 @@ export default function AdminTenantsPage() {
       slug: selectedCompany.slug,
       ...formData
     }
-    
-    console.log('🔍 Updating company with data:', updateData)
 
     try {
       const response = await fetch('/api/companies', {
@@ -129,7 +127,6 @@ export default function AdminTenantsPage() {
       })
 
       const data = await response.json()
-      console.log('📡 Update response:', response.status, data)
 
       if (response.ok) {
         setIsEditModalOpen(false)
@@ -353,11 +350,7 @@ export default function AdminTenantsPage() {
                     required
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     value={formData.name}
-                    onChange={(e) => {
-                      const newData = { ...formData, name: e.target.value }
-                      console.log('📝 Form data updated:', newData)
-                      setFormData(newData)
-                    }}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div>
@@ -376,11 +369,7 @@ export default function AdminTenantsPage() {
                     type="text"
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     value={formData.nameEs}
-                    onChange={(e) => {
-                      const newData = { ...formData, nameEs: e.target.value }
-                      console.log('📝 Form data updated:', newData)
-                      setFormData(newData)
-                    }}
+                    onChange={(e) => setFormData({ ...formData, nameEs: e.target.value })}
                   />
                 </div>
                 <div>

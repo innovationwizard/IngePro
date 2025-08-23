@@ -79,51 +79,7 @@ export default function AdminPeoplePage() {
     setIsEditModalOpen(true)
   }
 
-  const handleDebugUser = async () => {
-    try {
-      const response = await fetch('/api/debug/user')
-      if (response.ok) {
-        const data = await response.json()
-        console.log('🔍 Debug user data:', data)
-        
-        if (data.personTenants.length === 0) {
-          // No company associations found, try to fix
-          const companyResponse = await fetch('/api/companies')
-          if (companyResponse.ok) {
-            const companyData = await companyResponse.json()
-            if (companyData.companies.length > 0) {
-              const company = companyData.companies[0]
-              const fixResponse = await fetch('/api/debug/user', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  action: 'fix-association',
-                  companyId: company.id
-                })
-              })
-              
-              if (fixResponse.ok) {
-                const fixData = await fixResponse.json()
-                alert(`Company association fixed! ${fixData.message}`)
-                // Refresh the page to see the users
-                window.location.reload()
-              } else {
-                alert('Failed to fix company association')
-              }
-            } else {
-              alert('No companies found to associate with')
-            }
-          }
-        } else {
-          alert(`User has ${data.personTenants.length} company associations. Check console for details.`)
-        }
-      } else {
-        console.error('Failed to debug user')
-      }
-    } catch (error) {
-      console.error('Error debugging user:', error)
-    }
-  }
+
 
   const handleCreatePerson = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -243,22 +199,37 @@ export default function AdminPeoplePage() {
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Personas</h1>
           <p className="text-gray-600">Invitar y gestionar personas de la empresa</p>
         </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={handleAddPerson}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Invitar Persona</span>
-          </button>
-          <button
-            onClick={handleDebugUser}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2"
-          >
-            <span>🔍 Debug Usuario</span>
-          </button>
-        </div>
+        <button
+          onClick={handleAddPerson}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Invitar Persona</span>
+        </button>
       </div>
+
+      {!isLoading && people.length === 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">
+                Empresa recién creada
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>
+                  Tu empresa fue creada exitosamente. Ahora puedes comenzar a invitar usuarios. 
+                  Los usuarios que invites aparecerán en esta lista.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white shadow-sm border rounded-lg">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -289,60 +260,85 @@ export default function AdminPeoplePage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {people.map((person) => (
-                <tr key={person.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <User className="h-5 w-5 text-blue-600" />
+              {people.length > 0 ? (
+                people.map((person) => (
+                  <tr key={person.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <User className="h-5 w-5 text-blue-600" />
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{person.name}</div>
+                          <div className="text-sm text-gray-500 flex items-center">
+                            <Mail className="h-3 w-3 mr-1" />
+                            {person.email}
+                          </div>
                         </div>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{person.name}</div>
-                        <div className="text-sm text-gray-500 flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
-                          {person.email}
-                        </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getRoleBadge(person.role)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(person.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {person.hasPassword ? (
+                        <span className="text-green-600">✓ Configurada</span>
+                      ) : (
+                        <span className="text-orange-600">⚠ Pendiente</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(person.createdAt).toLocaleDateString('es-ES')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => router.push(`/dashboard/admin/people/${person.id}`)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Ver Detalles"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEditPerson(person)}
+                          className="text-green-600 hover:text-green-900"
+                          title="Editar"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getRoleBadge(person.role)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(person.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {person.hasPassword ? (
-                      <span className="text-green-600">✓ Configurada</span>
-                    ) : (
-                      <span className="text-orange-600">⚠ Pendiente</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(person.createdAt).toLocaleDateString('es-ES')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => router.push(`/dashboard/admin/people/${person.id}`)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Ver Detalles"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEditPerson(person)}
-                        className="text-green-600 hover:text-green-900"
-                        title="Editar"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center space-y-3">
+                      <User className="h-12 w-12 text-gray-400" />
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">No hay usuarios registrados</h3>
+                        <p className="text-gray-500 mt-1">
+                          {isLoading ? 'Cargando usuarios...' : 'Comienza invitando personas a tu empresa'}
+                        </p>
+                      </div>
+                      {!isLoading && (
+                        <button
+                          onClick={handleAddPerson}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span>Invitar Primera Persona</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
