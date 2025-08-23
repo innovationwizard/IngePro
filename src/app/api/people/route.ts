@@ -101,12 +101,21 @@ export async function GET(request: NextRequest) {
     
     const people = await prisma.people.findMany({
       where: {
-        personTenants: {
-          some: {
-            companyId: { in: targetCompanyIds },
-            status: 'ACTIVE'
+        OR: [
+          // Check PersonTenants relationship
+          {
+            personTenants: {
+              some: {
+                companyId: { in: targetCompanyIds },
+                status: 'ACTIVE'
+              }
+            }
+          },
+          // Also check direct companyId relationship
+          {
+            companyId: { in: targetCompanyIds }
           }
-        }
+        ]
       },
       include: {
         personTenants: {

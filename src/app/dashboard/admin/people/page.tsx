@@ -79,27 +79,7 @@ export default function AdminPeoplePage() {
     setIsEditModalOpen(true)
   }
 
-  const handleRefreshSession = async () => {
-    try {
-      const response = await fetch('/api/auth/refresh-company', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
 
-      if (response.ok) {
-        const data = await response.json()
-        alert(`Sesión actualizada! Ahora asociado con: ${data.company.name}`)
-        // Refresh the page to see the users
-        window.location.reload()
-      } else {
-        const errorData = await response.json()
-        alert(`Error: ${errorData.error}`)
-      }
-    } catch (error) {
-      console.error('Error refreshing session:', error)
-      alert('Error al actualizar la sesión')
-    }
-  }
 
 
 
@@ -221,21 +201,13 @@ export default function AdminPeoplePage() {
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Personas</h1>
           <p className="text-gray-600">Invitar y gestionar personas de la empresa</p>
         </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={handleAddPerson}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Invitar Persona</span>
-          </button>
-          <button
-            onClick={handleRefreshSession}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2"
-          >
-            <span>🔄 Actualizar Sesión</span>
-          </button>
-        </div>
+        <button
+          onClick={handleAddPerson}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Invitar Persona</span>
+        </button>
       </div>
 
       {!isLoading && people.length === 0 && (
@@ -247,15 +219,14 @@ export default function AdminPeoplePage() {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                No se encontraron usuarios
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>
-                  Si acabas de crear tu empresa, es posible que necesites actualizar tu sesión 
-                  para ver los usuarios asociados. Haz clic en "🔄 Actualizar Sesión" arriba.
-                </p>
-              </div>
+                                      <h3 className="text-sm font-medium text-yellow-800">
+                          No se encontraron usuarios
+                        </h3>
+                        <div className="mt-2 text-sm text-yellow-700">
+                          <p>
+                            Comienza invitando personas a tu empresa. Los usuarios que invites aparecerán en esta lista.
+                          </p>
+                        </div>
             </div>
           </div>
         </div>
