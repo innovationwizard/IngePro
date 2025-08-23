@@ -8,11 +8,5 @@
       "source": "/:tenant/api/:path*", 
       "destination": "/api/:path*"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/rate-limit-cleanup",
-      "schedule": "*/5 * * * *"
-    }
   ]
 }
