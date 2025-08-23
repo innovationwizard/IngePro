@@ -55,12 +55,20 @@ export async function GET(
       }
     })
 
+    console.log('Person lookup:', {
+      personId: personId,
+      personFound: !!person,
+      personCompanyId: person?.companyId,
+      personTenantsCount: person?.personTenants.length
+    })
+
     if (!person) {
       return NextResponse.json({ error: 'Person not found' }, { status: 404 })
     }
 
     // Check if admin has access to this person's companies
     if (session.user?.role === 'ADMIN') {
+      // Get admin's company access through both PersonTenants and direct companyId
       const adminPersonTenants = await prisma.personTenants.findMany({
         where: {
           personId: session.user?.id,
@@ -70,9 +78,33 @@ export async function GET(
       })
       
       const adminCompanyIds = adminPersonTenants.map(ut => ut.companyId)
+      
+      // Also check admin's direct companyId
+      const adminUser = await prisma.people.findUnique({
+        where: { id: session.user?.id },
+        select: { companyId: true }
+      })
+      
+      if (adminUser?.companyId) {
+        adminCompanyIds.push(adminUser.companyId)
+      }
+      
+      // Get person's company access through both PersonTenants and direct companyId
       const personCompanyIds = person.personTenants.map(ut => ut.companyId)
       
+      // Also check person's direct companyId
+      if (person.companyId) {
+        personCompanyIds.push(person.companyId)
+      }
+      
       const hasAccess = personCompanyIds.some(id => adminCompanyIds.includes(id))
+      
+      console.log('Access check:', {
+        personId: personId,
+        adminCompanyIds: adminCompanyIds,
+        personCompanyIds: personCompanyIds,
+        hasAccess: hasAccess
+      })
       
       if (!hasAccess) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
