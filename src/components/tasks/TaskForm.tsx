@@ -26,7 +26,7 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    categoryId: '',
+    categoryId: 'none',
     progressUnit: ''
   })
 
@@ -35,10 +35,10 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
     setLoading(true)
 
     try {
-      // Prepare form data - remove categoryId if empty string
+      // Prepare form data - remove categoryId if "none" or empty
       const submitData = {
         ...formData,
-        categoryId: formData.categoryId || undefined
+        categoryId: formData.categoryId === "none" || !formData.categoryId ? undefined : formData.categoryId
       }
 
       const response = await fetch('/api/tasks', {
@@ -57,7 +57,7 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
         setFormData({
           name: '',
           description: '',
-          categoryId: '',
+          categoryId: 'none',
           progressUnit: ''
         })
       } else {
@@ -119,7 +119,7 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
               <SelectValue placeholder="Selecciona una categoría (opcional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sin categoría</SelectItem>
+              <SelectItem value="none">Sin categoría</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
