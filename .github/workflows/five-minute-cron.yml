@@ -13,21 +13,11 @@ jobs:
       group: five-minute-cron
       cancel-in-progress: false   # avoid overlapping runs
 
-    strategy:
-      matrix:
-        endpoint: [ "${{ secrets.CRON_URL_1 }}", "${{ secrets.CRON_URL_2 }}" ]  # add more as needed
-
     steps:
-      - name: Hit endpoint
+      - name: Hit rate-limit-cleanup endpoint
         run: |
-          URL="${{ matrix.endpoint }}"
-          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
-            echo "No URL configured for this slot; skipping."
-            exit 0
-          fi
           curl --fail --silent --show-error \
                --max-time 50 \
                --retry 3 --retry-all-errors --retry-delay 5 \
-               -H "Authorization: Bearer ${{ secrets.CRON_BEARER_TOKEN }}" \
                -H "User-Agent: gh-five-minute-cron" \
-               "$URL"
+               "https://ingepro.vercel.app/api/cron/rate-limit-cleanup"
