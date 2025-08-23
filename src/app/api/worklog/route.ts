@@ -18,15 +18,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     
     // Get query parameters
-    const userId = searchParams.get('userId')
+    const personId = searchParams.get('personId')
     const projectId = searchParams.get('projectId')
     const limit = parseInt(searchParams.get('limit') || '50')
 
     let where: any = {}
     
-    // Filter by user if specified
-    if (userId) {
-      where.userId = userId
+    // Filter by person if specified
+    if (personId) {
+      where.personId = personId
     }
     
     // Filter by project if specified
@@ -38,15 +38,15 @@ export async function GET(request: NextRequest) {
     if (session.user?.role !== 'SUPERUSER') {
       if (session.user?.role === 'ADMIN') {
         // Admin can see work logs from their companies
-        const userTenants = await prisma.userTenant.findMany({
+        const personTenants = await prisma.personTenants.findMany({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             status: 'ACTIVE'
           },
           select: { companyId: true }
         })
         
-        const adminCompanyIds = userTenants.map(ut => ut.companyId)
+        const adminCompanyIds = personTenants.map(ut => ut.companyId)
         
         where.project = {
           companyId: {
@@ -55,14 +55,14 @@ export async function GET(request: NextRequest) {
         }
       } else {
         // WORKER/SUPERVISOR can only see their own work logs
-        where.userId = session.user?.id
+        where.personId = session.user?.id
       }
     }
 
-    const workLogs = await prisma.workLog.findMany({
+    const workLogs = await prisma.workLogs.findMany({
       where,
       include: {
-        user: {
+        person: {
           select: {
             id: true,
             name: true,
@@ -98,10 +98,10 @@ export async function GET(request: NextRequest) {
       description: log.notes || log.notesEs || '',
       status: log.clockOut ? 'COMPLETED' : 'ACTIVE',
       createdAt: log.createdAt.toISOString(),
-      user: {
-        id: log.user.id,
-        name: log.user.name,
-        email: log.user.email
+      person: {
+        id: log.person.id,
+        name: log.person.name,
+        email: log.person.email
       },
       project: log.project ? {
         id: log.project.id,
@@ -138,9 +138,9 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
 
-    // Validate project exists and user has access
+    // Validate project exists and person has access
     if (projectId) {
-      const project = await prisma.project.findUnique({
+      const project = await prisma.projects.findUnique({
         where: { id: projectId },
         include: { company: true }
       })
@@ -149,39 +149,39 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Project not found' }, { status: 404 })
       }
 
-      // Check if user has access to this project
+      // Check if person has access to this project
       if (session.user?.role === 'ADMIN') {
-        const userTenant = await prisma.userTenant.findFirst({
+        const personTenant = await prisma.personTenants.findFirst({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             companyId: project.company.id,
             status: 'ACTIVE'
           }
         })
         
-        if (!userTenant) {
+        if (!personTenant) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
       } else if (session.user?.role !== 'SUPERUSER') {
-        // Check if user is assigned to this project
-        const userProject = await prisma.userProject.findFirst({
+        // Check if person is assigned to this project
+        const personProject = await prisma.personProjects.findFirst({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             projectId: projectId,
             status: 'ACTIVE'
           }
         })
         
-        if (!userProject) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!personProject) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 400 })
         }
       }
     }
 
     // Create work log
-    const workLog = await prisma.workLog.create({
+    const workLog = await prisma.workLogs.create({
       data: {
-        userId: session.user?.id!,
+        personId: session.user?.id!,
         projectId: projectId || null,
         clockIn: new Date(),
         notes: description || '',
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date()
       },
       include: {
-        user: {
+        person: {
           select: {
             id: true,
             name: true,
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
         description: workLog.notes || '',
         status: 'ACTIVE',
         createdAt: workLog.createdAt.toISOString(),
-        user: workLog.user,
+        person: workLog.person,
         project: workLog.project
       }
     })
@@ -252,10 +252,10 @@ export async function PUT(request: NextRequest) {
     const prisma = await getPrisma()
 
     // Find the work log
-    const workLog = await prisma.workLog.findUnique({
+    const workLog = await prisma.workLogs.findUnique({
       where: { id },
       include: {
-        user: true,
+        person: true,
         project: {
           include: { company: true }
         }
@@ -266,13 +266,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Work log not found' }, { status: 404 })
     }
 
-    // Check if user can modify this work log
-    if (session.user?.role !== 'SUPERUSER' && workLog.userId !== session.user?.id) {
+    // Check if person can modify this work log
+    if (session.user?.role !== 'SUPERUSER' && workLog.personId !== session.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Update work log
-    const updatedWorkLog = await prisma.workLog.update({
+    const updatedWorkLog = await prisma.workLogs.update({
       where: { id },
       data: {
         clockOut: endTime ? new Date(endTime) : null,
@@ -281,7 +281,7 @@ export async function PUT(request: NextRequest) {
         updatedAt: new Date()
       },
       include: {
-        user: {
+        person: {
           select: {
             id: true,
             name: true,
@@ -317,7 +317,7 @@ export async function PUT(request: NextRequest) {
         description: updatedWorkLog.notes || '',
         status: updatedWorkLog.clockOut ? 'COMPLETED' : 'ACTIVE',
         createdAt: updatedWorkLog.createdAt.toISOString(),
-        user: updatedWorkLog.user,
+        person: updatedWorkLog.person,
         project: updatedWorkLog.project
       }
     })

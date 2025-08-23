@@ -25,7 +25,7 @@ export async function POST(
     const { userIds, role } = assignUsersSchema.parse(body);
 
     // Get the project to check company access
-    const project = await prisma.project.findUnique({
+    const project = await prisma.projects.findUnique({
       where: { id: projectId },
       include: { company: true }
     });
@@ -34,58 +34,58 @@ export async function POST(
       return NextResponse.json({ message: 'Project not found' }, { status: 404 });
     }
 
-    // Check if user has access to this project's company
+    // Check if person has access to this project's company
     let hasAccess = false;
     
     if (session.user.role === 'SUPERUSER') {
       hasAccess = true;
     } else if (session.user.role === 'ADMIN') {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user.id,
+          personId: session.user.id,
           companyId: project.companyId,
           role: 'ADMIN',
           status: 'ACTIVE'
         }
       });
-      hasAccess = !!userTenant;
+      hasAccess = !!personTenant;
     } else if (session.user.role === 'SUPERVISOR') {
       // Supervisors can only assign workers to projects they're assigned to
-      const userProject = await prisma.userProject.findFirst({
+      const personProject = await prisma.personProjects.findFirst({
         where: {
-          userId: session.user.id,
+          personId: session.user.id,
           projectId: projectId,
           role: 'SUPERVISOR',
           status: 'ACTIVE'
         }
       });
-      hasAccess = !!userProject && role === 'WORKER';
+      hasAccess = !!personProject && role === 'WORKER';
     }
 
     if (!hasAccess) {
       return NextResponse.json({ message: 'Access denied' }, { status: 403 });
     }
 
-    // Create UserProject entries for each user
-    const userProjects = await Promise.all(
+    // Create PersonProjects entries for each person
+    const personProjects = await Promise.all(
       userIds.map(async (userId) => {
-        // Check if user already has access to the project's company
-        const userTenant = await prisma.userTenant.findFirst({
+        // Check if person already has access to the project's company
+        const personTenant = await prisma.personTenants.findFirst({
           where: {
-            userId: userId,
+            personId: userId,
             companyId: project.companyId,
             status: 'ACTIVE'
           }
         });
 
-        if (!userTenant) {
-          throw new Error(`User ${userId} does not have access to company ${project.companyId}`);
+        if (!personTenant) {
+          throw new Error(`Person ${userId} does not have access to company ${project.companyId}`);
         }
 
-        // Check if user is already assigned to this project
-        const existingAssignment = await prisma.userProject.findFirst({
+        // Check if person is already assigned to this project
+        const existingAssignment = await prisma.personProjects.findFirst({
           where: {
-            userId: userId,
+            personId: userId,
             projectId: projectId,
             status: 'ACTIVE'
           }
@@ -93,15 +93,15 @@ export async function POST(
 
         if (existingAssignment) {
           // Update existing assignment
-          return await prisma.userProject.update({
+          return await prisma.personProjects.update({
             where: { id: existingAssignment.id },
             data: { role, startDate: new Date() }
           });
         } else {
           // Create new assignment
-          return await prisma.userProject.create({
+          return await prisma.personProjects.create({
             data: {
-              userId: userId,
+              personId: userId,
               projectId: projectId,
               role: role,
               startDate: new Date(),
@@ -113,8 +113,8 @@ export async function POST(
     );
 
     return NextResponse.json({
-      message: 'Users assigned successfully',
-      userProjects
+      message: 'People assigned successfully',
+      personProjects
     });
 
   } catch (error) {

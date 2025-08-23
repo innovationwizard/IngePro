@@ -13,7 +13,7 @@ interface WorkLog {
   description: string
   status: 'ACTIVE' | 'COMPLETED'
   createdAt: string
-  user: {
+  person: {
     id: string
     name: string
     email: string
@@ -39,7 +39,7 @@ export default function WorkLogsPage() {
     dateTo: ''
   })
 
-  // Check if user is authenticated
+  // Check if person is authenticated
   if (!session) {
     router.push('/auth/login')
     return null
@@ -270,8 +270,8 @@ export default function WorkLogsPage() {
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{log.user.name}</div>
-                          <div className="text-sm text-gray-500">{log.user.email}</div>
+                                          <div className="text-sm font-medium text-gray-900">{log.person.name}</div>
+                <div className="text-sm text-gray-500">{log.person.email}</div>
                         </div>
                       </div>
                     </td>

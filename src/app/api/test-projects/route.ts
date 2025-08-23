@@ -9,7 +9,7 @@ export async function GET() {
     console.log('TEST: Prisma client obtained')
     
     // Simple query to test database connection
-    const projects = await prisma.project.findMany({
+    const projects = await prisma.projects.findMany({
       take: 10,
       include: {
         company: true

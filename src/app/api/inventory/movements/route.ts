@@ -22,18 +22,18 @@ export async function GET(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       if (endDate) whereClause.recordedAt.lte = new Date(endDate)
     }
 
-    const movements = await prisma.inventoryMovement.findMany({
+    const movements = await prisma.inventoryMovements.findMany({
       where: whereClause,
       include: {
         material: true
@@ -132,18 +132,18 @@ export async function POST(request: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify material belongs to company
-    const material = await prisma.material.findFirst({
+    const material = await prisma.materials.findFirst({
       where: {
         id: materialId,
         projectMaterials: {
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
     const totalCost = unitCost ? quantity * unitCost : null
 
     // Create inventory movement
-    const movement = await prisma.inventoryMovement.create({
+    const movement = await prisma.inventoryMovements.create({
       data: {
         materialId,
         type,
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
 
     // Update material stock level
     const newStock = material.currentStock + quantity
-    await prisma.material.update({
+    await prisma.materials.update({
       where: { id: materialId },
       data: { currentStock: newStock }
     })

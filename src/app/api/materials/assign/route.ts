@@ -26,26 +26,26 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify project belongs to user's company
-    const project = await prisma.project.findFirst({
+    // Verify project belongs to person's company
+    const project = await prisma.projects.findFirst({
       where: {
         id: validatedData.projectId,
         companyId: companyId
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify all materials exist
-    const materials = await prisma.material.findMany({
+    const materials = await prisma.materials.findMany({
       where: {
         id: { in: validatedData.materialIds },
         status: 'ACTIVE'
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     // Create material assignments in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create project-material relationships
-      const materialAssignments = await tx.projectMaterial.createMany({
+      const materialAssignments = await tx.projectMaterials.createMany({
         data: validatedData.materialIds.map(materialId => ({
           projectId: validatedData.projectId,
           materialId: materialId

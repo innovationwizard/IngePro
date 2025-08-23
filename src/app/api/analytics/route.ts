@@ -22,18 +22,18 @@ export async function GET(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
 // Helper function for productivity analytics
 async function getProductivityAnalytics(prisma: any, dateFilter: any, projectFilter: any, workerFilter: any) {
   // Get progress updates with filters
-  const progressUpdates = await prisma.taskProgressUpdate.findMany({
+  const progressUpdates = await prisma.taskProgressUpdates.findMany({
     where: {
       createdAt: dateFilter,
       project: projectFilter,
@@ -182,7 +182,7 @@ async function getProductivityAnalytics(prisma: any, dateFilter: any, projectFil
 // Helper function for material efficiency analytics
 async function getMaterialEfficiencyAnalytics(prisma: any, dateFilter: any, projectFilter: any) {
   // Get material consumption and loss data
-  const materialConsumptions = await prisma.materialConsumption.findMany({
+  const materialConsumptions = await prisma.materialConsumptions.findMany({
     where: {
       recordedAt: dateFilter,
       project: projectFilter
@@ -193,7 +193,7 @@ async function getMaterialEfficiencyAnalytics(prisma: any, dateFilter: any, proj
     }
   })
 
-  const materialLosses = await prisma.materialLoss.findMany({
+  const materialLosses = await prisma.materialLosses.findMany({
     where: {
       createdAt: dateFilter,
       project: projectFilter
@@ -280,7 +280,7 @@ async function getCostAnalysis(prisma: any, dateFilter: any, projectFilter: any)
   // This would typically integrate with actual cost data
   // For now, we'll provide a framework for cost analysis
   
-  const progressUpdates = await prisma.taskProgressUpdate.findMany({
+  const progressUpdates = await prisma.taskProgressUpdates.findMany({
     where: {
       createdAt: dateFilter,
       project: projectFilter
@@ -322,7 +322,7 @@ async function getCostAnalysis(prisma: any, dateFilter: any, projectFilter: any)
 
 // Helper function for performance metrics
 async function getPerformanceMetrics(prisma: any, dateFilter: any, projectFilter: any, workerFilter: any) {
-  const progressUpdates = await prisma.taskProgressUpdate.findMany({
+  const progressUpdates = await prisma.taskProgressUpdates.findMany({
     where: {
       createdAt: dateFilter,
       project: projectFilter,
@@ -361,7 +361,7 @@ async function getPerformanceMetrics(prisma: any, dateFilter: any, projectFilter
 
 // Helper function for time trends
 async function getTimeTrends(prisma: any, dateFilter: any, projectFilter: any) {
-  const progressUpdates = await prisma.taskProgressUpdate.findMany({
+  const progressUpdates = await prisma.taskProgressUpdates.findMany({
     where: {
       createdAt: dateFilter,
       project: projectFilter
@@ -406,7 +406,7 @@ async function getTimeTrends(prisma: any, dateFilter: any, projectFilter: any) {
 
 // Helper function for worker performance ranking
 async function getWorkerPerformanceRanking(prisma: any, dateFilter: any, projectFilter: any) {
-  const progressUpdates = await prisma.taskProgressUpdate.findMany({
+  const progressUpdates = await prisma.taskProgressUpdates.findMany({
     where: {
       createdAt: dateFilter,
       project: projectFilter

@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Create demo company with all required fields
-  const demoCompany = await prisma.company.upsert({
+  const demoCompany = await prisma.companies.upsert({
     where: { id: 'demo-company' },
     update: {},
     create: {
@@ -64,7 +64,7 @@ async function main() {
   ];
 
   for (const userData of demoUsers) {
-    await prisma.user.upsert({
+    await prisma.people.upsert({
       where: { id: userData.id },
       update: {},
       create: userData,
@@ -94,7 +94,7 @@ async function main() {
   ];
 
   for (const projectData of demoProjects) {
-    await prisma.project.upsert({
+    await prisma.projects.upsert({
       where: { id: projectData.id },
       update: {},
       create: projectData,

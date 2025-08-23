@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     
     console.log('🔍 Checking for existing company...');
     // Check if company slug already exists
-    const existingCompany = await prisma.company.findUnique({
+    const existingCompany = await prisma.companies.findUnique({
       where: { slug: validatedData.companySlug }
     });
     
@@ -55,20 +55,20 @@ export async function POST(request: Request) {
     }
     console.log('✅ Company slug is available');
     
-    console.log('🔍 Checking for existing user...');
-    // Check if user email already exists
-    const existingUser = await prisma.user.findUnique({
+    console.log('🔍 Checking for existing person...');
+    // Check if person email already exists
+    const existingPerson = await prisma.people.findUnique({
       where: { email: validatedData.userEmail }
     });
     
-    if (existingUser) {
-      console.log('❌ User email already exists');
+    if (existingPerson) {
+      console.log('❌ Person email already exists');
       return NextResponse.json(
-        { error: 'User email already exists' },
+        { error: 'Person email already exists' },
         { status: 409 }
       );
     }
-    console.log('✅ User email is available');
+    console.log('✅ Person email is available');
     
     console.log('🔐 Hashing password...');
     // Hash the password
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     // Create company and user in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create company
-      const company = await tx.company.create({
+      const company = await tx.companies.create({
         data: {
           name: validatedData.companyName,
           nameEs: validatedData.companyNameEs,
@@ -88,8 +88,8 @@ export async function POST(request: Request) {
         }
       });
       
-      // Create user
-      const user = await tx.user.create({
+      // Create person
+      const person = await tx.people.create({
         data: {
           email: validatedData.userEmail,
           name: validatedData.userName,
@@ -100,19 +100,19 @@ export async function POST(request: Request) {
         }
       });
       
-      // Create UserTenant relationship
-      await tx.userTenant.create({
+      // Create PersonTenants relationship
+      await tx.personTenants.create({
         data: {
-          userId: user.id,
+          personId: person.id,
           companyId: company.id,
           startDate: new Date(),
         }
       });
       
       // Create audit log
-      await tx.auditLog.create({
+      await tx.auditLogs.create({
         data: {
-          userId: user.id,
+          personId: person.id,
           action: 'CREATE',
           entityType: 'COMPANY',
           entityId: company.id,
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
         }
       });
       
-      return { company, user };
+      return { company, person };
     });
     
     // Disconnect from database
@@ -133,18 +133,18 @@ export async function POST(request: Request) {
     // Return success response (without sensitive data)
     return NextResponse.json({
       success: true,
-      message: 'Company and user created successfully',
+      message: 'Company and person created successfully',
       company: {
         id: result.company.id,
         name: result.company.name,
         slug: result.company.slug,
         status: result.company.status
       },
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        role: result.user.role
+      person: {
+        id: result.person.id,
+        email: result.person.email,
+        name: result.person.name,
+        role: result.person.role
       }
     });
     

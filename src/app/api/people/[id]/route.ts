@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 export const runtime = 'nodejs'
 
-// Validation schema for updating user assignments
+// Validation schema for updating person assignments
 const updateAssignmentSchema = z.object({
   action: z.enum(['end-assignment', 'assign-company', 'assign-project']),
   assignmentId: z.string(),
@@ -15,7 +15,7 @@ const updateAssignmentSchema = z.object({
   projectId: z.string().optional(),
 })
 
-// GET - Get detailed user information
+// GET - Get detailed person information
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -28,21 +28,21 @@ export async function GET(
     }
 
     const prisma = await getPrisma()
-    const userId = params.id
+    const personId = params.id
 
-    // Get user with all relationships
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    // Get person with all relationships
+    const person = await prisma.people.findUnique({
+      where: { id: personId },
       include: {
-        userTenants: {
+        personTenants: {
           include: { company: true },
           orderBy: { startDate: 'desc' }
         },
-        userTeams: {
+        personTeams: {
           include: { team: true },
           orderBy: { startDate: 'desc' }
         },
-        userProjects: {
+        personProjects: {
           include: { 
             project: {
               include: {
@@ -55,24 +55,24 @@ export async function GET(
       }
     })
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if (!person) {
+      return NextResponse.json({ error: 'Person not found' }, { status: 404 })
     }
 
-    // Check if admin has access to this user's companies
+    // Check if admin has access to this person's companies
     if (session.user?.role === 'ADMIN') {
-      const adminUserTenants = await prisma.userTenant.findMany({
+      const adminPersonTenants = await prisma.personTenants.findMany({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         select: { companyId: true }
       })
       
-      const adminCompanyIds = adminUserTenants.map(ut => ut.companyId)
-      const userCompanyIds = user.userTenants.map(ut => ut.companyId)
+      const adminCompanyIds = adminPersonTenants.map(ut => ut.companyId)
+      const personCompanyIds = person.personTenants.map(ut => ut.companyId)
       
-      const hasAccess = userCompanyIds.some(id => adminCompanyIds.includes(id))
+      const hasAccess = personCompanyIds.some(id => adminCompanyIds.includes(id))
       
       if (!hasAccess) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -81,7 +81,7 @@ export async function GET(
 
     // Format current assignments
     const currentAssignments = {
-      companies: user.userTenants
+      companies: person.personTenants
         .filter(ut => ut.status === 'ACTIVE' && !ut.endDate)
         .map(ut => ({
           id: ut.id,
@@ -89,7 +89,7 @@ export async function GET(
           startDate: ut.startDate,
           endDate: ut.endDate
         })),
-      teams: user.userTeams
+      teams: person.personTeams
         .filter(ut => ut.status === 'ACTIVE' && !ut.endDate)
         .map(ut => ({
           id: ut.id,
@@ -98,7 +98,7 @@ export async function GET(
           endDate: ut.endDate,
           company: 'N/A' // TODO: Get company from team
         })),
-      projects: user.userProjects
+      projects: person.personProjects
         .filter(up => up.status === 'ACTIVE' && !up.endDate)
         .map(up => ({
           id: up.id,
@@ -111,19 +111,19 @@ export async function GET(
 
     // Format history (all assignments including ended ones)
     const history = [
-      ...user.userTenants.map(ut => ({
+      ...person.personTenants.map(ut => ({
         id: ut.id,
         name: ut.company.name,
         startDate: ut.startDate,
         endDate: ut.endDate
       })),
-      ...user.userTeams.map(ut => ({
+      ...person.personTeams.map(ut => ({
         id: ut.id,
         name: ut.team.name,
         startDate: ut.startDate,
         endDate: ut.endDate
       })),
-      ...user.userProjects.map(up => ({
+      ...person.personProjects.map(up => ({
         id: up.id,
         name: up.project.name,
         startDate: up.startDate,
@@ -132,28 +132,28 @@ export async function GET(
     ].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
 
     return NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        status: user.status,
-        role: user.role,
-        createdAt: user.createdAt,
+      person: {
+        id: person.id,
+        name: person.name,
+        email: person.email,
+        status: person.status,
+        role: person.role,
+        createdAt: person.createdAt,
         currentAssignments,
         history
       }
     })
 
   } catch (error) {
-    console.error('Error fetching user details:', error)
+    console.error('Error fetching person details:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch user details' },
+      { error: 'Failed to fetch person details' },
       { status: 500 }
     )
   }
 }
 
-// PUT - Update user assignments (end assignment or assign to company)
+// PUT - Update person assignments (end assignment or assign to company)
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -169,12 +169,12 @@ export async function PUT(
     const validatedData = updateAssignmentSchema.parse(body)
     
     const prisma = await getPrisma()
-    const userId = params.id
+    const personId = params.id
 
     if (validatedData.action === 'end-assignment') {
       // End an assignment
       if (validatedData.assignmentType === 'company') {
-        await prisma.userTenant.update({
+        await prisma.personTenants.update({
           where: { id: validatedData.assignmentId },
           data: { 
             endDate: new Date(),
@@ -182,7 +182,7 @@ export async function PUT(
           }
         })
       } else if (validatedData.assignmentType === 'team') {
-        await prisma.userTeam.update({
+        await prisma.personTeams.update({
           where: { id: validatedData.assignmentId },
           data: { 
             endDate: new Date(),
@@ -190,7 +190,7 @@ export async function PUT(
           }
         })
       } else if (validatedData.assignmentType === 'project') {
-        await prisma.userProject.update({
+        await prisma.personProjects.update({
           where: { id: validatedData.assignmentId },
           data: { 
             endDate: new Date(),
@@ -205,7 +205,7 @@ export async function PUT(
       })
 
     } else if (validatedData.action === 'assign-company') {
-      // Assign user to a company
+      // Assign person to a company
       if (!validatedData.companyId) {
         return NextResponse.json(
           { error: 'Company ID is required' },
@@ -215,25 +215,25 @@ export async function PUT(
 
       // Check if admin has access to the target company
       if (session.user?.role === 'ADMIN') {
-        const adminUserTenants = await prisma.userTenant.findMany({
+        const adminPersonTenants = await prisma.personTenants.findMany({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             status: 'ACTIVE'
           },
           select: { companyId: true }
         })
         
-        const adminCompanyIds = adminUserTenants.map(ut => ut.companyId)
+        const adminCompanyIds = adminPersonTenants.map(ut => ut.companyId)
         
         if (!adminCompanyIds.includes(validatedData.companyId)) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
       }
 
-      // Check if user is already assigned to this company
-      const existingAssignment = await prisma.userTenant.findFirst({
+      // Check if person is already assigned to this company
+      const existingAssignment = await prisma.personTenants.findFirst({
         where: {
-          userId: userId,
+          personId: personId,
           companyId: validatedData.companyId,
           status: 'ACTIVE'
         }
@@ -241,15 +241,15 @@ export async function PUT(
 
       if (existingAssignment) {
         return NextResponse.json(
-          { error: 'User is already assigned to this company' },
+          { error: 'Person is already assigned to this company' },
           { status: 409 }
         )
       }
 
       // Create new assignment
-      await prisma.userTenant.create({
+      await prisma.personTenants.create({
         data: {
-          userId: userId,
+          personId: personId,
           companyId: validatedData.companyId,
           startDate: new Date(),
           status: 'ACTIVE'
@@ -258,10 +258,10 @@ export async function PUT(
 
       return NextResponse.json({
         success: true,
-        message: 'User assigned to company successfully'
+        message: 'Person assigned to company successfully'
       })
     } else if (validatedData.action === 'assign-project') {
-      // Assign user to a project
+      // Assign person to a project
       if (!validatedData.projectId) {
         return NextResponse.json(
           { error: 'Project ID is required' },
@@ -271,7 +271,7 @@ export async function PUT(
 
       // Check if admin has access to the project's company
       if (session.user?.role === 'ADMIN') {
-        const project = await prisma.project.findUnique({
+        const project = await prisma.projects.findUnique({
           where: { id: validatedData.projectId },
           select: { companyId: true }
         })
@@ -280,23 +280,23 @@ export async function PUT(
           return NextResponse.json({ error: 'Project not found' }, { status: 404 })
         }
 
-        const userTenant = await prisma.userTenant.findFirst({
+        const personTenant = await prisma.personTenants.findFirst({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             companyId: project.companyId,
             status: 'ACTIVE'
           }
         })
         
-        if (!userTenant) {
+        if (!personTenant) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
       }
 
-      // Check if user is already assigned to this project
-      const existingAssignment = await prisma.userProject.findFirst({
+      // Check if person is already assigned to this project
+      const existingAssignment = await prisma.personProjects.findFirst({
         where: {
-          userId: userId,
+          personId: personId,
           projectId: validatedData.projectId,
           status: 'ACTIVE'
         }
@@ -304,15 +304,15 @@ export async function PUT(
 
       if (existingAssignment) {
         return NextResponse.json(
-          { error: 'User is already assigned to this project' },
+          { error: 'Person is already assigned to this project' },
           { status: 409 }
         )
       }
 
       // Create new assignment
-      await prisma.userProject.create({
+      await prisma.personProjects.create({
         data: {
-          userId: userId,
+          personId: personId,
           projectId: validatedData.projectId,
           startDate: new Date(),
           status: 'ACTIVE'
@@ -321,14 +321,14 @@ export async function PUT(
 
       return NextResponse.json({
         success: true,
-        message: 'User assigned to project successfully'
+        message: 'Person assigned to project successfully'
       })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 
   } catch (error) {
-    console.error('Error updating user assignment:', error)
+    console.error('Error updating person assignment:', error)
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -338,7 +338,7 @@ export async function PUT(
     }
 
     return NextResponse.json(
-      { error: 'Failed to update user assignment' },
+      { error: 'Failed to update person assignment' },
       { status: 500 }
     )
   }

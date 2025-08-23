@@ -30,26 +30,26 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify project belongs to user's company
-    const project = await prisma.project.findFirst({
+    // Verify project belongs to person's company
+    const project = await prisma.projects.findFirst({
       where: {
         id: validatedData.projectId,
         companyId: companyId
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify material is assigned to the project
-    const projectMaterial = await prisma.projectMaterial.findFirst({
+    const projectMaterial = await prisma.projectMaterials.findFirst({
       where: {
         projectId: validatedData.projectId,
         materialId: validatedData.materialId
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create consumption/loss record
-    const consumptionRecord = await prisma.materialConsumption.create({
+    const consumptionRecord = await prisma.materialConsumptions.create({
       data: {
         taskProgressUpdateId: '', // Will be empty for manual tracking
         materialId: validatedData.materialId,
@@ -127,18 +127,18 @@ export async function GET(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get consumption records
-    const consumptionRecords = await prisma.materialConsumption.findMany({
+    const consumptionRecords = await prisma.materialConsumptions.findMany({
       where: whereClause,
       include: {
         material: {
@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Get loss records
-    const lossRecords = await prisma.materialLoss.findMany({
+    const lossRecords = await prisma.materialLosses.findMany({
       where: whereClause,
       include: {
         material: {

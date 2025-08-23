@@ -20,18 +20,18 @@ interface Task {
   id: string
   name: string
   description?: string
-  category: {
+  category?: {
     id: string
     name: string
-  }
+  } | null
   project: {
     id: string
     name: string
   }
   progressUnit: string
   status: string
-  assignedUsers: Array<{
-    user: {
+  assignedPeople: Array<{
+    person: {
       id: string
       name: string
       role: string
@@ -150,12 +150,12 @@ export default function TasksPage() {
 
   const fetchWorkers = async () => {
     try {
-      const response = await fetch('/api/users')
+      const response = await fetch('/api/people')
       if (response.ok) {
         const data = await response.json()
-        // Filter only WORKER users
-        const workerUsers = data.users.filter((user: any) => user.role === 'WORKER')
-        setWorkers(workerUsers)
+        // Filter only WORKER people
+        const workerPeople = data.people.filter((person: any) => person.role === 'WORKER')
+        setWorkers(workerPeople)
       }
     } catch (error) {
       console.error('Error fetching workers:', error)

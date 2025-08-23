@@ -10,8 +10,8 @@ export async function GET(req: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Get all projects with user counts
-    const projects = await prisma.project.findMany({
+    // Get all projects with people counts
+    const projects = await prisma.projects.findMany({
       select: {
         id: true,
         name: true,
@@ -25,11 +25,11 @@ export async function GET(req: NextRequest) {
       }
     })
     
-    // For each project, count active users (this is a workaround until Prisma client is fixed)
+    // For each project, count active people (this is a workaround until Prisma client is fixed)
     const projectStats = await Promise.all(
       projects.map(async (project) => {
-        // Count users assigned to this project via UserProject
-        const userCount = await prisma.userProject.count({
+        // Count people assigned to this project via PersonProjects
+        const peopleCount = await prisma.personProjects.count({
           where: {
             projectId: project.id,
             status: 'ACTIVE'
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         
         return {
           id: project.id,
-          userCount,
+          peopleCount,
           workLogCount: project._count.workLogs
         }
       })

@@ -44,11 +44,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
+    // Find person by email
+    const person = await prisma.people.findUnique({
       where: { email: email.toLowerCase() },
       include: {
-        userTenants: {
+        personTenants: {
           where: { status: 'ACTIVE' },
           include: { company: true },
           orderBy: { startDate: 'desc' },
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    if (!user) {
+    if (!person) {
       return NextResponse.json(
-        { message: 'Usuario no encontrado' },
+        { message: 'Persona no encontrada' },
         { status: 404 }
       )
     }
@@ -67,19 +67,19 @@ export async function POST(request: NextRequest) {
     // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 12)
 
-    // Update user's password
-    await prisma.user.update({
-      where: { id: user.id },
+    // Update person's password
+    await prisma.people.update({
+      where: { id: person.id },
       data: { password: hashedPassword }
     })
 
     // Log the password reset action
-    await prisma.auditLog.create({
+    await prisma.auditLogs.create({
       data: {
-        userId: user.id,
+        personId: person.id,
         action: 'PASSWORD_RESET',
-        entityType: 'USER',
-        entityId: user.id,
+        entityType: 'PERSON',
+        entityId: person.id,
         oldValues: null,
         newValues: JSON.stringify({ passwordUpdated: true })
       }
@@ -87,11 +87,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: 'Contraseña actualizada exitosamente',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
+      person: {
+        id: person.id,
+        email: person.email,
+        name: person.name,
+        role: person.role
       }
     })
 

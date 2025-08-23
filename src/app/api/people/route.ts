@@ -1,5 +1,5 @@
-// src/app/api/users/route.ts
-// Production users route for CRUD operations
+// src/app/api/people/route.ts
+// Production people route for CRUD operations
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
@@ -11,16 +11,16 @@ import crypto from 'crypto'
 
 export const runtime = 'nodejs'
 
-// Validation schema for creating users
-const createUserSchema = z.object({
+// Validation schema for creating people
+const createPersonSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   role: z.enum(['WORKER', 'SUPERVISOR', 'ADMIN']),
   companyId: z.string().optional(), // Optional for cross-company invitations
 })
 
-// Validation schema for updating users
-const updateUserSchema = z.object({
+// Validation schema for updating people
+const updatePersonSchema = z.object({
   id: z.string(),
   name: z.string().min(2).optional(),
   email: z.string().email().optional(),
@@ -28,7 +28,7 @@ const updateUserSchema = z.object({
   role: z.enum(['WORKER', 'SUPERVISOR', 'ADMIN']).optional(),
 })
 
-// GET - List users for the admin's company
+// GET - List people for the admin's company
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -50,25 +50,25 @@ export async function GET(request: NextRequest) {
       if (session.user?.role === 'SUPERUSER') {
         targetCompanyIds = [requestedCompanyId]
       } else if (session.user?.role === 'ADMIN') {
-        const adminUserTenant = await prisma.userTenant.findFirst({
+        const adminPersonTenant = await prisma.personTenants.findFirst({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             companyId: requestedCompanyId,
             status: 'ACTIVE'
           }
         })
-        if (adminUserTenant) {
+        if (adminPersonTenant) {
           targetCompanyIds = [requestedCompanyId]
         }
       } else if (session.user?.role === 'SUPERVISOR') {
-        const supervisorUserTenant = await prisma.userTenant.findFirst({
+        const supervisorPersonTenant = await prisma.personTenants.findFirst({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             companyId: requestedCompanyId,
             status: 'ACTIVE'
           }
         })
-        if (supervisorUserTenant) {
+        if (supervisorPersonTenant) {
           targetCompanyIds = [requestedCompanyId]
         }
       }
@@ -76,34 +76,34 @@ export async function GET(request: NextRequest) {
       // If no specific company requested, get all companies user has access to
       if (session.user?.role === 'SUPERUSER') {
         // SUPERUSER can see all companies
-        const allCompanies = await prisma.company.findMany({
+        const allCompanies = await prisma.companies.findMany({
           where: { status: 'ACTIVE' },
           select: { id: true }
         })
         targetCompanyIds = allCompanies.map(c => c.id)
       } else {
         // ADMIN/SUPERVISOR see companies they're associated with
-        const userTenants = await prisma.userTenant.findMany({
+        const personTenants = await prisma.personTenants.findMany({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             status: 'ACTIVE'
           },
           select: { companyId: true }
         })
-        targetCompanyIds = userTenants.map(ut => ut.companyId)
+        targetCompanyIds = personTenants.map(ut => ut.companyId)
       }
     }
     
     if (targetCompanyIds.length === 0) {
-      console.log('No target company IDs found, returning empty users array');
-      return NextResponse.json({ users: [] })
+      console.log('No target company IDs found, returning empty people array');
+      return NextResponse.json({ people: [] })
     }
     
     console.log('Target company IDs:', targetCompanyIds);
     
-    const users = await prisma.user.findMany({
+    const people = await prisma.people.findMany({
       where: {
-        userTenants: {
+        personTenants: {
           some: {
             companyId: { in: targetCompanyIds },
             status: 'ACTIVE'
@@ -111,15 +111,15 @@ export async function GET(request: NextRequest) {
         }
       },
       include: {
-        userTenants: {
+        personTenants: {
           where: { companyId: { in: targetCompanyIds } },
           include: { company: true }
         },
-        userTeams: {
+        personTeams: {
           where: { status: 'ACTIVE' },
           include: { team: true }
         },
-        userProjects: {
+        personProjects: {
           where: { status: 'ACTIVE' },
           include: { project: true }
         }
@@ -127,51 +127,51 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     })
     
-    console.log('Found users:', users.length);
-    console.log('Users with userTenants:', users.map(u => ({ id: u.id, name: u.name, userTenants: u.userTenants.length })));
+    console.log('Found people:', people.length);
+    console.log('People with personTenants:', people.map(p => ({ id: p.id, name: p.name, personTenants: p.personTenants.length })));
 
-    const formattedUsers = users.map(user => {
-      // Find the user tenant for the requested company (if specific company requested)
-      const relevantUserTenant = requestedCompanyId 
-        ? user.userTenants.find(ut => ut.companyId === requestedCompanyId)
-        : user.userTenants[0];
+    const formattedPeople = people.map(person => {
+      // Find the person tenant for the requested company (if specific company requested)
+      const relevantPersonTenant = requestedCompanyId 
+        ? person.personTenants.find(ut => ut.companyId === requestedCompanyId)
+        : person.personTenants[0];
       
-      const formattedUser = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        status: user.status,
-        role: user.role,
-        createdAt: user.createdAt,
-        currentCompany: relevantUserTenant?.company.name || 'Unknown',
-        currentTeams: user.userTeams.map(ut => ut.team.name),
-        currentProjects: user.userProjects.map(up => up.project.name),
-        hasPassword: !!user.password
+      const formattedPerson = {
+        id: person.id,
+        name: person.name,
+        email: person.email,
+        status: person.status,
+        role: person.role,
+        createdAt: person.createdAt,
+        currentCompany: relevantPersonTenant?.company.name || 'Unknown',
+        currentTeams: person.personTeams.map(ut => ut.team.name),
+        currentProjects: person.personProjects.map(up => up.project.name),
+        hasPassword: !!person.password
       };
       
-      console.log('Formatted user:', {
-        id: formattedUser.id,
-        name: formattedUser.name,
-        role: formattedUser.role,
-        userTenants: user.userTenants.map(ut => ({ companyId: ut.companyId }))
+      console.log('Formatted person:', {
+        id: formattedPerson.id,
+        name: formattedPerson.name,
+        role: formattedPerson.role,
+        personTenants: person.personTenants.map(ut => ({ companyId: ut.companyId }))
       });
       
-      return formattedUser;
+      return formattedPerson;
     })
     
-    console.log('Final formatted users:', formattedUsers.map(u => ({ id: u.id, name: u.name, role: u.role })));
+    console.log('Final formatted people:', formattedPeople.map(p => ({ id: p.id, name: p.name, role: p.role })));
 
-    return NextResponse.json({ users: formattedUsers })
+    return NextResponse.json({ people: formattedPeople })
   } catch (error) {
-    console.error('Error fetching users:', error)
+    console.error('Error fetching people:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch users' },
+      { error: 'Failed to fetch people' },
       { status: 500 }
     )
   }
 }
 
-// POST - Create new user with invitation
+// POST - Create new person with invitation
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -181,36 +181,36 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = createUserSchema.parse(body)
+    const validatedData = createPersonSchema.parse(body)
     
     const prisma = await getPrisma()
     
-    // Get admin's current active company (most recent UserTenant)
-    const adminUserTenant = await prisma.userTenant.findFirst({
+    // Get admin's current active company (most recent PersonTenant)
+    const adminPersonTenant = await prisma.personTenants.findFirst({
       where: {
-        userId: session.user?.id,
+        personId: session.user?.id,
         status: 'ACTIVE'
       },
       orderBy: { startDate: 'desc' }
     })
     
-    if (!adminUserTenant) {
+    if (!adminPersonTenant) {
       return NextResponse.json(
         { error: 'Admin not associated with any company' },
         { status: 400 }
       )
     }
     
-    const adminCompanyId = adminUserTenant.companyId
+    const adminCompanyId = adminPersonTenant.companyId
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    // Check if person already exists
+    const existingPerson = await prisma.people.findUnique({
       where: { email: validatedData.email }
     })
 
-    if (existingUser) {
+    if (existingPerson) {
       return NextResponse.json(
-        { error: 'User with this email already exists' },
+        { error: 'Person with this email already exists' },
         { status: 409 }
       )
     }
@@ -223,10 +223,10 @@ export async function POST(request: NextRequest) {
     const invitationToken = crypto.randomBytes(32).toString('hex')
     const invitationExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
-    // Create user in transaction
+    // Create person in transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create user
-      const user = await tx.user.create({
+      // Create person
+      const person = await tx.people.create({
         data: {
           email: validatedData.email,
           name: validatedData.name,
@@ -237,32 +237,32 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // Create UserTenant relationship
-      await tx.userTenant.create({
+      // Create PersonTenant relationship
+      await tx.personTenants.create({
         data: {
-          userId: user.id,
+          personId: person.id,
           companyId: adminCompanyId,
           startDate: new Date(),
         }
       })
 
       // Create audit log
-      await tx.auditLog.create({
+      await tx.auditLogs.create({
         data: {
-          userId: session.user?.id || '',
+          personId: session.user?.id || '',
           action: 'CREATE',
-          entityType: 'USER',
-          entityId: user.id,
-          newValues: JSON.stringify({
-            email: user.email,
-            name: user.name,
+          entityType: 'PERSON',
+          entityId: person.id,
+          newValues: {
+            email: person.email,
+            name: person.name,
             role: validatedData.role,
-            status: user.status
-          })
+            status: person.status
+          }
         }
       })
 
-      return { user, tempPassword, invitationToken }
+      return { person, tempPassword, invitationToken }
     })
 
     // Generate invitation link
@@ -275,13 +275,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'User created successfully',
-      user: {
-        id: result.user.id,
-        name: result.user.name,
-        email: result.user.email,
+      message: 'Person created successfully',
+      person: {
+        id: result.person.id,
+        name: result.person.name,
+        email: result.person.email,
         role: validatedData.role,
-        status: result.user.status
+        status: result.person.status
       },
       invitation: {
         link: invitationLink,
@@ -291,7 +291,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error creating user:', error)
+    console.error('Error creating person:', error)
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -301,13 +301,13 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to create user' },
+      { error: 'Failed to create person' },
       { status: 500 }
     )
   }
 }
 
-// PUT - Update user
+// PUT - Update person
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -317,12 +317,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = updateUserSchema.parse(body)
+    const validatedData = updatePersonSchema.parse(body)
     
     const prisma = await getPrisma()
 
-    // Update user
-    const updatedUser = await prisma.user.update({
+    // Update person
+    const updatedPerson = await prisma.people.update({
       where: { id: validatedData.id },
       data: {
         ...(validatedData.name && { name: validatedData.name }),
@@ -332,33 +332,33 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    // Role is now only stored in User table, no need to update UserTenant
+    // Role is now only stored in People table, no need to update PersonTenant
 
     // Create audit log
-    await prisma.auditLog.create({
+    await prisma.auditLogs.create({
       data: {
-        userId: session.user?.id || '',
+        personId: session.user?.id || '',
         action: 'UPDATE',
-        entityType: 'USER',
+        entityType: 'PERSON',
         entityId: validatedData.id,
-        newValues: JSON.stringify(validatedData)
+        newValues: validatedData
       }
     })
 
     return NextResponse.json({
       success: true,
-      message: 'User updated successfully',
-      user: {
-        id: updatedUser.id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        status: updatedUser.status
+      message: 'Person updated successfully',
+      person: {
+        id: updatedPerson.id,
+        name: updatedPerson.name,
+        email: updatedPerson.email,
+        role: updatedPerson.role,
+        status: updatedPerson.status
       }
     })
 
   } catch (error) {
-    console.error('Error updating user:', error)
+    console.error('Error updating person:', error)
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -368,7 +368,7 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to update user' },
+      { error: 'Failed to update person' },
       { status: 500 }
     )
   }

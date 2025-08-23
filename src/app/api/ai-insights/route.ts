@@ -30,14 +30,14 @@ export async function GET(request: NextRequest) {
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       dataSummary: {
         totalProjects: data.projects.length,
         totalTasks: data.tasks.length,
-        totalWorkers: data.workers.length,
+        totalPeople: data.people.length,
         totalMaterials: data.materials.length,
         dateRange: {
           start: data.dateRange.start,
@@ -107,7 +107,7 @@ async function getAnalysisData(prisma: any, projectFilter: any) {
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
   
   // Get projects
-  const projects = await prisma.project.findMany({
+  const projects = await prisma.projects.findMany({
     where: projectFilter,
     include: {
       taskAssignments: {
@@ -145,7 +145,7 @@ async function getAnalysisData(prisma: any, projectFilter: any) {
   })
 
   // Get all tasks
-  const tasks = await prisma.task.findMany({
+  const tasks = await prisma.tasks.findMany({
     include: {
       category: true,
       projectAssignments: {
@@ -171,11 +171,11 @@ async function getAnalysisData(prisma: any, projectFilter: any) {
     }
   })
 
-  // Get workers
-  const workers = await prisma.user.findMany({
+  // Get people
+  const people = await prisma.people.findMany({
     where: {
       role: 'WORKER',
-      userTenants: {
+      personTenants: {
         some: {
           companyId: projectFilter.companyId,
           status: 'ACTIVE'
@@ -185,7 +185,7 @@ async function getAnalysisData(prisma: any, projectFilter: any) {
   })
 
   // Get materials
-  const materials = await prisma.material.findMany({
+  const materials = await prisma.materials.findMany({
     include: {
       projectMaterials: {
         include: {
@@ -228,7 +228,7 @@ async function getAnalysisData(prisma: any, projectFilter: any) {
   })
 
   // Get reorder requests
-  const reorderRequests = await prisma.reorderRequest.findMany({
+  const reorderRequests = await prisma.reorderRequests.findMany({
     where: {
       material: {
         projectMaterials: {

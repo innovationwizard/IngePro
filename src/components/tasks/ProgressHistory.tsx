@@ -31,11 +31,11 @@ interface Project {
 interface Task {
   id: string
   name: string
-  category: {
+  category?: {
     id: string
     name: string
     nameEs?: string
-  }
+  } | null
 }
 
 interface Worker {
@@ -85,11 +85,11 @@ interface ProgressUpdate {
 interface ProgressHistoryProps {
   projects: Project[]
   tasks: Task[]
-  userRole: string
+  personRole: string
   companyName?: string
 }
 
-export default function ProgressHistory({ projects, tasks, userRole }: ProgressHistoryProps) {
+export default function ProgressHistory({ projects, tasks, personRole }: ProgressHistoryProps) {
   const [loading, setLoading] = useState(false)
   const [progressUpdates, setProgressUpdates] = useState<ProgressUpdate[]>([])
   const [summary, setSummary] = useState<any>(null)
@@ -163,7 +163,7 @@ export default function ProgressHistory({ projects, tasks, userRole }: ProgressH
       ...progressUpdates.map(update => [
         update.id,
         `"${update.task.name}"`,
-        `"${update.task.category.nameEs || update.task.category.name}"`,
+        `"${update.task.category?.nameEs || update.task.category?.name || 'Sin categoría'}"`,
         `"${update.project.nameEs || update.project.name}"`,
         `"${update.worker.name}"`,
         update.amountCompleted,
@@ -196,7 +196,7 @@ export default function ProgressHistory({ projects, tasks, userRole }: ProgressH
       task: {
         name: update.task.nameEs || update.task.name,
         category: {
-          name: update.task.category.nameEs || update.task.category.name
+          name: update.task.category?.nameEs || update.task.category?.name || 'Sin categoría'
         }
       },
       project: {
@@ -577,7 +577,7 @@ export default function ProgressHistory({ projects, tasks, userRole }: ProgressH
                           {update.amountCompleted}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {update.task.category.nameEs || update.task.category.name}
+                          {update.task.category?.nameEs || update.task.category?.name || 'Sin categoría'}
                         </p>
                       </div>
                     </div>

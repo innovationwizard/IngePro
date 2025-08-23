@@ -22,14 +22,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find user
-    const user = await prisma.user.findUnique({
+    const prisma = await getPrisma()
+    
+    // Find person
+    const person = await prisma.people.findUnique({
       where: { email }
     })
 
-    if (!user) {
+    if (!person) {
       return NextResponse.json(
-        { message: 'Usuario no encontrado' },
+        { message: 'Persona no encontrada' },
         { status: 404 }
       )
     }
@@ -37,9 +39,9 @@ export async function POST(request: NextRequest) {
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 12)
 
-    // Update user password
-    await prisma.user.update({
-      where: { id: user.id },
+    // Update person password
+    await prisma.people.update({
+      where: { id: person.id },
       data: { password: hashedPassword }
     })
 

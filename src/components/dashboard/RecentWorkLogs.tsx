@@ -12,7 +12,7 @@ interface WorkLog {
   duration: number | null
   status: 'ACTIVE' | 'COMPLETED'
   createdAt: string
-  user: {
+  person: {
     id: string
     name: string
   }

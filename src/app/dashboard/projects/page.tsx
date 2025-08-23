@@ -16,10 +16,10 @@ interface Project {
     id: string
     name: string
   }
-  userCount: number
-  users: Array<{
+  peopleCount: number
+  people: Array<{
     id: string
-    user: {
+    person: {
       id: string
       name: string
       email: string
@@ -34,15 +34,15 @@ interface Company {
   name: string
 }
 
-interface UserProject {
+interface PersonProject {
   id: string;
-  userId: string;
+  personId: string;
   projectId: string;
   role: 'WORKER' | 'SUPERVISOR';
   startDate: string;
   endDate?: string;
   status: 'ACTIVE' | 'INACTIVE';
-  user: {
+  person: {
     id: string;
     name: string;
     email: string;
@@ -50,7 +50,7 @@ interface UserProject {
   };
 }
 
-interface User {
+interface Person {
   id: string;
   name: string;
   email: string;
@@ -76,8 +76,8 @@ export default function ProjectsPage() {
     companyId: '',
     status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
   })
-  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [availablePeople, setAvailablePeople] = useState<Person[]>([]);
+  const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<'WORKER' | 'SUPERVISOR'>('WORKER');
 
   // Check if user is authenticated
@@ -114,7 +114,7 @@ export default function ProjectsPage() {
           const projectStats = statsData.projectStats.find((stats: any) => stats.id === project.id)
           return {
             ...project,
-            userCount: projectStats?.userCount || 0
+            peopleCount: projectStats?.peopleCount || 0
           }
         })
         
@@ -145,37 +145,37 @@ export default function ProjectsPage() {
     }
   }
 
-  const fetchAvailableUsers = async (companyId: string) => {
+  const fetchAvailablePeople = async (companyId: string) => {
     try {
-      const response = await fetch(`/api/users?companyId=${companyId}`);
+      const response = await fetch(`/api/people?companyId=${companyId}`);
       if (response.ok) {
         const data = await response.json();
-        // Filter users based on role permissions
+        // Filter people based on role permissions
         if (session?.user?.role === 'SUPERVISOR') {
           // Supervisors can only assign workers
-          setAvailableUsers(data.users.filter((user: User) => user.role === 'WORKER'));
+          setAvailablePeople(data.people.filter((person: Person) => person.role === 'WORKER'));
         } else {
           // Admins can assign both workers and supervisors
-          setAvailableUsers(data.users.filter((user: User) => 
-            user.role === 'WORKER' || user.role === 'SUPERVISOR'
+          setAvailablePeople(data.people.filter((person: Person) => 
+            person.role === 'WORKER' || person.role === 'SUPERVISOR'
           ));
         }
       }
     } catch (error) {
-      console.error('Error fetching available users:', error);
+      console.error('Error fetching available people:', error);
     }
   };
 
   const handleOpenAssignmentModal = (project: Project) => {
     setSelectedProject(project);
-    setSelectedUsers([]);
+    setSelectedPeople([]);
     setSelectedRole('WORKER');
-    fetchAvailableUsers(project.companyId);
+    fetchAvailablePeople(project.companyId);
     setIsAssignmentModalOpen(true);
   };
 
-  const handleAssignUsers = async () => {
-    if (!selectedProject || selectedUsers.length === 0) return;
+  const handleAssignPeople = async () => {
+    if (!selectedProject || selectedPeople.length === 0) return;
 
     try {
       const response = await fetch(`/api/projects/${selectedProject.id}/assign-users`, {
@@ -183,44 +183,44 @@ export default function ProjectsPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          userIds: selectedUsers,
+          personIds: selectedPeople,
           role: selectedRole
         })
       });
 
       if (response.ok) {
-        setMessage('Usuarios asignados exitosamente');
+        setMessage('Personas asignadas exitosamente');
         setIsAssignmentModalOpen(false);
-        // Refresh projects to show updated user counts
+        // Refresh projects to show updated people counts
         setTimeout(() => fetchProjects(), 100);
       } else {
         const error = await response.json();
         setMessage(`Error: ${error.message}`);
       }
     } catch (error) {
-      setMessage('Error al asignar usuarios');
+      setMessage('Error al asignar personas');
     }
   };
 
-  const handleUnassignUser = async (projectId: string, userId: string) => {
+  const handleUnassignPerson = async (projectId: string, personId: string) => {
     try {
       const response = await fetch(`/api/projects/${projectId}/unassign-user`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ userId })
+        body: JSON.stringify({ personId })
       });
 
       if (response.ok) {
-        setMessage('Usuario desasignado exitosamente');
-        // Refresh projects to show updated user counts
+        setMessage('Persona desasignada exitosamente');
+        // Refresh projects to show updated people counts
         setTimeout(() => fetchProjects(), 100);
       } else {
         const error = await response.json();
         setMessage(`Error: ${error.message}`);
       }
     } catch (error) {
-      setMessage('Error al desasignar usuario');
+      setMessage('Error al desasignar persona');
     }
   };
 

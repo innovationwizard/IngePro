@@ -10,15 +10,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import TaskAssignmentModal from './TaskAssignmentModal'
 import TaskProgressModal from './TaskProgressModal'
 import TaskValidationModal from './TaskValidationModal'
+import TaskEditForm from './TaskEditForm'
 
 interface Task {
   id: string
   name: string
   description?: string
-  category: {
+  category?: {
     id: string
     name: string
-  }
+  } | null
   progressUnit: string
   projectAssignments?: Array<{
     project: {
@@ -76,10 +77,17 @@ interface Task {
   }
 }
 
+interface TaskCategory {
+  id: string
+  name: string
+  nameEs?: string
+  description?: string
+}
+
 interface TaskListProps {
   tasks: Task[]
   onTaskUpdated: () => void
-  userRole: string
+  personRole: string
 }
 
 const taskStatusColors = {
@@ -108,7 +116,7 @@ const taskStatusLabels = {
   'OBSTACLE_OTHER': 'Otro Obstáculo',
 }
 
-export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListProps) {
+export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListProps) {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>(tasks)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -116,6 +124,25 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
   const [showAssignmentModal, setShowAssignmentModal] = useState(false)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [showValidationModal, setShowValidationModal] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [categories, setCategories] = useState<TaskCategory[]>([])
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  // Fetch categories when component mounts
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/task-categories')
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data.categories || [])
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+      }
+    }
+    fetchCategories()
+  }, [])
 
   useEffect(() => {
     let filtered = tasks
@@ -124,7 +151,7 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
     if (searchTerm) {
       filtered = filtered.filter(task =>
         task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.category?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.project.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
@@ -150,6 +177,11 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
   const handleValidateProgress = (task: Task) => {
     setSelectedTask(task)
     setShowValidationModal(true)
+  }
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setIsEditModalOpen(true)
   }
 
   const getTotalProgress = (task: Task) => {
@@ -195,8 +227,8 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
           const totalProgress = getTotalProgress(task)
           const pendingUpdates = getPendingUpdates(task)
           const isAssigned = task.workerAssignments && task.workerAssignments.length > 0
-          const canLogProgress = userRole === 'WORKER' && isAssigned
-          const canValidate = (userRole === 'ADMIN' || userRole === 'SUPERVISOR') && pendingUpdates.length > 0
+          const canLogProgress = personRole === 'WORKER' && isAssigned
+          const canValidate = (personRole === 'ADMIN' || personRole === 'SUPERVISOR') && pendingUpdates.length > 0
 
           return (
             <Card key={task.id} className="hover:shadow-md transition-shadow">
@@ -213,7 +245,7 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Categoría</p>
-                    <p className="text-sm">{task.category.name}</p>
+                    <p className="text-sm">{task.category?.name || 'Sin categoría'}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-500">Proyectos</p>
@@ -250,14 +282,23 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
                 </div>
 
                 <div className="flex gap-2">
-                  {(userRole === 'ADMIN' || userRole === 'SUPERVISOR') && (
-                                         <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={() => handleAssignTask(task)}
-                     >
-                       {isAssigned ? 'Reasignar' : 'Asignar'}
-                     </Button>
+                  {(personRole === 'ADMIN' || personRole === 'SUPERVISOR') && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditTask(task)}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAssignTask(task)}
+                      >
+                        {isAssigned ? 'Reasignar' : 'Asignar'}
+                      </Button>
+                    </>
                   )}
                   
                   {canLogProgress && (
@@ -405,6 +446,24 @@ export default function TaskList({ tasks, onTaskUpdated, userRole }: TaskListPro
             }}
           />
         </>
+      )}
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <TaskEditForm
+          task={editingTask}
+          categories={categories}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false)
+            setEditingTask(null)
+          }}
+          onTaskUpdated={() => {
+            setIsEditModalOpen(false)
+            setEditingTask(null)
+            onTaskUpdated()
+          }}
+        />
       )}
     </div>
   )

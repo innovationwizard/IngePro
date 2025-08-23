@@ -30,9 +30,9 @@ export async function GET(request: NextRequest) {
 
     // If admin, show all their companies
     if (session.user?.role === 'ADMIN') {
-      const userTenants = await prisma.userTenant.findMany({
+      const personTenants = await prisma.personTenants.findMany({
         where: { 
-          userId: session.user.id,
+          personId: session.user.id,
           status: 'ACTIVE'
         },
         include: {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
             include: {
               _count: {
                 select: {
-                  users: true,
+                  people: true,
                   projects: true,
                   workLogs: true
                 }
@@ -50,14 +50,14 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      const companies = userTenants.map(ut => ({
+      const companies = personTenants.map(ut => ({
         id: ut.company.id,
         name: ut.company.name,
         nameEs: ut.company.nameEs,
         slug: ut.company.slug,
         status: ut.company.status,
         createdAt: ut.company.createdAt,
-        users: ut.company._count.users,
+        people: ut.company._count.people,
         projects: ut.company._count.projects,
         workLogs: ut.company._count.workLogs,
         role: ut.role
@@ -67,11 +67,11 @@ export async function GET(request: NextRequest) {
     }
 
     // If superuser, show all companies
-    const companies = await prisma.company.findMany({
+    const companies = await prisma.companies.findMany({
       include: {
         _count: {
           select: {
-            users: true,
+            people: true,
             projects: true,
             workLogs: true
           }
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       slug: company.slug,
       status: company.status,
       createdAt: company.createdAt,
-      users: company._count.users,
+      people: company._count.people,
       projects: company._count.projects,
       workLogs: company._count.workLogs
     }))
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     const prisma = await getPrisma()
 
     // Check if company slug already exists
-    const existingCompany = await prisma.company.findUnique({
+    const existingCompany = await prisma.companies.findUnique({
       where: { slug: validatedData.slug }
     })
     
@@ -129,36 +129,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create company in transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create company
-      const company = await tx.company.create({
-        data: {
-          name: validatedData.name,
-          nameEs: validatedData.nameEs,
-          slug: validatedData.slug,
-          status: validatedData.status,
-        }
-      })
-
-      // If admin is creating the company, associate them with it
-      if (session.user?.role === 'ADMIN') {
-        // Create UserTenant relationship for the admin
-        await tx.userTenant.create({
+          // Create company in transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // Create company
+        const company = await tx.companies.create({
           data: {
-            userId: session.user.id,
-            companyId: company.id,
-            role: 'ADMIN',
-            startDate: new Date(),
+            name: validatedData.name,
+            nameEs: validatedData.nameEs,
+            slug: validatedData.slug,
+            status: validatedData.status,
           }
         })
 
-        // Don't update user's companyId - keep them associated with all their companies
-        // The user can switch between companies using the UserTenant relationships
-      }
+        // If admin is creating the company, associate them with it
+        if (session.user?.role === 'ADMIN') {
+          // Create PersonTenant relationship for the admin
+          await tx.personTenants.create({
+            data: {
+              personId: session.user.id,
+              companyId: company.id,
+              startDate: new Date(),
+            }
+          })
 
-      return company
-    })
+          // Don't update person's companyId - keep them associated with all their companies
+          // The person can switch between companies using the PersonTenant relationships
+        }
+
+        return company
+      })
 
     return NextResponse.json({
       success: true,
@@ -209,7 +208,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update company
-    const updatedCompany = await prisma.company.update({
+    const updatedCompany = await prisma.companies.update({
       where: { id },
       data: updateData
     })

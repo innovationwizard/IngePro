@@ -12,10 +12,10 @@ interface Task {
   id: string
   name: string
   description?: string
-  category: {
+  category?: {
     id: string
     name: string
-  }
+  } | null
   progressUnit: string
   projectAssignments?: Array<{
     project: {
@@ -133,7 +133,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Categoría</p>
-                  <p className="text-sm">{task.category.name}</p>
+                  <p className="text-sm">{task.category?.name || 'Sin categoría'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Unidad de Medida</p>

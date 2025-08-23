@@ -41,26 +41,26 @@ export async function POST(
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the task exists and is assigned to the user for this project
-    const workerAssignment = await prisma.taskWorkerAssignment.findFirst({
+    // Verify the task exists and is assigned to the person for this project
+    const workerAssignment = await prisma.taskWorkerAssignments.findFirst({
       where: {
         taskId: taskId,
         projectId: validatedData.projectId,
@@ -119,7 +119,7 @@ export async function POST(
     // Create progress update with materials in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create the progress update
-      const progressUpdate = await tx.taskProgressUpdate.create({
+      const progressUpdate = await tx.taskProgressUpdates.create({
         data: {
           taskId: taskId,
           projectId: validatedData.projectId,
@@ -134,7 +134,7 @@ export async function POST(
 
       // Add material consumptions if provided
       if (validatedData.materialConsumptions && validatedData.materialConsumptions.length > 0) {
-        await tx.materialConsumption.createMany({
+        await tx.materialConsumptions.createMany({
           data: validatedData.materialConsumptions.map(mc => ({
             taskProgressUpdateId: progressUpdate.id,
             materialId: mc.materialId,
@@ -196,18 +196,18 @@ export async function GET(
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -215,7 +215,7 @@ export async function GET(
     }
 
     // Verify the task exists and get project assignments
-    const taskAssignments = await prisma.taskProjectAssignment.findMany({
+    const taskAssignments = await prisma.taskProjectAssignments.findMany({
       where: {
         taskId: taskId,
         project: {
@@ -237,9 +237,9 @@ export async function GET(
       return NextResponse.json({ error: 'Task not found in your company' }, { status: 404 })
     }
 
-    // If user is WORKER, verify they are assigned to the task in at least one project
+    // If person is WORKER, verify they are assigned to the task in at least one project
     if (session.user?.role === 'WORKER') {
-      const workerAssignment = await prisma.taskWorkerAssignment.findFirst({
+      const workerAssignment = await prisma.taskWorkerAssignments.findFirst({
         where: {
           taskId: taskId,
           workerId: session.user?.id,
@@ -254,7 +254,7 @@ export async function GET(
       }
     }
 
-    const progressUpdates = await prisma.taskProgressUpdate.findMany({
+    const progressUpdates = await prisma.taskProgressUpdates.findMany({
       where: { taskId: taskId },
       include: {
         worker: {

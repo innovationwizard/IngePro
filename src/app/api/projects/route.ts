@@ -39,14 +39,14 @@ export async function GET(req: NextRequest) {
       console.log('DEBUG: SUPERUSER - getting all projects');
     } else if (session.user.role === 'ADMIN') {
       // ADMIN sees projects from ALL their companies
-      const userTenants = await prisma.userTenant.findMany({
+      const personTenants = await prisma.personTenants.findMany({
         where: {
-          userId: session.user.id,
+          personId: session.user.id,
           status: 'ACTIVE'
         },
         select: { companyId: true }
       });
-      companyIds = userTenants.map(ut => ut.companyId);
+      companyIds = personTenants.map(ut => ut.companyId);
       console.log('DEBUG: ADMIN - companies:', companyIds);
     } else {
       // SUPERVISOR/WORKER sees projects from their primary company
@@ -77,14 +77,14 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    const projects = await prisma.project.findMany({
+    const projects = await prisma.projects.findMany({
       where: whereClause,
       include: {
         company: true,
-        users: {
+        people: {
           where: { status: 'ACTIVE' },
           include: {
-            user: {
+            person: {
               select: {
                 id: true,
                 name: true,
@@ -136,17 +136,17 @@ export async function POST(request: NextRequest) {
     // Step 1: Determine current company context
     let currentCompanyId: string | undefined = session.user?.companyId
     
-    // If no company in session, try to get from UserTenant (most recent active)
+    // If no company in session, try to get from PersonTenant (most recent active)
     if (!currentCompanyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { createdAt: 'desc' },
         select: { companyId: true }
       })
-      currentCompanyId = userTenant?.companyId || undefined
+      currentCompanyId = personTenant?.companyId || undefined
     }
     
     // Step 2: Get user's role from session
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if project name already exists in the company
-    const existingProject = await prisma.project.findFirst({
+    const existingProject = await prisma.projects.findFirst({
       where: {
         name: validatedData.name,
         companyId: targetCompanyId
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
 
     console.log('POST /api/projects - Creating project for company:', targetCompanyId)
     
-    const project = await prisma.project.create({
+    const project = await prisma.projects.create({
       data: {
         name: validatedData.name,
         description: validatedData.description || '',
@@ -246,7 +246,7 @@ export async function PUT(request: NextRequest) {
 
     // Check if admin has access to both the current and new company (if changing)
     if (session.user?.role === 'ADMIN') {
-      const project = await prisma.project.findUnique({
+      const project = await prisma.projects.findUnique({
         where: { id },
         select: { companyId: true }
       })
@@ -256,9 +256,9 @@ export async function PUT(request: NextRequest) {
       }
 
       // Check access to current company
-      const currentCompanyAccess = await prisma.userTenant.findFirst({
+      const currentCompanyAccess = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           companyId: project.companyId,
           status: 'ACTIVE'
         }
@@ -270,9 +270,9 @@ export async function PUT(request: NextRequest) {
 
       // If changing companies, check access to new company
       if (validatedData.companyId && validatedData.companyId !== project.companyId) {
-        const newCompanyAccess = await prisma.userTenant.findFirst({
+        const newCompanyAccess = await prisma.personTenants.findFirst({
           where: {
-            userId: session.user?.id,
+            personId: session.user?.id,
             companyId: validatedData.companyId,
             status: 'ACTIVE'
           }
@@ -284,7 +284,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const updatedProject = await prisma.project.update({
+    const updatedProject = await prisma.projects.update({
       where: { id },
       data: validatedData,
       include: {

@@ -13,10 +13,10 @@ interface Task {
   id: string
   name: string
   description?: string
-  category: {
+  category?: {
     id: string
     name: string
-  }
+  } | null
   progressUnit: string
   progressUpdates: Array<{
     id: string
@@ -250,7 +250,7 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Categoría</p>
-                  <p className="text-sm">{task.category.name}</p>
+                  <p className="text-sm">{task.category?.name || 'Sin categoría'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Proyecto</p>

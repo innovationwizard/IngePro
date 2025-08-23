@@ -10,12 +10,12 @@ export const runtime = 'nodejs'
 const taskSchema = z.object({
   name: z.string().min(2, 'Task name must be at least 2 characters'),
   description: z.string().optional(),
-  categoryId: z.string().min(1, 'Category is required'),
+  categoryId: z.string().min(1, 'Category is required').optional(),
   progressUnit: z.string().min(1, 'Unit of measure is required'),
   materialIds: z.array(z.string()).optional(), // Array of material IDs
 })
 
-// GET - List tasks for the user's projects
+// GET - List tasks for the person's projects
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -26,18 +26,18 @@ export async function GET(request: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
       whereClause.categoryId = categoryId
     }
 
-    // If user is WORKER, only show tasks assigned to them
+    // If person is WORKER, only show tasks assigned to them
     if (session.user?.role === 'WORKER') {
-      // Get tasks assigned to this worker through TaskWorkerAssignment
-      const workerAssignments = await prisma.taskWorkerAssignment.findMany({
+      // Get tasks assigned to this worker through TaskWorkerAssignments
+      const workerAssignments = await prisma.taskWorkerAssignments.findMany({
         where: {
           workerId: session.user?.id,
           project: {
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const tasks = await prisma.task.findMany({
+    const tasks = await prisma.tasks.findMany({
       where: whereClause,
       include: {
         category: true,
@@ -186,40 +186,42 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify category exists (universal)
-    const category = await prisma.taskCategory.findFirst({
-      where: {
-        id: validatedData.categoryId,
-        status: 'ACTIVE'
-      }
-    })
+    // Verify category exists if provided
+    if (validatedData.categoryId) {
+      const category = await prisma.taskCategories.findFirst({
+        where: {
+          id: validatedData.categoryId,
+          status: 'ACTIVE'
+        }
+      })
 
-    if (!category) {
-      return NextResponse.json({ error: 'Task category not found' }, { status: 404 })
+      if (!category) {
+        return NextResponse.json({ error: 'Task category not found' }, { status: 404 })
+      }
     }
 
     // Create task with materials in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create the task (universal, no project)
-      const task = await tx.task.create({
+      const task = await tx.tasks.create({
         data: {
           name: validatedData.name,
           description: validatedData.description,
@@ -272,31 +274,28 @@ export async function PUT(request: NextRequest) {
     
     const prisma = await getPrisma()
 
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the task belongs to the user's company
-    const existingTask = await prisma.task.findFirst({
+    // Verify the task exists (tasks are universal, not company-specific)
+    const existingTask = await prisma.tasks.findFirst({
       where: {
-        id: id,
-        project: {
-          companyId: companyId
-        }
+        id: id
       }
     })
 
@@ -304,35 +303,30 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
+    // Verify category exists if provided
+    if (validatedData.categoryId) {
+      const category = await prisma.taskCategories.findFirst({
+        where: {
+          id: validatedData.categoryId,
+          status: 'ACTIVE'
+        }
+      })
+
+      if (!category) {
+        return NextResponse.json({ error: 'Task category not found' }, { status: 404 })
+      }
+    }
+
     // Update task
-    const updatedTask = await prisma.task.update({
+    const updatedTask = await prisma.tasks.update({
       where: { id },
       data: {
         name: validatedData.name,
         description: validatedData.description,
         categoryId: validatedData.categoryId,
-        projectId: validatedData.projectId,
         progressUnit: validatedData.progressUnit,
       }
     })
-
-    // Update materials if provided
-    if (validatedData.materialIds) {
-      // Remove existing materials
-      await prisma.taskMaterial.deleteMany({
-        where: { taskId: id }
-      })
-
-      // Add new materials
-      if (validatedData.materialIds.length > 0) {
-        await prisma.taskMaterial.createMany({
-          data: validatedData.materialIds.map(materialId => ({
-            taskId: id,
-            materialId: materialId
-          }))
-        })
-      }
-    }
 
     return NextResponse.json({
       success: true,

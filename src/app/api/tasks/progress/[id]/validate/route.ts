@@ -39,18 +39,18 @@ export async function POST(
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -58,7 +58,7 @@ export async function POST(
     }
 
     // Get the progress update with task and project context
-    const progressUpdate = await prisma.taskProgressUpdate.findFirst({
+    const progressUpdate = await prisma.taskProgressUpdates.findFirst({
       where: {
         id: progressUpdateId,
         project: {
@@ -144,7 +144,7 @@ export async function POST(
       }
 
       // Update the progress update
-      const updatedProgressUpdate = await tx.taskProgressUpdate.update({
+      const updatedProgressUpdate = await tx.taskProgressUpdates.update({
         where: { id: progressUpdateId },
         data: {
           validationStatus: validationStatus,
@@ -158,7 +158,7 @@ export async function POST(
       if (validatedData.action === 'MODIFY') {
         // Update amount if provided
         if (validatedData.modifiedAmount !== undefined) {
-          await tx.taskProgressUpdate.update({
+          await tx.taskProgressUpdates.update({
             where: { id: progressUpdateId },
             data: {
               amountCompleted: validatedData.modifiedAmount
@@ -169,13 +169,13 @@ export async function POST(
         // Update material consumptions if provided
         if (validatedData.modifiedMaterialConsumptions) {
           // Remove existing consumptions
-          await tx.materialConsumption.deleteMany({
+          await tx.materialConsumptions.deleteMany({
             where: { taskProgressUpdateId: progressUpdateId }
           })
 
           // Add new consumptions
           if (validatedData.modifiedMaterialConsumptions.length > 0) {
-            await tx.materialConsumption.createMany({
+            await tx.materialConsumptions.createMany({
               data: validatedData.modifiedMaterialConsumptions.map(mc => ({
                 taskProgressUpdateId: progressUpdateId,
                 materialId: mc.materialId,
@@ -188,13 +188,13 @@ export async function POST(
         // Update material losses if provided
         if (validatedData.modifiedMaterialLosses) {
           // Remove existing losses
-          await tx.materialLoss.deleteMany({
+          await tx.materialLosses.deleteMany({
             where: { taskProgressUpdateId: progressUpdateId }
           })
 
           // Add new losses
           if (validatedData.modifiedMaterialLosses.length > 0) {
-            await tx.materialLoss.createMany({
+            await tx.materialLosses.createMany({
               data: validatedData.modifiedMaterialLosses.map(ml => ({
                 taskProgressUpdateId: progressUpdateId,
                 materialId: ml.materialId,
@@ -247,25 +247,25 @@ export async function GET(
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    const progressUpdate = await prisma.taskProgressUpdate.findFirst({
+    const progressUpdate = await prisma.taskProgressUpdates.findFirst({
       where: {
         id: progressUpdateId,
         project: {

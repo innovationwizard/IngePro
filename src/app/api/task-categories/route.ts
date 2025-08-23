@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     const prisma = await getPrisma()
     
-    const taskCategories = await prisma.taskCategory.findMany({
+    const taskCategories = await prisma.taskCategories.findMany({
       where: {
         status: 'ACTIVE'
       },
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     const prisma = await getPrisma()
     
     // Check if category name already exists globally
-    const existingCategory = await prisma.taskCategory.findFirst({
+    const existingCategory = await prisma.taskCategories.findFirst({
       where: {
         name: validatedData.name,
         status: 'ACTIVE'
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const taskCategory = await prisma.taskCategory.create({
+    const taskCategory = await prisma.taskCategories.create({
       data: {
         name: validatedData.name,
         nameEs: validatedData.nameEs,
@@ -125,7 +125,7 @@ export async function PUT(request: NextRequest) {
     const prisma = await getPrisma()
 
     // Verify the task category exists
-    const existingCategory = await prisma.taskCategory.findFirst({
+    const existingCategory = await prisma.taskCategories.findFirst({
       where: {
         id: id,
         status: 'ACTIVE'
@@ -138,7 +138,7 @@ export async function PUT(request: NextRequest) {
 
     // Check if name is being updated and if it conflicts
     if (validatedData.name && validatedData.name !== existingCategory.name) {
-      const nameConflict = await prisma.taskCategory.findFirst({
+      const nameConflict = await prisma.taskCategories.findFirst({
         where: {
           name: validatedData.name,
           status: 'ACTIVE',
@@ -154,7 +154,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const updatedCategory = await prisma.taskCategory.update({
+    const updatedCategory = await prisma.taskCategories.update({
       where: { id },
       data: validatedData
     })

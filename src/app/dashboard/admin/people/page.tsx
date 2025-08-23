@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Plus, Edit, Eye, User, Mail, Building, Calendar, Clock, Copy, Check } from 'lucide-react'
 
-interface User {
+interface Person {
   id: string
   name: string
   email: string
@@ -24,14 +24,14 @@ interface InvitationData {
   expiresAt: string
 }
 
-export default function AdminUsersPage() {
+export default function AdminPeoplePage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const [users, setUsers] = useState<User[]>([])
+  const [people, setPeople] = useState<Person[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null)
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedPassword, setCopiedPassword] = useState(false)
@@ -42,48 +42,48 @@ export default function AdminUsersPage() {
     role: 'WORKER' as 'WORKER' | 'SUPERVISOR' | 'ADMIN'
   })
 
-  // Check if user is admin
+  // Check if person is admin
   if (session?.user?.role !== 'ADMIN') {
     router.push('/dashboard')
     return null
   }
 
-  // Fetch users on component mount
+  // Fetch people on component mount
   useEffect(() => {
-    fetchUsers()
+    fetchPeople()
   }, [])
 
-  const fetchUsers = async () => {
+  const fetchPeople = async () => {
     try {
-      const response = await fetch('/api/users')
+      const response = await fetch('/api/people')
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.users)
+        setPeople(data.people)
       } else {
-        console.error('Failed to fetch users')
+        console.error('Failed to fetch people')
       }
     } catch (error) {
-      console.error('Error fetching users:', error)
+      console.error('Error fetching people:', error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleAddUser = () => {
+  const handleAddPerson = () => {
     setFormData({ name: '', email: '', role: 'WORKER' })
     setIsAddModalOpen(true)
   }
 
-  const handleEditUser = (user: User) => {
-    setSelectedUser(user)
+  const handleEditPerson = (person: Person) => {
+    setSelectedPerson(person)
     setIsEditModalOpen(true)
   }
 
-  const handleCreateUser = async (e: React.FormEvent) => {
+  const handleCreatePerson = async (e: React.FormEvent) => {
     e.preventDefault()
     
     try {
-      const response = await fetch('/api/users', {
+      const response = await fetch('/api/people', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -94,26 +94,26 @@ export default function AdminUsersPage() {
       if (response.ok) {
         setInvitationData(data.invitation)
         setIsAddModalOpen(false)
-        fetchUsers() // Refresh user list
+        fetchPeople() // Refresh people list
       } else {
-        alert(data.error || 'Error creating user')
+        alert(data.error || 'Error creating person')
       }
     } catch (error) {
-      console.error('Error creating user:', error)
-      alert('Error creating user')
+      console.error('Error creating person:', error)
+      alert('Error creating person')
     }
   }
 
-  const handleUpdateUser = async (e: React.FormEvent) => {
+  const handleUpdatePerson = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedUser) return
+    if (!selectedPerson) return
 
     try {
-      const response = await fetch('/api/users', {
+      const response = await fetch('/api/people', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: selectedUser.id,
+          id: selectedPerson.id,
           name: formData.name,
           email: formData.email,
           role: formData.role
@@ -124,14 +124,14 @@ export default function AdminUsersPage() {
 
       if (response.ok) {
         setIsEditModalOpen(false)
-        setSelectedUser(null)
-        fetchUsers() // Refresh user list
+        setSelectedPerson(null)
+        fetchPeople() // Refresh people list
       } else {
-        alert(data.error || 'Error updating user')
+        alert(data.error || 'Error updating person')
       }
     } catch (error) {
-      console.error('Error updating user:', error)
-      alert('Error updating user')
+      console.error('Error updating person:', error)
+      alert('Error updating person')
     }
   }
 
@@ -194,15 +194,15 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
-          <p className="text-gray-600">Invitar y gestionar usuarios de la empresa</p>
+          <h1 className="text-2xl font-bold text-gray-900">Gestión de Personas</h1>
+          <p className="text-gray-600">Invitar y gestionar personas de la empresa</p>
         </div>
         <button
-          onClick={handleAddUser}
+          onClick={handleAddPerson}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
-          <span>Invitar Usuario</span>
+          <span>Invitar Persona</span>
         </button>
       </div>
 
@@ -235,8 +235,8 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+              {people.map((person) => (
+                <tr key={person.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
@@ -245,41 +245,41 @@ export default function AdminUsersPage() {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm font-medium text-gray-900">{person.name}</div>
                         <div className="text-sm text-gray-500 flex items-center">
                           <Mail className="h-3 w-3 mr-1" />
-                          {user.email}
+                          {person.email}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {getRoleBadge(user.role)}
+                    {getRoleBadge(person.role)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(user.status)}
+                    {getStatusBadge(person.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.hasPassword ? (
+                    {person.hasPassword ? (
                       <span className="text-green-600">✓ Configurada</span>
                     ) : (
                       <span className="text-orange-600">⚠ Pendiente</span>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(user.createdAt).toLocaleDateString('es-ES')}
+                    {new Date(person.createdAt).toLocaleDateString('es-ES')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => router.push(`/dashboard/admin/users/${user.id}`)}
+                        onClick={() => router.push(`/dashboard/admin/people/${person.id}`)}
                         className="text-blue-600 hover:text-blue-900"
                         title="Ver Detalles"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleEditUser(user)}
+                        onClick={() => handleEditPerson(person)}
                         className="text-green-600 hover:text-green-900"
                         title="Editar"
                       >
@@ -294,13 +294,13 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Add User Modal */}
+      {/* Add Person Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Invitar Usuario</h3>
-              <form onSubmit={handleCreateUser} className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Invitar Persona</h3>
+              <form onSubmit={handleCreatePerson} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre</label>
                   <input
@@ -356,19 +356,19 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* Edit User Modal */}
-      {isEditModalOpen && selectedUser && (
+      {/* Edit Person Modal */}
+      {isEditModalOpen && selectedPerson && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Usuario</h3>
-              <form onSubmit={handleUpdateUser} className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Persona</h3>
+              <form onSubmit={handleUpdatePerson} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre</label>
                   <input
                     type="text"
                     required
-                    defaultValue={selectedUser.name}
+                    defaultValue={selectedPerson.name}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
@@ -378,7 +378,7 @@ export default function AdminUsersPage() {
                   <input
                     type="email"
                     required
-                    defaultValue={selectedUser.email}
+                    defaultValue={selectedPerson.email}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
@@ -386,7 +386,7 @@ export default function AdminUsersPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Rol</label>
                   <select 
-                    defaultValue={selectedUser.role}
+                    defaultValue={selectedPerson.role}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                   >

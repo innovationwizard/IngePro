@@ -29,26 +29,26 @@ export async function POST(
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the task belongs to the user's company
-    const task = await prisma.task.findFirst({
+    // Verify the task belongs to the person's company
+    const task = await prisma.tasks.findFirst({
       where: {
         id: taskId,
         project: {
@@ -64,11 +64,11 @@ export async function POST(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
-    // Verify all users belong to the same company and are WORKERs
-    const users = await prisma.user.findMany({
+    // Verify all people belong to the same company and are WORKERs
+    const people = await prisma.people.findMany({
       where: {
         id: { in: validatedData.userIds },
-        userTenants: {
+        personTenants: {
           some: {
             companyId: companyId,
             status: 'ACTIVE'
@@ -78,23 +78,23 @@ export async function POST(
       }
     })
 
-    if (users.length !== validatedData.userIds.length) {
+    if (people.length !== validatedData.userIds.length) {
       return NextResponse.json({ 
-        error: 'Some users not found or not authorized for this company' 
+        error: 'Some people not found or not authorized for this company' 
       }, { status: 400 })
     }
 
     // Assign task to users in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Remove existing assignments for this task
-      await tx.userTask.deleteMany({
+      await tx.personTasks.deleteMany({
         where: { taskId: taskId }
       })
 
       // Create new assignments
-      const assignments = await tx.userTask.createMany({
+      const assignments = await tx.personTasks.createMany({
         data: validatedData.userIds.map(userId => ({
-          userId: userId,
+          personId: userId,
           taskId: taskId,
           assignedBy: session.user?.id || '',
         }))
@@ -102,7 +102,7 @@ export async function POST(
 
       // Update task status to IN_PROGRESS if it was NOT_STARTED
       if (task.status === 'NOT_STARTED') {
-        await tx.task.update({
+        await tx.tasks.update({
           where: { id: taskId },
           data: { status: 'IN_PROGRESS' }
         })
@@ -152,26 +152,26 @@ export async function DELETE(
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the task belongs to the user's company
-    const task = await prisma.task.findFirst({
+    // Verify the task belongs to the person's company
+    const task = await prisma.tasks.findFirst({
       where: {
         id: taskId,
         project: {
@@ -192,18 +192,18 @@ export async function DELETE(
     }
 
     // Remove assignments
-    const result = await prisma.userTask.deleteMany({
+    const result = await prisma.personTasks.deleteMany({
       where: whereClause
     })
 
     // Check if task has any remaining assignments
-    const remainingAssignments = await prisma.userTask.count({
+    const remainingAssignments = await prisma.personTasks.count({
       where: { taskId: taskId }
     })
 
     // If no assignments remain, set task status back to NOT_STARTED
     if (remainingAssignments === 0) {
-      await prisma.task.update({
+      await prisma.tasks.update({
         where: { id: taskId },
         data: { status: 'NOT_STARTED' }
       })

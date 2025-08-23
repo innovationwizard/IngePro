@@ -39,67 +39,67 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // Check demo users first (for testing)
-          const demoUsers = [
-            {
-              id: '1',
-              email: 'worker@demo.com',
-              name: 'Ricardo Trabajador',
-              role: 'WORKER',
-              companyId: 'demo-company',
-              companySlug: 'demo-company',
-              password: 'password123'
-            },
-            {
-              id: '2', 
-              email: 'supervisor@demo.com',
-              name: 'Ricardo Supervisor',
-              role: 'SUPERVISOR',
-              companyId: 'demo-company',
-              companySlug: 'demo-company',
-              password: 'password123'
-            },
-            {
-              id: '3',
-              email: 'admin@demo.com', 
-              name: 'Ricardo Administrador',
-              role: 'ADMIN',
-              companyId: 'demo-company',
-              companySlug: 'demo-company',
-              password: 'password123'
-            },
-            {
-              id: '4',
-              email: 'superuser@demo.com', 
-              name: 'System SuperUser',
-              role: 'SUPERUSER',
-              companyId: 'demo-company',
-              companySlug: 'demo-company',
-              password: 'password123'
-            }
-          ]
-
-          // Check demo users
-          const demoUser = demoUsers.find(u => u.email === credentials.email)
-          if (demoUser && credentials.password === demoUser.password) {
-            return {
-              id: demoUser.id,
-              email: demoUser.email,
-              name: demoUser.name,
-              role: demoUser.role,
-              companyId: demoUser.companyId,
-              companySlug: demoUser.companySlug
-            } as any
+                  // Check demo people first (for testing)
+        const demoPeople = [
+          {
+            id: '1',
+            email: 'worker@demo.com',
+            name: 'Ricardo Trabajador',
+            role: 'WORKER',
+            companyId: 'demo-company',
+            companySlug: 'demo-company',
+            password: 'password123'
+          },
+          {
+            id: '2', 
+            email: 'supervisor@demo.com',
+            name: 'Ricardo Supervisor',
+            role: 'SUPERVISOR',
+            companyId: 'demo-company',
+            companySlug: 'demo-company',
+            password: 'password123'
+          },
+          {
+            id: '3',
+            email: 'admin@demo.com', 
+            name: 'Ricardo Administrador',
+            role: 'ADMIN',
+            companyId: 'demo-company',
+            companySlug: 'demo-company',
+            password: 'password123'
+          },
+          {
+            id: '4',
+            email: 'superuser@demo.com', 
+            name: 'System SuperUser',
+            role: 'SUPERUSER',
+            companyId: 'demo-company',
+            companySlug: 'demo-company',
+            password: 'password123'
           }
+        ]
 
-          // Check real users from database
-          console.log('🔍 Checking database for user:', credentials.email);
+        // Check demo people
+        const demoPerson = demoPeople.find(p => p.email === credentials.email)
+        if (demoPerson && credentials.password === demoPerson.password) {
+          return {
+            id: demoPerson.id,
+            email: demoPerson.email,
+            name: demoPerson.name,
+            role: demoPerson.role,
+            companyId: demoPerson.companyId,
+            companySlug: demoPerson.companySlug
+          } as any
+        }
+
+          // Check real people from database
+          console.log('🔍 Checking database for person:', credentials.email);
           const prisma = await getPrisma();
           const user = await retryWithBackoff(async () => {
-            return await prisma.user.findUnique({
+            return await prisma.people.findUnique({
               where: { email: credentials.email },
               include: {
-                userTenants: {
+                personTenants: {
                   where: { status: 'ACTIVE' },
                   include: { company: true },
                   orderBy: { startDate: 'desc' },
@@ -109,14 +109,14 @@ export const authOptions: NextAuthOptions = {
             });
           });
 
-          console.log('👤 User found:', user ? 'Yes' : 'No');
+          console.log('👤 Person found:', user ? 'Yes' : 'No');
           if (user) {
-            console.log('🔑 User has password:', !!user.password);
-            console.log('🏢 User tenants:', user.userTenants.length);
+            console.log('🔑 Person has password:', !!user.password);
+            console.log('🏢 Person tenants:', user.personTenants.length);
           }
 
           if (!user || !user.password) {
-            console.log('❌ User not found or no password');
+            console.log('❌ Person not found or no password');
             return null
           }
 
@@ -128,17 +128,17 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
-          // Get user's current company (most recent active tenant relationship)
-          const activeTenants = user.userTenants.filter(ut => ut.status === 'ACTIVE');
+          // Get person's current company (most recent active tenant relationship)
+          const activeTenants = user.personTenants.filter(ut => ut.status === 'ACTIVE');
           const currentTenant = activeTenants[0];
           console.log('🏢 Current tenant:', currentTenant ? 'Found' : 'Not found');
-          console.log('👤 User role:', user.role);
+          console.log('👤 Person role:', user.role);
           console.log('🏢 Tenant status:', currentTenant?.status);
           
-          // If no tenant relationship found, use user's single role
+          // If no tenant relationship found, use person's single role
           if (!currentTenant) {
-            console.log('⚠️ No tenant relationship, using user role');
-            console.log('🔍 User role from database:', user.role);
+            console.log('⚠️ No tenant relationship, using person role');
+            console.log('🔍 Person role from database:', user.role);
             return {
               id: user.id,
               email: user.email,
@@ -149,17 +149,17 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
-          // User has only one role - use it
-          console.log('✅ Auth successful with user role:', user.role);
+          // Person has only one role - use it
+          console.log('✅ Auth successful with person role:', user.role);
           
           return {
             id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            companyId: currentTenant.companyId,
-            companySlug: currentTenant.company.slug
-          }
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              companyId: currentTenant.companyId,
+              companySlug: currentTenant.company.slug
+            }
 
         } catch (error) {
           console.error('Auth error:', error)

@@ -1,4 +1,4 @@
-export interface User {
+export interface Person {
   id: string
   name: string
   email: string
@@ -19,13 +19,13 @@ export interface Tenant {
   id: string
   name: string
   nameEs: string
-  users: number
+  people: number
   projects: number
   status: string
   createdAt: string
 }
 
-export interface UserAssignment {
+export interface PersonAssignment {
   id: string
   name: string
   company: string

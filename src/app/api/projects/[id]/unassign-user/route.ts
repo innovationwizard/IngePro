@@ -24,7 +24,7 @@ export async function DELETE(
     const { userId } = unassignUserSchema.parse(body);
 
     // Get the project to check company access
-    const project = await prisma.project.findUnique({
+    const project = await prisma.projects.findUnique({
       where: { id: projectId },
       include: { company: true }
     });
@@ -33,42 +33,42 @@ export async function DELETE(
       return NextResponse.json({ message: 'Project not found' }, { status: 404 });
     }
 
-    // Check if user has access to this project's company
+    // Check if person has access to this project's company
     let hasAccess = false;
     
     if (session.user.role === 'SUPERUSER') {
       hasAccess = true;
     } else if (session.user.role === 'ADMIN') {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user.id,
+          personId: session.user.id,
           companyId: project.companyId,
           role: 'ADMIN',
           status: 'ACTIVE'
         }
       });
-      hasAccess = !!userTenant;
+      hasAccess = !!personTenant;
     } else if (session.user.role === 'SUPERVISOR') {
       // Supervisors can only unassign workers from projects they're assigned to
-      const userProject = await prisma.userProject.findFirst({
+      const personProject = await prisma.personProjects.findFirst({
         where: {
-          userId: session.user.id,
+          personId: session.user.id,
           projectId: projectId,
           role: 'SUPERVISOR',
           status: 'ACTIVE'
         }
       });
       
-      if (userProject) {
-        // Check if the user being unassigned is a worker
-        const targetUserProject = await prisma.userProject.findFirst({
+      if (personProject) {
+        // Check if the person being unassigned is a worker
+        const targetPersonProject = await prisma.personProjects.findFirst({
           where: {
-            userId: userId,
+            personId: userId,
             projectId: projectId,
             status: 'ACTIVE'
           }
         });
-        hasAccess = targetUserProject?.role === 'WORKER';
+        hasAccess = targetPersonProject?.role === 'WORKER';
       }
     }
 
@@ -76,22 +76,22 @@ export async function DELETE(
       return NextResponse.json({ message: 'Access denied' }, { status: 403 });
     }
 
-    // Find and deactivate the UserProject assignment
-    const userProject = await prisma.userProject.findFirst({
+    // Find and deactivate the PersonProjects assignment
+    const personProject = await prisma.personProjects.findFirst({
       where: {
-        userId: userId,
+        personId: userId,
         projectId: projectId,
         status: 'ACTIVE'
       }
     });
 
-    if (!userProject) {
-      return NextResponse.json({ message: 'User not assigned to this project' }, { status: 404 });
+    if (!personProject) {
+      return NextResponse.json({ message: 'Person not assigned to this project' }, { status: 404 });
     }
 
     // Deactivate the assignment
-    await prisma.userProject.update({
-      where: { id: userProject.id },
+    await prisma.personProjects.update({
+      where: { id: personProject.id },
       data: {
         status: 'INACTIVE',
         endDate: new Date()
@@ -99,7 +99,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({
-      message: 'User unassigned successfully'
+      message: 'Person unassigned successfully'
     });
 
   } catch (error) {

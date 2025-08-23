@@ -62,7 +62,7 @@ export default function SuperUserPage() {
             <p className="text-2xl font-bold text-blue-600">24</p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="font-semibold text-green-900">Total Users</h3>
+                            <h3 className="font-semibold text-green-900">Total People</h3>
             <p className="text-2xl font-bold text-green-600">1,247</p>
           </div>
           <div className="bg-orange-50 p-4 rounded-lg">
@@ -85,7 +85,7 @@ export default function SuperUserPage() {
           </div>
           <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
             <h3 className="font-semibold text-gray-900">Multi-tenant Oversight</h3>
-            <p className="text-sm text-gray-600">View all companies and users</p>
+                            <p className="text-sm text-gray-600">View all companies and people</p>
           </div>
           <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
             <h3 className="font-semibold text-gray-900">Revenue Analytics</h3>

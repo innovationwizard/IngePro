@@ -12,6 +12,10 @@ const materialSchema = z.object({
   nameEs: z.string().optional(),
   description: z.string().optional(),
   unit: z.string().min(1, 'Unit is required'),
+  unitCost: z.number().optional(),
+  minStockLevel: z.number().optional(),
+  maxStockLevel: z.number().optional(),
+  currentStock: z.number().default(0),
 })
 
 // GET - List materials for the company
@@ -25,27 +29,26 @@ export async function GET(request: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    const materials = await prisma.material.findMany({
+    const materials = await prisma.materials.findMany({
       where: {
-        companyId: companyId,
         status: 'ACTIVE'
       },
       orderBy: { name: 'asc' }
@@ -76,28 +79,27 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Check if material name already exists in this company
-    const existingMaterial = await prisma.material.findFirst({
+    // Check if material name already exists
+    const existingMaterial = await prisma.materials.findFirst({
       where: {
-        companyId: companyId,
         name: validatedData.name,
         status: 'ACTIVE'
       }
@@ -110,13 +112,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const material = await prisma.material.create({
+    const material = await prisma.materials.create({
       data: {
         name: validatedData.name,
         nameEs: validatedData.nameEs,
         description: validatedData.description,
         unit: validatedData.unit,
-        companyId: companyId,
+        unitCost: validatedData.unitCost,
+        minStockLevel: validatedData.minStockLevel,
+        maxStockLevel: validatedData.maxStockLevel,
+        currentStock: validatedData.currentStock,
       }
     })
 
@@ -158,29 +163,28 @@ export async function PUT(request: NextRequest) {
     
     const prisma = await getPrisma()
 
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the material belongs to the user's company
-    const existingMaterial = await prisma.material.findFirst({
+    // Verify the material exists
+    const existingMaterial = await prisma.materials.findFirst({
       where: {
         id: id,
-        companyId: companyId
       }
     })
 
@@ -190,9 +194,8 @@ export async function PUT(request: NextRequest) {
 
     // Check if name is being updated and if it conflicts
     if (validatedData.name && validatedData.name !== existingMaterial.name) {
-      const nameConflict = await prisma.material.findFirst({
+      const nameConflict = await prisma.materials.findFirst({
         where: {
-          companyId: companyId,
           name: validatedData.name,
           status: 'ACTIVE',
           id: { not: id }
@@ -207,7 +210,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const updatedMaterial = await prisma.material.update({
+    const updatedMaterial = await prisma.materials.update({
       where: { id },
       data: validatedData
     })

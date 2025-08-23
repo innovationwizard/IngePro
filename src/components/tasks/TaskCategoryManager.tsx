@@ -168,14 +168,14 @@ export default function TaskCategoryManager({ categories, onCategoryCreated }: T
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre en Español
-                </label>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre corto
+                  </label>
                 <Input
                   type="text"
                   value={formData.nameEs}
                   onChange={(e) => setFormData(prev => ({ ...prev, nameEs: e.target.value }))}
-                  placeholder="Ingresa el nombre en español (opcional)"
+                                      placeholder="Ingresa el nombre corto (opcional)"
                 />
               </div>
               <div>

@@ -61,7 +61,7 @@ export default function Sidebar() {
     },
     {
       name: 'Gestión de Usuarios',
-      href: '/dashboard/admin/users',
+              href: '/dashboard/admin/people',
       icon: Users,
       roles: ['ADMIN', 'SUPERUSER']
     },

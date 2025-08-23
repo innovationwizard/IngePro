@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, Plus, Calendar, Building, Users, Target, Mail, Clock } from 'lucide-react'
 
-interface UserAssignment {
+interface PersonAssignment {
   id: string
   name: string
   startDate: string
@@ -13,7 +13,7 @@ interface UserAssignment {
   company?: string
 }
 
-interface UserData {
+interface PersonData {
   id: string
   name: string
   email: string
@@ -21,20 +21,20 @@ interface UserData {
   role: string
   createdAt: string
   currentAssignments: {
-    companies: UserAssignment[]
-    teams: UserAssignment[]
-    projects: UserAssignment[]
+    companies: PersonAssignment[]
+    teams: PersonAssignment[]
+    projects: PersonAssignment[]
   }
-  history: UserAssignment[]
+  history: PersonAssignment[]
 }
 
-export default function UserDetailPage() {
+export default function PersonDetailPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const params = useParams()
-  const userId = params.id as string
+  const personId = params.id as string
 
-  const [user, setUser] = useState<UserData | null>(null)
+  const [person, setPerson] = useState<PersonData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -54,28 +54,28 @@ export default function UserDetailPage() {
   })
   const [availableProjects, setAvailableProjects] = useState<Array<{id: string, name: string, company: {name: string}}>>([])
 
-  // Check if user is admin
+  // Check if person is admin
   if (session?.user?.role !== 'ADMIN') {
     router.push('/dashboard')
     return null
   }
 
-  // Fetch user data on component mount
+  // Fetch person data on component mount
   useEffect(() => {
-    fetchUserData()
-  }, [userId])
+    fetchPersonData()
+  }, [personId])
 
-  const fetchUserData = async () => {
+  const fetchPersonData = async () => {
     try {
-      const response = await fetch(`/api/users/${userId}`)
+      const response = await fetch(`/api/people/${personId}`)
       if (response.ok) {
         const data = await response.json()
-        setUser(data.user)
+        setPerson(data.person)
       } else {
-        setError('Error al cargar los datos del usuario')
+        setError('Error al cargar los datos de la persona')
       }
     } catch (error) {
-      console.error('Error fetching user data:', error)
+      console.error('Error fetching person data:', error)
       setError('Error de conexión')
     } finally {
       setIsLoading(false)
@@ -128,7 +128,7 @@ export default function UserDetailPage() {
     if (confirm(`¿Está seguro de que desea terminar esta asignación?`)) {
       setIsActionLoading(true)
       try {
-        const response = await fetch(`/api/users/${userId}`, {
+        const response = await fetch(`/api/people/${personId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -142,7 +142,7 @@ export default function UserDetailPage() {
 
         if (response.ok) {
           setMessage(data.message)
-          fetchUserData() // Refresh user data
+          fetchPersonData() // Refresh person data
         } else {
           setMessage(data.error || 'Error al terminar la asignación')
         }
@@ -160,7 +160,7 @@ export default function UserDetailPage() {
     setIsActionLoading(true)
     
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(`/api/people/${personId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -177,12 +177,12 @@ export default function UserDetailPage() {
         setMessage(data.message)
         setIsAssignCompanyModalOpen(false)
         setAssignFormData({ companyId: '' })
-        fetchUserData() // Refresh user data
+        fetchPersonData() // Refresh person data
       } else {
-        setMessage(data.error || 'Error al asignar usuario')
+        setMessage(data.error || 'Error al asignar persona')
       }
     } catch (error) {
-      console.error('Error assigning user:', error)
+      console.error('Error assigning person:', error)
       setMessage('Error de conexión')
     } finally {
       setIsActionLoading(false)
@@ -194,7 +194,7 @@ export default function UserDetailPage() {
     setIsActionLoading(true)
     
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(`/api/people/${personId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -211,7 +211,7 @@ export default function UserDetailPage() {
         setMessage(data.message)
         setIsAssignProjectModalOpen(false)
         setAssignProjectFormData({ projectId: '' })
-        fetchUserData() // Refresh user data
+        fetchPersonData() // Refresh person data
       } else {
         setMessage(data.error || 'Error al asignar proyecto')
       }
@@ -233,7 +233,7 @@ export default function UserDetailPage() {
     )
   }
 
-  if (error || !user) {
+  if (error || !person) {
     return (
       <div className="space-y-6">
         <div className="flex items-center space-x-4">
@@ -245,7 +245,7 @@ export default function UserDetailPage() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Error</h1>
-            <p className="text-gray-600">{error || 'Usuario no encontrado'}</p>
+            <p className="text-gray-600">{error || 'Persona no encontrada'}</p>
           </div>
         </div>
       </div>
@@ -262,39 +262,39 @@ export default function UserDetailPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{person.name}</h1>
           <p className="text-gray-600 flex items-center">
             <Mail className="h-4 w-4 mr-1" />
-            {user.email}
+            {person.email}
           </p>
         </div>
       </div>
 
-      {/* User Info Card */}
+      {/* Person Info Card */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Información del Usuario</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Información de la Persona</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Estado</label>
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              user.status === 'ACTIVE' 
+              person.status === 'ACTIVE' 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-red-100 text-red-800'
             }`}>
-              {user.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+              {person.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
             </span>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Rol Principal</label>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {user.role}
+              {person.role}
             </span>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
             <p className="text-sm text-gray-900 flex items-center">
               <Clock className="h-4 w-4 mr-1" />
-              {new Date(user.createdAt).toLocaleDateString('es-ES')}
+              {new Date(person.createdAt).toLocaleDateString('es-ES')}
             </p>
           </div>
         </div>
@@ -318,12 +318,12 @@ export default function UserDetailPage() {
               </button>
             </div>
             <div className="space-y-3">
-              {user.currentAssignments.companies.length > 0 ? (
-                user.currentAssignments.companies.map((company) => (
+              {person.currentAssignments.companies.length > 0 ? (
+                person.currentAssignments.companies.map((company) => (
                   <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <div className="font-medium">{company.name}</div>
-                      <div className="text-sm text-gray-500">Rol: {user.role}</div>
+                      <div className="text-sm text-gray-500">Rol: {person.role}</div>
                       <div className="text-xs text-gray-400">
                         Desde: {new Date(company.startDate).toLocaleDateString('es-ES')}
                       </div>
@@ -359,8 +359,8 @@ export default function UserDetailPage() {
               </button>
             </div>
             <div className="space-y-3">
-              {user.currentAssignments.projects.length > 0 ? (
-                user.currentAssignments.projects.map((project) => (
+              {person.currentAssignments.projects.length > 0 ? (
+                person.currentAssignments.projects.map((project) => (
                   <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <div className="font-medium">{project.name}</div>
@@ -392,8 +392,8 @@ export default function UserDetailPage() {
               Historial
             </h2>
             <div className="space-y-3">
-                              {user.history.length > 0 ? (
-                  user.history.map((entry, index) => (
+                              {person.history.length > 0 ? (
+                  person.history.map((entry, index) => (
                     <div key={index} className="p-3 border rounded-lg">
                       <div className="font-medium">{entry.name}</div>
                       <div className="text-xs text-gray-400">

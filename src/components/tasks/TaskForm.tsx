@@ -35,12 +35,18 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
     setLoading(true)
 
     try {
+      // Prepare form data - remove categoryId if empty string
+      const submitData = {
+        ...formData,
+        categoryId: formData.categoryId || undefined
+      }
+
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (response.ok) {
@@ -103,17 +109,17 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
         {/* Category */}
         <div>
                    <label className="block text-sm font-medium text-gray-700 mb-2">
-           Categoría *
+           Categoría (Opcional)
          </label>
           <Select
             value={formData.categoryId}
             onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
-            required
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecciona una categoría" />
+              <SelectValue placeholder="Selecciona una categoría (opcional)" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="">Sin categoría</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
@@ -153,7 +159,7 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
       <div className="flex justify-end">
         <Button
           type="submit"
-          disabled={loading || !formData.name || !formData.categoryId || !formData.progressUnit}
+          disabled={loading || !formData.name || !formData.progressUnit}
           className="min-w-[120px]"
         >
                      {loading ? 'Creando...' : 'Crear Tarea'}

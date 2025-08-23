@@ -27,26 +27,26 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify project belongs to user's company
-    const project = await prisma.project.findFirst({
+    // Verify project belongs to person's company
+    const project = await prisma.projects.findFirst({
       where: {
         id: validatedData.projectId,
         companyId: companyId
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify task exists
-    const task = await prisma.task.findFirst({
+    const task = await prisma.tasks.findFirst({
       where: {
         id: validatedData.taskId
       }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     // Create assignments in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Assign task to project
-      const projectAssignment = await tx.taskProjectAssignment.create({
+      const projectAssignment = await tx.taskProjectAssignments.create({
         data: {
           taskId: validatedData.taskId,
           projectId: validatedData.projectId,
@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
       let workerAssignments = []
       if (validatedData.workerIds && validatedData.workerIds.length > 0) {
         // Verify all workers belong to the company
-        const workers = await tx.user.findMany({
+        const workers = await tx.people.findMany({
           where: {
             id: { in: validatedData.workerIds },
-            userTenants: {
+            personTenants: {
               some: {
                 companyId: companyId,
                 status: 'ACTIVE'
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         // Create worker assignments
         workerAssignments = await Promise.all(
           validatedData.workerIds.map(workerId =>
-            tx.taskWorkerAssignment.create({
+            tx.taskWorkerAssignments.create({
               data: {
                 taskId: validatedData.taskId,
                 projectId: validatedData.projectId,

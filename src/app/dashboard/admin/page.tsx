@@ -19,7 +19,7 @@ export default function AdminPage() {
       title: 'Gestión de Usuarios',
       description: 'Crear, editar y eliminar usuarios del sistema',
       icon: Users,
-      href: '/dashboard/admin/users',
+              href: '/dashboard/admin/people',
       color: 'bg-blue-500',
     },
     {
@@ -79,7 +79,7 @@ export default function AdminPage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Acceso Rápido</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={() => router.push('/dashboard/admin/users')}
+            onClick={() => router.push('/dashboard/admin/people')}
             className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Users className="h-5 w-5 text-blue-600" />

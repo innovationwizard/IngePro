@@ -18,14 +18,14 @@ export async function POST(request: NextRequest) {
     
     const prisma = await getPrisma()
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
+    // Find person by email
+    const person = await prisma.people.findUnique({
       where: { email: validatedData.email }
     })
 
-    if (!user) {
+    if (!person) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'Person not found' },
         { status: 404 }
       )
     }
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     // Hash the new password
     const hashedPassword = await hash(validatedData.password, 12)
 
-    // Update user password
-    await prisma.user.update({
-      where: { id: user.id },
+    // Update person password
+    await prisma.people.update({
+      where: { id: person.id },
       data: { 
         password: hashedPassword,
         updatedAt: new Date()
@@ -47,12 +47,12 @@ export async function POST(request: NextRequest) {
     })
 
     // Create audit log
-    await prisma.auditLog.create({
+    await prisma.auditLogs.create({
       data: {
-        userId: user.id,
+        personId: person.id,
         action: 'UPDATE',
-        entityType: 'USER',
-        entityId: user.id,
+        entityType: 'PERSON',
+        entityId: person.id,
         newValues: JSON.stringify({ passwordChanged: true })
       }
     })

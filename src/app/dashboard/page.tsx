@@ -22,14 +22,14 @@ import {
 } from 'lucide-react'
 
 interface DashboardStats {
-  totalUsers: number
+  totalPeople: number
   totalProjects: number
   totalWorkHours: number
   activeWorkLogs: number
   companies: Array<{
     id: string
     name: string
-    userCount: number
+    peopleCount: number
     projectCount: number
     totalHours: number
   }>
@@ -37,7 +37,7 @@ interface DashboardStats {
     id: string
     name: string
     company: string
-    userCount: number
+    peopleCount: number
     totalHours: number
     status: string
   }>
@@ -46,7 +46,7 @@ interface DashboardStats {
     type: string
     description: string
     timestamp: string
-    user: string
+    person: string
   }>
 }
 
@@ -98,8 +98,8 @@ export default function DashboardPage() {
           ])
 
           // Calculate stats
-          const totalUsers = companiesData.companies.reduce((acc: number, company: any) => 
-            acc + (company.users || 0), 0)
+          const totalPeople = companiesData.companies.reduce((acc: number, company: any) => 
+            acc + (company.people || 0), 0)
           const totalProjects = projectsData.projects.length
           const totalWorkHours = workLogsData.workLogs.reduce((acc: number, log: any) => 
             acc + (log.duration || 0), 0) / 60 // Convert minutes to hours
@@ -107,14 +107,14 @@ export default function DashboardPage() {
             log.status === 'ACTIVE').length
 
           setStats({
-            totalUsers,
+            totalPeople,
             totalProjects,
             totalWorkHours: Math.round(totalWorkHours * 10) / 10,
             activeWorkLogs,
             companies: companiesData.companies.map((company: any) => ({
               id: company.id,
               name: company.name,
-              userCount: company.users || 0,
+              peopleCount: company.people || 0,
               projectCount: company.projects || 0,
               totalHours: Math.round((company.workLogs || 0) / 60 * 10) / 10 // Convert workLogs to hours
             })),
@@ -126,7 +126,7 @@ export default function DashboardPage() {
                 id: project.id,
                 name: project.name,
                 company: project.company.name,
-                userCount: projectStats?.userCount || 0,
+                peopleCount: projectStats?.peopleCount || 0,
                 totalHours: Math.round((projectStats?.workLogCount || 0) / 60 * 10) / 10, // Convert workLogs to hours
                 status: project.status
               }
@@ -134,9 +134,9 @@ export default function DashboardPage() {
             recentActivity: workLogsData.workLogs.slice(0, 5).map((log: any) => ({
               id: log.id,
               type: 'work_log',
-              description: `${log.user.name} ${log.status === 'ACTIVE' ? 'inició' : 'completó'} trabajo`,
+              description: `${log.person.name} ${log.status === 'ACTIVE' ? 'inició' : 'completó'} trabajo`,
               timestamp: log.createdAt,
-              user: log.user.name
+              person: log.person.name
             }))
           })
         }
@@ -203,8 +203,8 @@ export default function DashboardPage() {
                     <Users className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">Total Personas</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalPeople || 0}</p>
                   </div>
                 </div>
               </div>
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                       <div>
                         <div className="font-medium text-gray-900">{company.name}</div>
                         <div className="text-sm text-gray-500">
-                          {company.userCount} usuarios • {company.projectCount} proyectos
+                          {company.peopleCount} personas • {company.projectCount} proyectos
                         </div>
                       </div>
                       <div className="text-right">
@@ -283,7 +283,7 @@ export default function DashboardPage() {
                       <div>
                         <div className="font-medium text-gray-900">{project.name}</div>
                         <div className="text-sm text-gray-500">
-                          {project.company} • {project.userCount} usuarios
+                          {project.company} • {project.peopleCount} personas
                         </div>
                       </div>
                       <div className="text-right">
@@ -374,8 +374,8 @@ export default function DashboardPage() {
                     <Users className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Usuarios Asignados</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
+                    <p className="text-sm font-medium text-gray-600">Personas Asignadas</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalPeople || 0}</p>
                   </div>
                 </div>
               </div>
@@ -429,7 +429,7 @@ export default function DashboardPage() {
                     <div>
                       <div className="font-medium text-gray-900">{project.name}</div>
                       <div className="text-sm text-gray-500">
-                        {project.company} • {project.userCount} usuarios
+                        {project.company} • {project.peopleCount} personas
                       </div>
                     </div>
                     <div className="text-right">

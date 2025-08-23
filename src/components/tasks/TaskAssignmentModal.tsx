@@ -12,26 +12,26 @@ interface Task {
   id: string
   name: string
   description?: string
-  category: {
+  category?: {
     id: string
     name: string
-  }
-  project: {
-    id: string
-    name: string
-  }
+  } | null
   progressUnit: string
   status: string
-  assignedUsers: Array<{
-    user: {
+  workerAssignments: Array<{
+    worker: {
       id: string
       name: string
       role: string
     }
+    project: {
+      id: string
+      name: string
+    }
   }>
 }
 
-interface User {
+interface Person {
   id: string
   name: string
   email: string
@@ -46,30 +46,30 @@ interface TaskAssignmentModalProps {
 }
 
 export default function TaskAssignmentModal({ task, open, onOpenChange, onSuccess }: TaskAssignmentModalProps) {
-  const [users, setUsers] = useState<User[]>([])
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
+  const [people, setPeople] = useState<Person[]>([])
+  const [selectedPersonIds, setSelectedPersonIds] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     if (open) {
-      fetchUsers()
-      // Set currently assigned users
-      setSelectedUserIds(task.assignedUsers.map(assignment => assignment.user.id))
+      fetchPeople()
+      // Set currently assigned people
+      setSelectedPersonIds(task.workerAssignments.map(assignment => assignment.worker.id))
     }
   }, [open, task])
 
-  const fetchUsers = async () => {
+  const fetchPeople = async () => {
     try {
-      const response = await fetch('/api/users')
+      const response = await fetch('/api/people')
       if (response.ok) {
         const data = await response.json()
-        // Filter to only show WORKER users
-        const workerUsers = data.users.filter((user: User) => user.role === 'WORKER')
-        setUsers(workerUsers)
+        // Filter to only show WORKER people
+        const workerPeople = data.people.filter((person: Person) => person.role === 'WORKER')
+        setPeople(workerPeople)
       }
     } catch (error) {
-      console.error('Error fetching users:', error)
+      console.error('Error fetching people:', error)
     }
   }
 
@@ -84,7 +84,7 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userIds: selectedUserIds,
+          personIds: selectedPersonIds,
         }),
       })
 
@@ -106,20 +106,20 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
     }
   }
 
-  const handleUserToggle = (userId: string) => {
-    setSelectedUserIds(prev => 
-      prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
+  const handlePersonToggle = (personId: string) => {
+    setSelectedPersonIds(prev => 
+      prev.includes(personId)
+        ? prev.filter(id => id !== personId)
+        : [...prev, personId]
     )
   }
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPeople = people.filter(person =>
+    person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const currentlyAssignedUsers = task.assignedUsers.map(assignment => assignment.user)
+  const currentlyAssignedPeople = task.workerAssignments.map(assignment => assignment.worker)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,7 +138,7 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Categoría</p>
-                  <p className="text-sm">{task.category.name}</p>
+                  <p className="text-sm">{task.category?.name || 'Sin categoría'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Proyecto</p>
@@ -163,13 +163,13 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
           </Card>
 
           {/* Currently Assigned */}
-          {currentlyAssignedUsers.length > 0 && (
+          {currentlyAssignedPeople.length > 0 && (
             <div>
               <h4 className="font-medium mb-2">Actualmente Asignados</h4>
               <div className="flex flex-wrap gap-2">
-                {currentlyAssignedUsers.map((user) => (
-                  <Badge key={user.id} variant="outline">
-                    {user.name}
+                {currentlyAssignedPeople.map((person) => (
+                  <Badge key={person.id} variant="outline">
+                    {person.name}
                   </Badge>
                 ))}
               </div>
@@ -188,24 +188,24 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
             />
             
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {filteredUsers.map((user) => {
-                const isSelected = selectedUserIds.includes(user.id)
-                const isCurrentlyAssigned = currentlyAssignedUsers.some(assigned => assigned.id === user.id)
+              {filteredPeople.map((person) => {
+                const isSelected = selectedPersonIds.includes(person.id)
+                const isCurrentlyAssigned = currentlyAssignedPeople.some(assigned => assigned.id === person.id)
                 
                 return (
                   <div
-                    key={user.id}
+                    key={person.id}
                     className={`p-3 border rounded-lg cursor-pointer transition-colors ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
-                    onClick={() => handleUserToggle(user.id)}
+                    onClick={() => handlePersonToggle(person.id)}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-sm">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
+                        <p className="font-medium text-sm">{person.name}</p>
+                        <p className="text-xs text-gray-500">{person.email}</p>
                         {isCurrentlyAssigned && (
                           <p className="text-xs text-blue-600">Actualmente asignado</p>
                         )}
@@ -223,7 +223,7 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
               })}
             </div>
             
-            {filteredUsers.length === 0 && (
+            {filteredPeople.length === 0 && (
               <p className="text-center text-gray-500 py-4">
                 {searchTerm ? 'No workers found matching your search' : 'No workers available'}
               </p>
@@ -231,12 +231,12 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
           </div>
 
           {/* Summary */}
-          {selectedUserIds.length > 0 && (
+          {selectedPersonIds.length > 0 && (
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium mb-2">Assignment Summary</h4>
               <p className="text-sm text-gray-600">
-                This task will be assigned to {selectedUserIds.length} worker{selectedUserIds.length !== 1 ? 's' : ''}.
-                {task.assignedUsers.length > 0 && selectedUserIds.length === 0 && (
+                This task will be assigned to {selectedPersonIds.length} worker{selectedPersonIds.length !== 1 ? 's' : ''}.
+                {task.workerAssignments.length > 0 && selectedPersonIds.length === 0 && (
                   <span className="text-orange-600"> All current assignments will be removed.</span>
                 )}
               </p>

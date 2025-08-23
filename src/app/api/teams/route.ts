@@ -21,7 +21,7 @@ export async function GET() {
   try {
     const prisma = await getPrisma();
     
-    const teams = await prisma.team.findMany({
+    const teams = await prisma.teams.findMany({
       select: {
         id: true,
         name: true,
@@ -39,7 +39,7 @@ export async function GET() {
         },
         _count: {
           select: {
-            users: true,
+            people: true,
             projects: true,
           }
         }
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     const prisma = await getPrisma();
     
     // Verify company exists
-    const company = await prisma.company.findUnique({
+    const company = await prisma.companies.findUnique({
       where: { id: validatedData.companyId }
     });
     
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     }
     
     // Create team
-    const team = await prisma.team.create({
+    const team = await prisma.teams.create({
       data: validatedData,
       select: {
         id: true,

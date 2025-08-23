@@ -16,45 +16,45 @@ export async function GET(request: NextRequest) {
     const prisma = await getPrisma()
     const email = session.user.email
 
-    // Get user with all relationships
-    const user = await prisma.user.findUnique({
+    // Get person with all relationships
+    const person = await prisma.people.findUnique({
       where: { email },
       include: {
-        userTenants: {
+        personTenants: {
           include: { company: true }
         }
       }
     })
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if (!person) {
+      return NextResponse.json({ error: 'Person not found' }, { status: 404 })
     }
 
     return NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        status: user.status,
-        companyId: user.companyId,
-        userTenants: user.userTenants.map(ut => ({
-          id: ut.id,
-          role: ut.role,
-          status: ut.status,
-          companyId: ut.companyId,
-          companyName: ut.company.name,
-          companySlug: ut.company.slug,
-          startDate: ut.startDate,
-          endDate: ut.endDate
+      person: {
+        id: person.id,
+        email: person.email,
+        name: person.name,
+        role: person.role,
+        status: person.status,
+        companyId: person.companyId,
+        personTenants: person.personTenants.map(pt => ({
+          id: pt.id,
+          role: pt.role,
+          status: pt.status,
+          companyId: pt.companyId,
+          companyName: pt.company.name,
+          companySlug: pt.company.slug,
+          startDate: pt.startDate,
+          endDate: pt.endDate
         }))
       }
     })
 
   } catch (error) {
-    console.error('Debug user error:', error)
+    console.error('Debug person error:', error)
     return NextResponse.json(
-      { error: 'Failed to get user debug info' },
+      { error: 'Failed to get person debug info' },
       { status: 500 }
     )
   }
@@ -75,16 +75,16 @@ export async function POST(request: NextRequest) {
     const email = session.user.email
 
     if (action === 'fix-role') {
-      // Update user's direct role
-      const updatedUser = await prisma.user.update({
+      // Update person's direct role
+      const updatedPerson = await prisma.people.update({
         where: { email },
         data: { role: role || 'ADMIN' }
       })
 
-              // UserTenant no longer stores role
-      await prisma.userTenant.updateMany({
+              // PersonTenants no longer stores role
+      await prisma.personTenants.updateMany({
         where: { 
-          userId: updatedUser.id,
+          personId: updatedPerson.id,
           status: 'ACTIVE'
         },
         data: { role: role || 'ADMIN' }
@@ -93,11 +93,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: `Role updated to ${role || 'ADMIN'}`,
-        user: {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          name: updatedUser.name,
-          role: updatedUser.role
+        person: {
+          id: updatedPerson.id,
+          email: updatedPerson.email,
+          name: updatedPerson.name,
+          role: updatedPerson.role
         }
       })
     }
@@ -105,9 +105,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 
   } catch (error) {
-    console.error('Debug user error:', error)
+    console.error('Debug person error:', error)
     return NextResponse.json(
-      { error: 'Failed to update user' },
+      { error: 'Failed to update person' },
       { status: 500 }
     )
   }

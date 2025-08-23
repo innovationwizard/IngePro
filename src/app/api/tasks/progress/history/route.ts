@@ -25,18 +25,18 @@ export async function GET(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     // Get progress updates with different includes based on role
     const isAdmin = session.user?.role === 'ADMIN'
     
-    const progressUpdates = await prisma.taskProgressUpdate.findMany({
+    const progressUpdates = await prisma.taskProgressUpdates.findMany({
       where: whereClause,
       include: {
         task: {

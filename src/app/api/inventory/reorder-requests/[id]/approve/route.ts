@@ -29,18 +29,18 @@ export async function POST(
 
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -48,7 +48,7 @@ export async function POST(
     }
 
     // Get the reorder request
-    const reorderRequest = await prisma.reorderRequest.findFirst({
+    const reorderRequest = await prisma.reorderRequests.findFirst({
       where: {
         id: params.id,
         material: {
@@ -149,15 +149,15 @@ export async function POST(
 
         // Update both reorder request and material stock
         await prisma.$transaction([
-          prisma.reorderRequest.update({
+          prisma.reorderRequests.update({
             where: { id: params.id },
             data: updateData
           }),
-          prisma.material.update({
+          prisma.materials.update({
             where: { id: reorderRequest.materialId },
             data: { currentStock: newStock }
           }),
-          prisma.inventoryMovement.create({
+          prisma.inventoryMovements.create({
             data: {
               materialId: reorderRequest.materialId,
               type: 'PURCHASE',
@@ -176,7 +176,7 @@ export async function POST(
     }
 
     // Update reorder request for non-receive actions
-    const updatedRequest = await prisma.reorderRequest.update({
+    const updatedRequest = await prisma.reorderRequests.update({
       where: { id: params.id },
       data: updateData,
       include: {

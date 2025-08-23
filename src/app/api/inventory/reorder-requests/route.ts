@@ -22,18 +22,18 @@ export async function GET(request: NextRequest) {
     
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       if (endDate) whereClause.createdAt.lte = new Date(endDate)
     }
 
-    const reorderRequests = await prisma.reorderRequest.findMany({
+    const reorderRequests = await prisma.reorderRequests.findMany({
       where: whereClause,
       include: {
         material: true
@@ -132,18 +132,18 @@ export async function POST(request: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Get user's company context
+    // Get person's company context
     let companyId = session.user?.companyId
     
     if (!companyId) {
-      const userTenant = await prisma.userTenant.findFirst({
+      const personTenant = await prisma.personTenants.findFirst({
         where: {
-          userId: session.user?.id,
+          personId: session.user?.id,
           status: 'ACTIVE'
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = userTenant?.companyId
+      companyId = personTenant?.companyId
     }
 
     if (!companyId) {
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify material belongs to company
-    const material = await prisma.material.findFirst({
+    const material = await prisma.materials.findFirst({
       where: {
         id: materialId,
         projectMaterials: {
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if there's already a pending request for this material
-    const existingRequest = await prisma.reorderRequest.findFirst({
+    const existingRequest = await prisma.reorderRequests.findFirst({
       where: {
         materialId,
         status: 'PENDING'
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create reorder request
-    const reorderRequest = await prisma.reorderRequest.create({
+    const reorderRequest = await prisma.reorderRequests.create({
       data: {
         materialId,
         requestedQuantity,
