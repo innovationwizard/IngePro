@@ -3,16 +3,27 @@ import { getRateLimitStore, cleanupExpiredEntries } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs'
 
-// POST - Cleanup expired rate limit entries (called by Vercel cron)
+// POST - Cleanup expired rate limit entries (called by GitHub Actions cron)
 export async function POST(request: NextRequest) {
   try {
-    // Vercel cron jobs are called internally, no auth needed
-    // But we can add a simple verification if desired
+    // Detect the source of the request
     const userAgent = request.headers.get('user-agent')
+    const isGitHubActions = userAgent?.includes('gh-five-minute-cron')
     const isVercelCron = userAgent?.includes('Vercel') || process.env.NODE_ENV === 'development'
     
-    if (!isVercelCron) {
-      console.warn('Rate limit cleanup called from non-Vercel source:', userAgent)
+    let source = 'unknown'
+    let message = 'Rate limit cleanup completed'
+    
+    if (isGitHubActions) {
+      source = 'github-actions-cron'
+      message = 'Rate limit cleanup completed by GitHub Actions cron'
+    } else if (isVercelCron) {
+      source = 'vercel-cron'
+      message = 'Rate limit cleanup completed by Vercel cron'
+    } else {
+      console.warn('Rate limit cleanup called from unknown source:', userAgent)
+      source = 'manual'
+      message = 'Rate limit cleanup completed manually'
     }
 
     // Perform cleanup
@@ -20,11 +31,11 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: 'Rate limit cleanup completed by Vercel cron',
+      message,
       cleanedEntries: cleanupResult.cleanedEntries,
       remainingEntries: cleanupResult.remainingEntries,
       timestamp: new Date().toISOString(),
-      source: 'vercel-cron'
+      source
     })
 
   } catch (error) {
