@@ -18,9 +18,10 @@ jobs:
         run: |
           set -euo pipefail
           URL="https://ingepro.app/api/cron/rate-limit-cleanup"
-          echo "Hitting $URL"
+          echo "Hitting $URL with POST method"
           curl --fail --silent --show-error \
                --max-time 50 \
                --retry 3 --retry-all-errors --retry-delay 5 \
+               -X POST \
                -H "User-Agent: gh-five-minute-cron" \
                "$URL"
