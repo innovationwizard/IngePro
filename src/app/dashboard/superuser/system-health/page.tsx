@@ -26,7 +26,7 @@ export default function SystemHealthPage() {
     memoryUsage: 78,
     diskUsage: 45,
     activeConnections: 1247,
-    errorRate: 0.02,
+    databaseHealth: 'healthy' as 'healthy' | 'warning' | 'critical',
     lastUpdated: new Date()
   })
 
@@ -60,18 +60,70 @@ export default function SystemHealthPage() {
     return null
   }
 
+  // ETag-based polling with jitter
   useEffect(() => {
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      setSystemMetrics(prev => ({
-        ...prev,
-        responseTime: Math.floor(Math.random() * 100) + 200,
-        cpuUsage: Math.floor(Math.random() * 20) + 60,
-        memoryUsage: Math.floor(Math.random() * 10) + 75,
-        lastUpdated: new Date()
-      }))
-    }, 5000)
-
+    let etag: string | null = null
+    let lastPollTime = 0
+    
+    const pollSystemHealth = async () => {
+      try {
+        const now = Date.now()
+        const timeSinceLastPoll = now - lastPollTime
+        
+        // Add ±10% jitter to 300s base interval
+        const baseInterval = 300000 // 300 seconds
+        const jitter = baseInterval * (0.9 + Math.random() * 0.2) // ±10% jitter
+        const minInterval = 270000 // 270 seconds (90% of 300s)
+        
+        if (timeSinceLastPoll < minInterval) {
+          return // Too early to poll
+        }
+        
+        const headers: Record<string, string> = {}
+        if (etag) {
+          headers['If-None-Match'] = etag
+        }
+        
+        const response = await fetch('/api/system-health', { headers })
+        
+        if (response.status === 304) {
+          // No changes, metrics are still fresh
+          console.log('System health: No changes (304)')
+          return
+        }
+        
+        if (response.ok) {
+          const newEtag = response.headers.get('etag')
+          if (newEtag) {
+            etag = newEtag
+          }
+          
+          const data = await response.json()
+          setSystemMetrics({
+            uptime: data.uptime,
+            responseTime: data.responseTime,
+            cpuUsage: data.cpuUsage,
+            memoryUsage: data.memoryUsage,
+            diskUsage: data.diskUsage,
+            activeConnections: data.activeConnections,
+            databaseHealth: data.databaseHealth,
+            lastUpdated: new Date(data.lastComputed)
+          })
+          
+          lastPollTime = now
+          console.log('System health: Updated from server')
+        }
+      } catch (error) {
+        console.error('Failed to fetch system health:', error)
+      }
+    }
+    
+    // Initial poll
+    pollSystemHealth()
+    
+    // Poll every 300 seconds with jitter
+    const interval = setInterval(pollSystemHealth, 300000)
+    
     return () => clearInterval(interval)
   }, [])
 
@@ -139,6 +191,30 @@ export default function SystemHealthPage() {
               </p>
             </div>
             <Database className="h-8 w-8 text-orange-600" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Database Health</p>
+              <p className={`text-2xl font-bold ${
+                systemMetrics.databaseHealth === 'critical' ? 'text-red-600' :
+                systemMetrics.databaseHealth === 'warning' ? 'text-yellow-600' :
+                'text-green-600'
+              }`}>
+                {systemMetrics.databaseHealth === 'critical' ? 'Critical' :
+                 systemMetrics.databaseHealth === 'warning' ? 'Warning' :
+                 'Healthy'}
+              </p>
+            </div>
+            {systemMetrics.databaseHealth === 'critical' ? (
+              <AlertTriangle className="h-8 w-8 text-red-600" />
+            ) : systemMetrics.databaseHealth === 'warning' ? (
+              <AlertTriangle className="h-8 w-8 text-yellow-600" />
+            ) : (
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            )}
           </div>
         </div>
       </div>

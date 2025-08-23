@@ -7,6 +7,39 @@ import { useState, useEffect } from 'react'
 export default function SuperUserPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [stats, setStats] = useState({
+    activeTenants: 0,
+    totalPeople: 0,
+    systemUptime: '0%',
+    activeAlerts: 0
+  })
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch real stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/analytics/superuser-stats')
+        if (response.ok) {
+          const data = await response.json()
+          setStats({
+            activeTenants: data.activeTenants || 0,
+            totalPeople: data.totalPeople || 0,
+            systemUptime: data.systemUptime || '0%',
+            activeAlerts: data.activeAlerts || 0
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (session?.user?.role === 'SUPERUSER') {
+      fetchStats()
+    }
+  }, [session])
 
   // Add debugging
   useEffect(() => {
@@ -59,19 +92,35 @@ export default function SuperUserPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-semibold text-blue-900">Active Tenants</h3>
-            <p className="text-2xl font-bold text-blue-600">24</p>
+            {isLoading ? (
+              <div className="animate-pulse bg-blue-200 h-8 w-16 rounded"></div>
+            ) : (
+              <p className="text-2xl font-bold text-blue-600">{stats.activeTenants}</p>
+            )}
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
-                            <h3 className="font-semibold text-green-900">Total People</h3>
-            <p className="text-2xl font-bold text-green-600">1,247</p>
+            <h3 className="font-semibold text-green-900">Total People</h3>
+            {isLoading ? (
+              <div className="animate-pulse bg-green-200 h-8 w-16 rounded"></div>
+            ) : (
+              <p className="text-2xl font-bold text-green-600">{stats.totalPeople.toLocaleString()}</p>
+            )}
           </div>
           <div className="bg-orange-50 p-4 rounded-lg">
             <h3 className="font-semibold text-orange-900">System Uptime</h3>
-            <p className="text-2xl font-bold text-orange-600">99.9%</p>
+            {isLoading ? (
+              <div className="animate-pulse bg-orange-200 h-8 w-16 rounded"></div>
+            ) : (
+              <p className="text-2xl font-bold text-orange-600">{stats.systemUptime}</p>
+            )}
           </div>
           <div className="bg-red-50 p-4 rounded-lg">
             <h3 className="font-semibold text-red-900">Active Alerts</h3>
-            <p className="text-2xl font-bold text-red-600">3</p>
+            {isLoading ? (
+              <div className="animate-pulse bg-red-200 h-8 w-16 rounded"></div>
+            ) : (
+              <p className="text-2xl font-bold text-red-600">{stats.activeAlerts}</p>
+            )}
           </div>
         </div>
       </div>

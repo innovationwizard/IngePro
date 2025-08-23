@@ -1,0 +1,12 @@
+# Rate Limit Cleanup Cron Job Configuration
+# Copy this file to .env.cron and fill in your values
+
+# Required: Secret key for cron job authentication
+# Generate a secure random string: openssl rand -base64 32
+CRON_SECRET=your-secure-random-secret-here
+
+# Optional: Override API URL (defaults to https://ingepro.app)
+API_URL=https://ingepro.app
+
+# Optional: Log file path for cron output
+LOG_FILE=/var/log/rate-limit-cleanup.log

@@ -7,7 +7,13 @@ interface RateLimitStore {
   };
 }
 
+// Global store for rate limiting
 const store: RateLimitStore = {};
+
+// Get access to the store for cleanup operations
+export function getRateLimitStore(): RateLimitStore {
+  return store;
+}
 
 export function checkRateLimit(identifier: string, maxRequests: number = 10, windowMs: number = 60000): boolean {
   const now = Date.now();
@@ -48,12 +54,28 @@ export function getRateLimitInfo(identifier: string): { remaining: number; reset
   };
 }
 
-// Clean up expired entries periodically
-setInterval(() => {
+// Clean up expired entries (called by server cron job)
+export async function cleanupExpiredEntries(): Promise<{
+  cleanedEntries: number;
+  remainingEntries: number;
+}> {
   const now = Date.now();
+  const initialCount = Object.keys(store).length;
+  let cleanedCount = 0;
+  
   Object.keys(store).forEach(key => {
     if (store[key].resetTime < now) {
       delete store[key];
+      cleanedCount++;
     }
   });
-}, 60000); // Clean up every minute 
+  
+  const remainingCount = Object.keys(store).length;
+  
+  console.log(`Rate limit cleanup: Removed ${cleanedCount} expired entries, ${remainingCount} remaining`)
+  
+  return {
+    cleanedEntries: cleanedCount,
+    remainingEntries: remainingCount
+  };
+} 

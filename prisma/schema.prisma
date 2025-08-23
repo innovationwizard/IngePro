@@ -28,6 +28,7 @@ model People {
   workLogs          WorkLogs[]
   workerAssignments TaskWorkerAssignments[]
   progressUpdates   TaskProgressUpdates[]
+  locationUpdates   LocationUpdates[]
 
   // Audit trail
   auditLogs AuditLogs[]
@@ -215,6 +216,23 @@ model WorkLogs {
   @@index([projectId])
   @@index([companyId])
   @@map("work_logs")
+}
+
+// Location tracking for workers
+model LocationUpdates {
+  id            String   @id @default(cuid()) @map("id")
+  personId      String   @unique @map("person_id") // One location per person
+  person        People   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  latitude      Float    @map("latitude")
+  longitude     Float    @map("longitude")
+  accuracy      Float?   @map("accuracy")
+  timestamp     DateTime @map("timestamp") @db.Timestamptz(6)
+  deltaDistance Float?   @map("delta_distance") // Distance from last position in meters
+  deltaHeading  Float?   @map("delta_heading") // Heading change in degrees
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("location_updates")
 }
 
 // Audit trail for all changes
