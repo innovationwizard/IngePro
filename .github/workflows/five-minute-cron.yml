@@ -16,8 +16,11 @@ jobs:
     steps:
       - name: Hit rate-limit-cleanup endpoint
         run: |
+          set -euo pipefail
+          URL="https://ingepro.app/api/cron/rate-limit-cleanup"
+          echo "Hitting $URL"
           curl --fail --silent --show-error \
                --max-time 50 \
                --retry 3 --retry-all-errors --retry-delay 5 \
                -H "User-Agent: gh-five-minute-cron" \
-               "https://ingepro.vercel.app/api/cron/rate-limit-cleanup"
+               "$URL"
