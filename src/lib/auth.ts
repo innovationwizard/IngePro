@@ -39,59 +39,6 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-                  // Check demo people first (for testing)
-        const demoPeople = [
-          {
-            id: '1',
-            email: 'worker@demo.com',
-            name: 'Ricardo Trabajador',
-            role: 'WORKER',
-            companyId: 'demo-company',
-            companySlug: 'demo-company',
-            password: 'password123'
-          },
-          {
-            id: '2', 
-            email: 'supervisor@demo.com',
-            name: 'Ricardo Supervisor',
-            role: 'SUPERVISOR',
-            companyId: 'demo-company',
-            companySlug: 'demo-company',
-            password: 'password123'
-          },
-          {
-            id: '3',
-            email: 'admin@demo.com', 
-            name: 'Ricardo Administrador',
-            role: 'ADMIN',
-            companyId: 'demo-company',
-            companySlug: 'demo-company',
-            password: 'password123'
-          },
-          {
-            id: '4',
-            email: 'superuser@demo.com', 
-            name: 'System SuperUser',
-            role: 'SUPERUSER',
-            companyId: 'demo-company',
-            companySlug: 'demo-company',
-            password: 'password123'
-          }
-        ]
-
-        // Check demo people
-        const demoPerson = demoPeople.find(p => p.email === credentials.email)
-        if (demoPerson && credentials.password === demoPerson.password) {
-          return {
-            id: demoPerson.id,
-            email: demoPerson.email,
-            name: demoPerson.name,
-            role: demoPerson.role,
-            companyId: demoPerson.companyId,
-            companySlug: demoPerson.companySlug
-          } as any
-        }
-
           // Check real people from database
           console.log('🔍 Checking database for person:', credentials.email);
           const prisma = await getPrisma();
@@ -139,6 +86,21 @@ export const authOptions: NextAuthOptions = {
           if (!currentTenant) {
             console.log('⚠️ No tenant relationship, using person role');
             console.log('🔍 Person role from database:', user.role);
+            
+            // Special handling for superusers - they don't need company relationships
+            if (user.role === 'SUPERUSER') {
+              console.log('🔑 Superuser detected - no company relationship needed');
+              return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                companyId: 'system',
+                companySlug: 'system'
+              }
+            }
+            
+            // For other roles without company relationships
             return {
               id: user.id,
               email: user.email,
@@ -199,6 +161,12 @@ export const authOptions: NextAuthOptions = {
         session.user.role = (token.role as string) || ''
         session.user.companyId = (token.companyId as string) || ''
         session.user.companySlug = (token.companySlug as string) || ''
+        
+        // Special handling for superusers in session
+        if (token.role === 'SUPERUSER') {
+          session.user.companyId = 'system'
+          session.user.companySlug = 'system'
+        }
       }
       return session
     }

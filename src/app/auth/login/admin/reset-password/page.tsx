@@ -22,8 +22,8 @@ export default function AdminPasswordReset() {
       return
     }
 
-    if (formData.newPassword.length < 6) {
-      setMessage('La contraseña debe tener al menos 6 caracteres')
+    if (formData.newPassword.length < 8) {
+      setMessage('La contraseña debe tener al menos 8 caracteres')
       setIsLoading(false)
       return
     }
@@ -99,7 +99,7 @@ export default function AdminPasswordReset() {
               <input
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                 value={formData.newPassword}
                 onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
