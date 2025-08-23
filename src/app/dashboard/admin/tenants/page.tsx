@@ -113,17 +113,23 @@ export default function AdminTenantsPage() {
     e.preventDefault()
     if (!selectedCompany) return
 
+    const updateData = {
+      id: selectedCompany.id,
+      slug: selectedCompany.slug,
+      ...formData
+    }
+    
+    console.log('🔍 Updating company with data:', updateData)
+
     try {
       const response = await fetch('/api/companies', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: selectedCompany.id,
-          ...formData
-        })
+        body: JSON.stringify(updateData)
       })
 
       const data = await response.json()
+      console.log('📡 Update response:', response.status, data)
 
       if (response.ok) {
         setIsEditModalOpen(false)
@@ -347,8 +353,22 @@ export default function AdminTenantsPage() {
                     required
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      const newData = { ...formData, name: e.target.value }
+                      console.log('📝 Form data updated:', newData)
+                      setFormData(newData)
+                    }}
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Slug (identificador único)</label>
+                  <input
+                    type="text"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
+                    value={selectedCompany?.slug || ''}
+                    disabled
+                  />
+                  <p className="text-xs text-gray-500 mt-1">El slug no se puede modificar</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Nombre corto</label>
@@ -356,7 +376,11 @@ export default function AdminTenantsPage() {
                     type="text"
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                     value={formData.nameEs}
-                    onChange={(e) => setFormData({ ...formData, nameEs: e.target.value })}
+                    onChange={(e) => {
+                      const newData = { ...formData, nameEs: e.target.value }
+                      console.log('📝 Form data updated:', newData)
+                      setFormData(newData)
+                    }}
                   />
                 </div>
                 <div>

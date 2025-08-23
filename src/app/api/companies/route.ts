@@ -200,17 +200,30 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { id, ...updateData } = body
     
+    // Validate the update data
+    const validatedData = companySchema.partial().parse(updateData)
+    
     const prisma = await getPrisma()
 
-    // Admin can only update their own company
-    if (session.user?.role === 'ADMIN' && id !== session.user.companyId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Admin can only update companies they have access to
+    if (session.user?.role === 'ADMIN') {
+      const personTenant = await prisma.personTenants.findFirst({
+        where: { 
+          personId: session.user.id,
+          companyId: id,
+          status: 'ACTIVE'
+        }
+      })
+      
+      if (!personTenant) {
+        return NextResponse.json({ error: 'Unauthorized - No access to this company' }, { status: 401 })
+      }
     }
 
     // Update company
     const updatedCompany = await prisma.companies.update({
       where: { id },
-      data: updateData
+      data: validatedData
     })
 
     return NextResponse.json({
