@@ -76,6 +76,12 @@ export default function AdminPeoplePage() {
 
   const handleEditPerson = (person: Person) => {
     setSelectedPerson(person)
+    // Initialize form data with the person's current values
+    setFormData({
+      name: person.name,
+      email: person.email,
+      role: person.role as 'WORKER' | 'SUPERVISOR' | 'ADMIN'
+    })
     setIsEditModalOpen(true)
   }
 
@@ -419,7 +425,7 @@ export default function AdminPeoplePage() {
                   <input
                     type="text"
                     required
-                    defaultValue={selectedPerson.name}
+                    value={formData.name}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
@@ -429,7 +435,7 @@ export default function AdminPeoplePage() {
                   <input
                     type="email"
                     required
-                    defaultValue={selectedPerson.email}
+                    value={formData.email}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
@@ -437,7 +443,7 @@ export default function AdminPeoplePage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Rol</label>
                   <select 
-                    defaultValue={selectedPerson.role}
+                    value={formData.role}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-2 sm:px-3 py-2 min-w-0"
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                   >
