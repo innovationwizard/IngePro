@@ -54,6 +54,17 @@ export async function GET(req: NextRequest) {
       if (primaryCompanyId) {
         companyIds = [primaryCompanyId];
         console.log('DEBUG: SUPERVISOR/WORKER - company:', primaryCompanyId);
+      } else {
+        // Fallback: try to get company from PersonTenants
+        const personTenants = await prisma.personTenants.findMany({
+          where: {
+            personId: session.user.id,
+            status: 'ACTIVE'
+          },
+          select: { companyId: true }
+        });
+        companyIds = personTenants.map(ut => ut.companyId);
+        console.log('DEBUG: SUPERVISOR/WORKER - fallback companies:', companyIds);
       }
     }
     

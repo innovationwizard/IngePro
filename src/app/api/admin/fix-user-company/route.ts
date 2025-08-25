@@ -6,7 +6,7 @@ import { getPrisma } from '@/lib/prisma';
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    if (!session?.user || !['ADMIN', 'SUPERVISOR'].includes(session.user.role)) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -35,18 +35,21 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           message: 'PersonTenants record created successfully',
-          companyId: session.user.companyId
+          companyId: session.user.companyId,
+          userRole: session.user.role
         });
       } else {
         return NextResponse.json({
           message: 'PersonTenants record already exists',
-          companyId: session.user.companyId
+          companyId: session.user.companyId,
+          userRole: session.user.role
         });
       }
     } else {
       return NextResponse.json({
         message: 'User has no companyId',
-        error: 'User needs to be associated with a company'
+        error: 'User needs to be associated with a company',
+        userRole: session.user.role
       }, { status: 400 });
     }
 
