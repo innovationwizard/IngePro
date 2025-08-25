@@ -91,11 +91,20 @@ export async function GET(request: NextRequest) {
           select: { companyId: true }
         })
         targetCompanyIds = personTenants.map(ut => ut.companyId)
+        
+        // If admin has no PersonTenants but has a companyId, use that
+        if (targetCompanyIds.length === 0 && session.user?.companyId) {
+          targetCompanyIds = [session.user.companyId]
+        }
       }
     }
     
+    console.log('DEBUG: Target company IDs:', targetCompanyIds);
+    console.log('DEBUG: User role:', session.user?.role);
+    console.log('DEBUG: User companyId:', session.user?.companyId);
+    
     if (targetCompanyIds.length === 0) {
-      console.log('No target company IDs found, returning empty people array');
+      console.log('DEBUG: No companies found, returning empty people array');
       return NextResponse.json({ people: [] })
     }
     
