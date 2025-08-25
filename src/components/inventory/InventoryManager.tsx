@@ -694,9 +694,9 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
           <DialogHeader>
             <DialogTitle>Nuevo Movimiento de Inventario</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleMovementSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <form onSubmit={handleMovementSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Material
               </label>
               <Select 
@@ -717,8 +717,8 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
               </Select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Tipo de Movimiento
               </label>
               <Select 
@@ -740,8 +740,8 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
               </Select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Cantidad
               </label>
               <Input
@@ -753,8 +753,8 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Costo por Unidad
               </label>
               <Input
@@ -765,8 +765,8 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Referencia
               </label>
               <Input
@@ -776,8 +776,8 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Notas
               </label>
               <Input
@@ -809,9 +809,9 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
           <DialogHeader>
             <DialogTitle>Nueva Solicitud de Reorden</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleReorderSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+          <form onSubmit={handleReorderSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Material
               </label>
               <Select 
@@ -832,8 +832,8 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
               </Select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Cantidad Solicitada
               </label>
               <Input
@@ -845,8 +845,8 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
                 Notas
               </label>
               <Input
