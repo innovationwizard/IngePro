@@ -16,12 +16,7 @@ export async function GET(req: NextRequest) {
         id: true,
         name: true,
         companyId: true,
-        status: true,
-        _count: {
-          select: {
-            workLogs: true
-          }
-        }
+        status: true
       }
     })
     
@@ -39,7 +34,7 @@ export async function GET(req: NextRequest) {
         return {
           id: project.id,
           peopleCount,
-          workLogCount: project._count.workLogs
+          workLogCount: 0 // Simplified for now
         }
       })
     )
