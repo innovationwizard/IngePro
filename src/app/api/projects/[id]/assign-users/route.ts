@@ -48,7 +48,20 @@ export async function POST(
           status: 'ACTIVE'
         }
       });
-      hasAccess = !!personTenant;
+      
+      console.log('Admin access check:', {
+        personTenantFound: !!personTenant,
+        userCompanyId: session.user.companyId,
+        projectCompanyId: project.companyId,
+        companyMatch: session.user.companyId === project.companyId
+      });
+      
+      if (personTenant) {
+        hasAccess = true;
+      } else {
+        // Fallback: check if admin has companyId that matches the project's company
+        hasAccess = session.user.companyId === project.companyId;
+      }
     } else if (session.user.role === 'SUPERVISOR') {
       // Supervisors can only assign workers to projects they're assigned to
       const personProject = await prisma.personProjects.findFirst({
@@ -65,7 +78,9 @@ export async function POST(
     console.log('Access check result:', { 
       userRole: session.user.role, 
       hasAccess, 
-      projectCompanyId: project.companyId 
+      projectCompanyId: project.companyId,
+      userCompanyId: session.user.companyId,
+      personTenantFound: session.user.role === 'ADMIN' ? 'checking...' : 'N/A'
     });
     
     if (!hasAccess) {
