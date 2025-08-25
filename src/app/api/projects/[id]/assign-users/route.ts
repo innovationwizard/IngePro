@@ -22,6 +22,7 @@ export async function POST(
     const prisma = await getPrisma();
     const projectId = params.id;
     const body = await request.json();
+    console.log('Assign users request:', { projectId, body });
     const { personIds, role } = assignUsersSchema.parse(body);
 
     // Get the project to check company access
@@ -44,7 +45,6 @@ export async function POST(
         where: {
           personId: session.user.id,
           companyId: project.companyId,
-          role: 'ADMIN',
           status: 'ACTIVE'
         }
       });
@@ -62,6 +62,12 @@ export async function POST(
       hasAccess = !!personProject && role === 'WORKER';
     }
 
+    console.log('Access check result:', { 
+      userRole: session.user.role, 
+      hasAccess, 
+      projectCompanyId: project.companyId 
+    });
+    
     if (!hasAccess) {
       return NextResponse.json({ message: 'Access denied' }, { status: 403 });
     }
@@ -120,10 +126,16 @@ export async function POST(
   } catch (error) {
     console.error('Error assigning users to project:', error);
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ message: 'Invalid request data' }, { status: 400 });
+      return NextResponse.json({ 
+        message: 'Invalid request data',
+        details: error.errors 
+      }, { status: 400 });
     }
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { 
+        message: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
