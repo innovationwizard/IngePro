@@ -103,6 +103,12 @@ export async function POST(
           throw new Error(`Person ${userId} does not have access to company ${project.companyId}`);
         }
 
+        // Update the person's role if needed
+        await prisma.people.update({
+          where: { id: userId },
+          data: { role: role }
+        });
+
         // Check if person is already assigned to this project
         const existingAssignment = await prisma.personProjects.findFirst({
           where: {
@@ -116,7 +122,7 @@ export async function POST(
           // Update existing assignment
           return await prisma.personProjects.update({
             where: { id: existingAssignment.id },
-            data: { role, startDate: new Date() }
+            data: { startDate: new Date() }
           });
         } else {
           // Create new assignment
@@ -124,7 +130,6 @@ export async function POST(
             data: {
               personId: userId,
               projectId: projectId,
-              role: role,
               startDate: new Date(),
               status: 'ACTIVE'
             }
