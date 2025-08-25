@@ -5,7 +5,7 @@ import { getPrisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 const assignUsersSchema = z.object({
-  userIds: z.array(z.string()),
+  personIds: z.array(z.string()),
   role: z.enum(['WORKER', 'SUPERVISOR'])
 });
 
@@ -22,7 +22,7 @@ export async function POST(
     const prisma = await getPrisma();
     const projectId = params.id;
     const body = await request.json();
-    const { userIds, role } = assignUsersSchema.parse(body);
+    const { personIds, role } = assignUsersSchema.parse(body);
 
     // Get the project to check company access
     const project = await prisma.projects.findUnique({
@@ -68,7 +68,7 @@ export async function POST(
 
     // Create PersonProjects entries for each person
     const personProjects = await Promise.all(
-      userIds.map(async (userId) => {
+      personIds.map(async (userId) => {
         // Check if person already has access to the project's company
         const personTenant = await prisma.personTenants.findFirst({
           where: {

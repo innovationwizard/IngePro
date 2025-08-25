@@ -23,4 +23,4 @@ These diagrams are generated using Swark for automated architecture documentatio
 
 ## Last Updated
 
-2025-08-24T03:57:14.557Z
+2025-08-24T04:01:02.670Z

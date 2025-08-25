@@ -37,6 +37,35 @@ npm install
 npm run dev
 ```
 
+## 🏗️ Architecture Documentation
+
+Automated architecture diagrams are available in the [docs/architecture](./docs/architecture/) directory. These diagrams are generated using **Swark** and provide:
+
+- **System Architecture Overview** - High-level system design and technology stack
+- **Database Schema** - Entity relationships and data models
+- **Component Dependencies** - React component hierarchy and relationships
+- **API Documentation** - Endpoint structure and authentication flow
+- **Security Architecture** - Authentication and authorization patterns
+- **Infrastructure Setup** - Deployment and AWS services configuration
+
+### Generate Architecture Diagrams
+
+```bash
+# Basic diagrams
+npm run generate-architecture
+
+# Enhanced diagrams with Swark
+npm run generate-enhanced-architecture
+
+# Watch mode (auto-regenerate on changes)
+npm run architecture:watch
+
+# Update and commit changes
+npm run update-architecture
+```
+
+The diagrams are automatically updated via GitHub Actions when code changes are pushed to the repository.
+
 4. Open your browser and navigate to `http://localhost:3000`
 
 ## Tecnologías Utilizadas

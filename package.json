@@ -7,7 +7,11 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "generate-architecture": "node scripts/generate-architecture.js",
+    "generate-enhanced-architecture": "node scripts/enhanced-architecture.js",
+    "update-architecture": "npm run generate-architecture && git add docs/architecture && git commit -m 'Update architecture diagrams'",
+    "architecture:watch": "nodemon --watch src --watch prisma --ext js,ts,tsx,prisma --exec 'npm run generate-architecture'"
   },
   "dependencies": {
     "@aws-sdk/client-rds": "^3.864.0",

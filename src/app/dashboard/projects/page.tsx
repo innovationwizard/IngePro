@@ -593,17 +593,17 @@ export default function ProjectsPage() {
                 Seleccionar Usuarios
               </label>
               <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-2">
-                {availableUsers.map((user) => (
+                {availablePeople.map((user) => (
                   <label key={user.id} className="flex items-center mb-2">
                     <input
                       type="checkbox"
                       value={user.id}
-                      checked={selectedUsers.includes(user.id)}
+                      checked={selectedPeople.includes(user.id)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedUsers([...selectedUsers, user.id]);
+                          setSelectedPeople([...selectedPeople, user.id]);
                         } else {
-                          setSelectedUsers(selectedUsers.filter(id => id !== user.id));
+                          setSelectedPeople(selectedPeople.filter(id => id !== user.id));
                         }
                       }}
                       className="mr-2"
@@ -624,8 +624,8 @@ export default function ProjectsPage() {
                 Cancelar
               </button>
               <button
-                onClick={handleAssignUsers}
-                disabled={selectedUsers.length === 0}
+                onClick={handleAssignPeople}
+                disabled={selectedPeople.length === 0}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
               >
                 Asignar Usuarios
