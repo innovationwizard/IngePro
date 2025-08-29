@@ -51,12 +51,38 @@ export async function POST(
     const task = await prisma.tasks.findFirst({
       where: {
         id: taskId,
-        project: {
-          companyId: companyId
-        }
+        OR: [
+          {
+            projectAssignments: {
+              some: {
+                project: {
+                  companyId: companyId
+                }
+              }
+            }
+          },
+          {
+            workerAssignments: {
+              some: {
+                project: {
+                  companyId: companyId
+                }
+              }
+            }
+          }
+        ]
       },
       include: {
-        project: true
+        projectAssignments: {
+          include: {
+            project: true
+          }
+        },
+        workerAssignments: {
+          include: {
+            project: true
+          }
+        }
       }
     })
 
@@ -174,9 +200,26 @@ export async function DELETE(
     const task = await prisma.tasks.findFirst({
       where: {
         id: taskId,
-        project: {
-          companyId: companyId
-        }
+        OR: [
+          {
+            projectAssignments: {
+              some: {
+                project: {
+                  companyId: companyId
+                }
+              }
+            }
+          },
+          {
+            workerAssignments: {
+              some: {
+                project: {
+                  companyId: companyId
+                }
+              }
+            }
+          }
+        ]
       }
     })
 
