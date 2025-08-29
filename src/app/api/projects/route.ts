@@ -70,8 +70,36 @@ export async function GET(req: NextRequest) {
     
     // Step 2: Build query based on role
     let whereClause: any = {};
+    let assignedProjectIds: string[] | undefined = undefined;
     
-    if (companyIds.length > 0) {
+    if (session.user.role === 'WORKER') {
+      // WORKER can only see projects they are assigned to
+      const assignedProjects = await prisma.personProjects.findMany({
+        where: {
+          personId: session.user.id,
+          status: 'ACTIVE'
+        },
+        select: { projectId: true }
+      });
+      
+      assignedProjectIds = assignedProjects.map(ap => ap.projectId);
+      console.log('DEBUG: WORKER - assigned project IDs:', assignedProjectIds);
+      
+      if (assignedProjectIds.length === 0) {
+        console.log('DEBUG: WORKER - no assigned projects, returning empty');
+        return NextResponse.json({
+          projects: [],
+          debug: { 
+            message: 'No assigned projects',
+            projectCount: 0,
+            userRole: session.user.role,
+            assignedProjectIds: assignedProjectIds
+          }
+        });
+      }
+      
+      whereClause.id = { in: assignedProjectIds };
+    } else if (companyIds.length > 0) {
       whereClause.companyId = { in: companyIds };
       console.log('DEBUG: Filtering by companies:', companyIds);
     } else if (session.user.role !== 'SUPERUSER') {
@@ -119,7 +147,8 @@ export async function GET(req: NextRequest) {
         message: 'Role-based query working',
         projectCount: projects.length,
         userRole: session.user.role,
-        companyIds: companyIds
+        companyIds: companyIds,
+        assignedProjectIds: session.user.role === 'WORKER' ? assignedProjectIds : undefined
       }
     });
 
