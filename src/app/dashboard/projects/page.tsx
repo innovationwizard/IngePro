@@ -31,6 +31,49 @@ interface Project {
       role: string
     }
   }>
+  taskAssignments: Array<{
+    id: string
+    taskId: string
+    projectId: string
+    assignedAt: string
+    assignedBy: string
+    task: {
+      id: string
+      name: string
+      description?: string
+      progressUnit: string
+      category?: {
+        id: string
+        name: string
+        nameEs?: string
+      }
+    }
+  }>
+  workerAssignments: Array<{
+    id: string
+    taskId: string
+    projectId: string
+    workerId: string
+    assignedAt: string
+    assignedBy: string
+    task: {
+      id: string
+      name: string
+      description?: string
+      progressUnit: string
+      category?: {
+        id: string
+        name: string
+        nameEs?: string
+      }
+    }
+    worker: {
+      id: string
+      name: string
+      email: string
+      role: string
+    }
+  }>
 }
 
 interface Company {
@@ -466,6 +509,60 @@ export default function ProjectsPage() {
                 ) : (
                   <p className="text-xs text-gray-500 italic">No hay usuarios asignados</p>
                 )}
+              </div>
+
+              {/* Project Tasks */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Tareas Asignadas:</h4>
+                {(() => {
+                  // Combine task assignments and worker assignments to show all tasks with their worker assignments
+                  const allTasks = new Map();
+                  
+                  // Add tasks assigned to project (without worker assignment)
+                  project.taskAssignments?.forEach(taskAssignment => {
+                    allTasks.set(taskAssignment.taskId, {
+                      task: taskAssignment.task,
+                      worker: null, // No worker assigned
+                      assignmentType: 'project'
+                    });
+                  });
+                  
+                  // Add tasks assigned to workers (override project assignments if they exist)
+                  project.workerAssignments?.forEach(workerAssignment => {
+                    allTasks.set(workerAssignment.taskId, {
+                      task: workerAssignment.task,
+                      worker: workerAssignment.worker,
+                      assignmentType: 'worker'
+                    });
+                  });
+                  
+                  const tasksArray = Array.from(allTasks.values());
+                  
+                  return tasksArray.length > 0 ? (
+                    <div className="space-y-1">
+                      {tasksArray.map((taskData, index) => (
+                        <div key={`${taskData.task.id}-${index}`} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center flex-wrap">
+                            <span className="text-gray-600">{taskData.task.name}</span>
+                            {taskData.task.category && (
+                              <span className="ml-2 px-1 py-0.5 bg-blue-100 rounded text-blue-600">
+                                {taskData.task.category.nameEs || taskData.task.category.name}
+                              </span>
+                            )}
+                            <span className="ml-2 px-1 py-0.5 bg-gray-100 rounded text-gray-500">
+                              {taskData.task.progressUnit}
+                            </span>
+                            <span className="ml-2 px-1 py-0.5 bg-green-100 rounded text-green-600">
+                              {taskData.worker ? taskData.worker.name : 'Sin asignar'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 italic">No hay tareas asignadas</p>
+                  );
+                })()}
               </div>
 
               {/* Assignment Button */}

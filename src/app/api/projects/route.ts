@@ -134,6 +134,44 @@ export async function GET(req: NextRequest) {
               }
             }
           }
+        },
+        taskAssignments: {
+          include: {
+            task: {
+              include: {
+                category: {
+                  select: {
+                    id: true,
+                    name: true,
+                    nameEs: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        workerAssignments: {
+          include: {
+            task: {
+              include: {
+                category: {
+                  select: {
+                    id: true,
+                    name: true,
+                    nameEs: true
+                  }
+                }
+              }
+            },
+            worker: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true
+              }
+            }
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
