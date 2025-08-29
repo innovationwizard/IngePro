@@ -178,7 +178,7 @@ export default function TasksPage() {
               <TaskList 
                 tasks={tasks} 
                 onTaskUpdated={fetchTasks}
-                userRole={session.user?.role || ''}
+                personRole={session.user?.role || ''}
               />
             </CardContent>
           </Card>
