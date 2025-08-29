@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useWorkLogStore } from '@/store'
+import { useWorkLogStore, useProjectStore } from '@/store'
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Clock, MapPin, AlertCircle } from 'lucide-react'
@@ -9,6 +9,7 @@ import { es } from '@/lib/translations/es'
 
 export function ClockInCard() {
   const { isClockedIn, clockIn, clockOut, currentWorkLog } = useWorkLogStore()
+  const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleClockIn = async () => {
@@ -17,15 +18,16 @@ export function ClockInCard() {
       return
     }
 
+    if (!currentProject) {
+      toast.error('Por favor selecciona un proyecto antes de hacer clock in')
+      return
+    }
+
     setIsLoading(true)
     try {
       const location = await getCurrentLocation()
       
-      // For demo purposes, we'll use a default project ID
-      // In production, this would come from the project selector
-      const projectId = 'demo-project-id'
-      
-      clockIn(projectId, location)
+      clockIn(currentProject.id, location)
       toast.success(es.dashboard.successClockIn)
     } catch (error) {
       console.error('Error getting location:', error)
@@ -54,11 +56,15 @@ export function ClockInCard() {
         {!isClockedIn ? (
           <button
             onClick={handleClockIn}
-            disabled={isLoading}
+            disabled={isLoading || !currentProject}
             className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
           >
             <Clock className="h-6 w-6" />
-            <span>{isLoading ? es.dashboard.gettingLocation : es.dashboard.clockIn}</span>
+            <span>
+              {isLoading ? es.dashboard.gettingLocation : 
+               !currentProject ? 'Selecciona un proyecto' : 
+               es.dashboard.clockIn}
+            </span>
           </button>
         ) : (
           <div className="space-y-4">

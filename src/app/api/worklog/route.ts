@@ -189,9 +189,51 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { projectId, description } = body
+    let { projectId, description } = body
     
     const prisma = await getPrisma()
+
+    // For workers, check if they have an active worklog and validate project matches
+    if (session.user?.role === 'WORKER') {
+      const activeWorkLog = await prisma.workLogs.findFirst({
+        where: {
+          personId: session.user?.id,
+          clockOut: null // Active worklog (not clocked out)
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      })
+
+      console.log('DEBUG: Worker worklog creation - Active worklog:', activeWorkLog)
+      console.log('DEBUG: Requested projectId:', projectId)
+
+      if (activeWorkLog) {
+        // Worker is already clocked in, validate project matches
+        if (projectId && projectId !== activeWorkLog.projectId) {
+          console.log('DEBUG: Project mismatch - Active:', activeWorkLog.projectId, 'Requested:', projectId)
+          return NextResponse.json({ 
+            error: `No puedes crear un registro de trabajo para el proyecto ${projectId} mientras estás trabajando en ${activeWorkLog.project?.name}. Debes hacer clock out primero.` 
+          }, { status: 400 })
+        }
+        // If no projectId provided, use the current active worklog's project
+        if (!projectId) {
+          projectId = activeWorkLog.projectId
+          console.log('DEBUG: Using active worklog project:', projectId)
+        }
+      } else {
+        // Worker is not clocked in, they cannot create worklogs
+        console.log('DEBUG: Worker not clocked in, cannot create worklog')
+        return NextResponse.json({ 
+          error: 'Debes hacer clock in antes de crear un registro de trabajo' 
+        }, { status: 400 })
+      }
+    }
 
     // Validate project exists and person has access
     if (projectId) {
