@@ -183,12 +183,12 @@ export default function TaskProjectAssignmentModal({
               </CardHeader>
               <CardContent>
                 <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Selecciona una tarea..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     {tasks.map((task) => (
-                      <SelectItem key={task.id} value={task.id}>
+                      <SelectItem key={task.id} value={task.id} className="bg-white hover:bg-gray-50">
                         <div className="flex flex-col">
                           <span className="font-medium">{task.name}</span>
                           <span className="text-sm text-gray-500">
@@ -234,12 +234,12 @@ export default function TaskProjectAssignmentModal({
               </CardHeader>
               <CardContent>
                 <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Selecciona un proyecto..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
+                      <SelectItem key={project.id} value={project.id} className="bg-white hover:bg-gray-50">
                         <div className="flex flex-col">
                           <span className="font-medium">{project.name}</span>
                           <span className="text-sm text-gray-500">
