@@ -11,7 +11,9 @@ import {
   Building,
   Settings,
   LogOut,
-  CheckSquare
+  CheckSquare,
+  Package,
+  BarChart3
 } from 'lucide-react'
 
 export default function Sidebar() {
@@ -42,16 +44,28 @@ export default function Sidebar() {
       roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
+      name: 'Registros de Trabajo',
+      href: '/dashboard/work-logs',
+      icon: Clock,
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
       name: 'Gestión de Tareas',
       href: '/dashboard/tasks',
       icon: CheckSquare,
       roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
-      name: 'Registros de Trabajo',
-      href: '/dashboard/work-logs',
-      icon: Clock,
-      roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
+      name: 'Gestión de Materiales',
+      href: '/dashboard/materials',
+      icon: Package,
+      roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Gestión de Usuarios',
+      href: '/dashboard/admin/people',
+      icon: Users,
+      roles: ['ADMIN', 'SUPERUSER']
     },
     {
       name: 'Gestión de Proyectos',
@@ -60,16 +74,16 @@ export default function Sidebar() {
       roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
-      name: 'Gestión de Usuarios',
-              href: '/dashboard/admin/people',
-      icon: Users,
-      roles: ['ADMIN', 'SUPERUSER']
-    },
-    {
       name: 'Gestión de Empresas',
       href: '/dashboard/admin/tenants',
       icon: Building,
       roles: ['ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Análisis',
+      href: '/dashboard/analysis',
+      icon: BarChart3,
+      roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
       name: 'SuperUser Dashboard',

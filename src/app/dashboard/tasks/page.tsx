@@ -6,11 +6,7 @@ import { useRouter } from 'next/navigation'
 import TaskList from '@/components/tasks/TaskList'
 import TaskForm from '@/components/tasks/TaskForm'
 import TaskCategoryManager from '@/components/tasks/TaskCategoryManager'
-import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
-import ProgressHistory from '@/components/tasks/ProgressHistory'
-import AdvancedAnalytics from '@/components/analytics/AdvancedAnalytics'
-import InventoryManager from '@/components/inventory/InventoryManager'
-import AIInsights from '@/components/ai-insights/AIInsights'
+
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -58,17 +54,7 @@ interface Project {
   nameEs?: string
 }
 
-interface Material {
-  id: string
-  name: string
-  nameEs?: string
-  unit: string
-}
 
-interface Worker {
-  id: string
-  name: string
-}
 
 
 
@@ -78,8 +64,6 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [categories, setCategories] = useState<TaskCategory[]>([])
   const [projects, setProjects] = useState<Project[]>([])
-  const [materials, setMaterials] = useState<Material[]>([])
-  const [workers, setWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('tasks')
 
@@ -94,8 +78,6 @@ export default function TasksPage() {
     fetchTasks()
     fetchCategories()
     fetchProjects()
-    fetchMaterials()
-    fetchWorkers()
   }, [session, status, router])
 
   const fetchTasks = async () => {
@@ -136,31 +118,7 @@ export default function TasksPage() {
     }
   }
 
-  const fetchMaterials = async () => {
-    try {
-      const response = await fetch('/api/materials')
-      if (response.ok) {
-        const data = await response.json()
-        setMaterials(data.materials)
-      }
-    } catch (error) {
-      console.error('Error fetching materials:', error)
-    }
-  }
 
-  const fetchWorkers = async () => {
-    try {
-      const response = await fetch('/api/people')
-      if (response.ok) {
-        const data = await response.json()
-        // Filter only WORKER people
-        const workerPeople = data.people.filter((person: any) => person.role === 'WORKER')
-        setWorkers(workerPeople)
-      }
-    } catch (error) {
-      console.error('Error fetching workers:', error)
-    }
-  }
 
 
 
@@ -208,21 +166,6 @@ export default function TasksPage() {
           )}
           {isAdmin && (
             <TabsTrigger value="categories" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Categorías</TabsTrigger>
-          )}
-          {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="consumption" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Consumo</TabsTrigger>
-          )}
-          {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="inventory" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Inventario</TabsTrigger>
-          )}
-          {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="history" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Historial</TabsTrigger>
-          )}
-          {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="analytics" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Análisis</TabsTrigger>
-          )}
-          {(isAdmin || isSupervisor) && (
-            <TabsTrigger value="ai-insights" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">IA</TabsTrigger>
           )}
         </TabsList>
 
@@ -273,78 +216,7 @@ export default function TasksPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="consumption" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Seguimiento de Consumo de Materiales</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MaterialConsumptionTracker 
-                    projects={projects}
-                    materials={materials}
-                    onConsumptionRecorded={() => {
-                      // Refresh data if needed
-                      console.log('Material consumption recorded')
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
 
-            <TabsContent value="inventory" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestión de Inventario</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <InventoryManager 
-                    materials={materials}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="history" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Historial de Progreso</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ProgressHistory 
-                    projects={projects}
-                    tasks={tasks}
-                    userRole={session.user?.role || ''}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Análisis Avanzado</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <AdvancedAnalytics 
-                    projects={projects}
-                    workers={workers}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="ai-insights" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Insights de IA</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <AIInsights 
-                    projects={projects}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
           </>
         )}
       </Tabs>
