@@ -5,7 +5,7 @@ import { getPrisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 const unassignUserSchema = z.object({
-  userId: z.string()
+  personId: z.string()
 });
 
 export async function DELETE(
@@ -21,7 +21,7 @@ export async function DELETE(
     const prisma = await getPrisma();
     const projectId = params.id;
     const body = await request.json();
-    const { userId } = unassignUserSchema.parse(body);
+    const { personId } = unassignUserSchema.parse(body);
 
     // Get the project to check company access
     const project = await prisma.projects.findUnique({
@@ -43,7 +43,6 @@ export async function DELETE(
         where: {
           personId: session.user.id,
           companyId: project.companyId,
-          role: 'ADMIN',
           status: 'ACTIVE'
         }
       });
@@ -54,21 +53,17 @@ export async function DELETE(
         where: {
           personId: session.user.id,
           projectId: projectId,
-          role: 'SUPERVISOR',
           status: 'ACTIVE'
         }
       });
       
       if (personProject) {
         // Check if the person being unassigned is a worker
-        const targetPersonProject = await prisma.personProjects.findFirst({
-          where: {
-            personId: userId,
-            projectId: projectId,
-            status: 'ACTIVE'
-          }
+        const targetPerson = await prisma.people.findUnique({
+          where: { id: personId },
+          select: { role: true }
         });
-        hasAccess = targetPersonProject?.role === 'WORKER';
+        hasAccess = targetPerson?.role === 'WORKER';
       }
     }
 
@@ -79,7 +74,7 @@ export async function DELETE(
     // Find and deactivate the PersonProjects assignment
     const personProject = await prisma.personProjects.findFirst({
       where: {
-        personId: userId,
+        personId: personId,
         projectId: projectId,
         status: 'ACTIVE'
       }
