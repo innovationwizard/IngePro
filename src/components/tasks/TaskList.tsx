@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Target } from 'lucide-react'
 import TaskAssignmentModal from './TaskAssignmentModal'
+import TaskProjectAssignmentModal from './TaskProjectAssignmentModal'
 import TaskProgressModal from './TaskProgressModal'
 import TaskValidationModal from './TaskValidationModal'
 import TaskEditForm from './TaskEditForm'
@@ -123,6 +125,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showAssignmentModal, setShowAssignmentModal] = useState(false)
+  const [showProjectAssignmentModal, setShowProjectAssignmentModal] = useState(false)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [showValidationModal, setShowValidationModal] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -199,6 +202,19 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
 
   return (
     <div className="space-y-6">
+      {/* Action Buttons */}
+      {(personRole === 'ADMIN' || personRole === 'SUPERVISOR') && (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowProjectAssignmentModal(true)}
+            className="flex items-center gap-2"
+          >
+            <Target className="h-4 w-4" />
+            Asignar Tarea a Proyecto
+          </Button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex gap-4">
         <div className="flex-1">
@@ -467,6 +483,16 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
           }}
         />
       )}
+
+      {/* Task Project Assignment Modal */}
+      <TaskProjectAssignmentModal
+        open={showProjectAssignmentModal}
+        onOpenChange={setShowProjectAssignmentModal}
+        onSuccess={() => {
+          setShowProjectAssignmentModal(false)
+          onTaskUpdated()
+        }}
+      />
     </div>
   )
 }
