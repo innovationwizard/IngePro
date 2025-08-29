@@ -63,6 +63,8 @@ export async function GET(request: NextRequest) {
           select: { projectId: true }
         })
         
+        console.log('DEBUG: Supervisor projects:', supervisorProjects)
+        
         const projectIds = supervisorProjects.map(sp => sp.projectId)
         
         if (projectIds.length > 0) {
@@ -70,20 +72,35 @@ export async function GET(request: NextRequest) {
           const workerAssignments = await prisma.personProjects.findMany({
             where: {
               projectId: { in: projectIds },
-              status: 'ACTIVE',
-              person: {
-                role: 'WORKER'
-              }
+              status: 'ACTIVE'
             },
-            select: { personId: true }
+            include: {
+              person: {
+                select: {
+                  id: true,
+                  role: true
+                }
+              }
+            }
           })
           
-          const workerIds = workerAssignments.map(wa => wa.personId)
+          console.log('DEBUG: Worker assignments:', workerAssignments)
+          
+          // Filter to only include workers (not other supervisors/admins)
+          const workerIds = workerAssignments
+            .filter(wa => wa.person.role === 'WORKER')
+            .map(wa => wa.personId)
+          
+          console.log('DEBUG: Filtered worker IDs:', workerIds)
+          
           // Include supervisor's own worklogs and their workers' worklogs
           workerIds.push(session.user?.id!)
           
+          console.log('DEBUG: Final person IDs for supervisor:', workerIds)
+          
           where.personId = { in: workerIds }
         } else {
+          console.log('DEBUG: No projects assigned to supervisor, showing only own worklogs')
           // If no projects assigned, only see own worklogs
           where.personId = session.user?.id
         }
@@ -93,6 +110,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    console.log('DEBUG: Final where clause:', JSON.stringify(where, null, 2))
+    
     const workLogs = await prisma.workLogs.findMany({
       where,
       include: {
@@ -121,6 +140,8 @@ export async function GET(request: NextRequest) {
       },
       take: limit
     })
+    
+    console.log('DEBUG: Found worklogs:', workLogs.length, 'for user role:', session.user?.role)
 
     // Transform the data to match frontend expectations
     const transformedWorkLogs = workLogs.map(log => ({
