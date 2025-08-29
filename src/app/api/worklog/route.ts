@@ -111,6 +111,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('DEBUG: Final where clause:', JSON.stringify(where, null, 2))
+    console.log('DEBUG: User role:', session.user?.role, 'User ID:', session.user?.id)
     
     const workLogs = await prisma.workLogs.findMany({
       where,
@@ -142,6 +143,16 @@ export async function GET(request: NextRequest) {
     })
     
     console.log('DEBUG: Found worklogs:', workLogs.length, 'for user role:', session.user?.role)
+    console.log('DEBUG: Worklog details:', workLogs.map(wl => ({
+      id: wl.id,
+      personId: wl.personId,
+      personName: wl.person.name,
+      personRole: wl.person.role,
+      projectId: wl.projectId,
+      projectName: wl.project?.name,
+      clockIn: wl.clockIn,
+      clockOut: wl.clockOut
+    })))
 
     // Transform the data to match frontend expectations
     const transformedWorkLogs = workLogs.map(log => ({
