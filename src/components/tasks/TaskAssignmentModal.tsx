@@ -18,6 +18,13 @@ interface Task {
   } | null
   progressUnit: string
   status: string
+  projectAssignments?: Array<{
+    project: {
+      id: string
+      name: string
+      nameEs?: string
+    }
+  }>
   workerAssignments: Array<{
     worker: {
       id: string
@@ -27,6 +34,7 @@ interface Task {
     project: {
       id: string
       name: string
+      nameEs?: string
     }
   }>
 }
@@ -142,7 +150,11 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Proyecto</p>
-                  <p className="text-sm">{task.project.name}</p>
+                  <p className="text-sm">
+                    {task.projectAssignments?.[0]?.project.name || 
+                     task.workerAssignments?.[0]?.project.name || 
+                     'Sin proyecto asignado'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>

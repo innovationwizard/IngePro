@@ -21,6 +21,7 @@ interface Task {
     name: string
   } | null
   progressUnit: string
+  status: string
   projectAssignments?: Array<{
     project: {
       id: string
@@ -152,7 +153,8 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
       filtered = filtered.filter(task =>
         task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.category?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.project.name.toLowerCase().includes(searchTerm.toLowerCase())
+        task.projectAssignments?.some(pa => pa.project.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        task.workerAssignments?.some(wa => wa.project.name.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     }
 
