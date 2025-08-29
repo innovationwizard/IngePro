@@ -91,7 +91,22 @@ export async function GET(req: NextRequest) {
     const projects = await prisma.projects.findMany({
       where: whereClause,
       include: {
-        company: true
+        company: true,
+        people: {
+          where: {
+            status: 'ACTIVE'
+          },
+          include: {
+            person: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true
+              }
+            }
+          }
+        }
       },
       orderBy: { createdAt: 'desc' }
     });

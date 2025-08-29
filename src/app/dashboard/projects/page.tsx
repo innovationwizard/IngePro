@@ -19,13 +19,17 @@ interface Project {
   peopleCount: number
   people: Array<{
     id: string
+    personId: string
+    projectId: string
+    startDate: string
+    endDate?: string
+    status: 'ACTIVE' | 'INACTIVE'
     person: {
       id: string
       name: string
       email: string
       role: string
     }
-    role: string
   }>
 }
 
@@ -426,7 +430,7 @@ export default function ProjectsPage() {
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <Users className="w-4 h-4 mr-2" />
-                  {project.userCount} usuario{project.userCount !== 1 ? 's' : ''} asignado{project.userCount !== 1 ? 's' : ''}
+                  {project.peopleCount || 0} usuario{(project.peopleCount || 0) !== 1 ? 's' : ''} asignado{(project.peopleCount || 0) !== 1 ? 's' : ''}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -435,22 +439,22 @@ export default function ProjectsPage() {
               </div>
 
               {/* Project Members */}
-              {project.users && project.users.length > 0 && (
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Miembros del Proyecto:</h4>
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Miembros del Proyecto:</h4>
+                {project.people && project.people.length > 0 ? (
                   <div className="space-y-1">
-                    {project.users.map((userProject) => (
-                      <div key={userProject.id} className="flex items-center justify-between text-xs">
+                    {project.people.map((personProject) => (
+                      <div key={personProject.id} className="flex items-center justify-between text-xs">
                         <div className="flex items-center">
-                          <span className="text-gray-600">{userProject.user.name}</span>
+                          <span className="text-gray-600">{personProject.person.name}</span>
                           <span className="ml-2 px-1 py-0.5 bg-gray-100 rounded text-gray-500">
-                            {userProject.user.role}
+                            {personProject.person.role}
                           </span>
                         </div>
                         {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERUSER' || 
-                          (session?.user?.role === 'SUPERVISOR' && userProject.role === 'WORKER')) && (
+                          (session?.user?.role === 'SUPERVISOR' && personProject.person.role === 'WORKER')) && (
                           <button
-                            onClick={() => handleUnassignUser(project.id, userProject.user.id)}
+                            onClick={() => handleUnassignPerson(project.id, personProject.person.id)}
                             className="text-red-600 hover:text-red-800 text-xs"
                           >
                             Desasignar
@@ -459,8 +463,10 @@ export default function ProjectsPage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-xs text-gray-500 italic">No hay usuarios asignados</p>
+                )}
+              </div>
 
               {/* Assignment Button */}
               {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERUSER' || 
