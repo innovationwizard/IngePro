@@ -131,147 +131,150 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Asignar Tarea: {task.name}</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Task Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Información de la Tarea</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Categoría</p>
-                  <p className="text-sm">{task.category?.name || 'Sin categoría'}</p>
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Task Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Información de la Tarea</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Categoría</p>
+                    <p className="text-sm">{task.category?.name || 'Sin categoría'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Proyecto</p>
+                    <p className="text-sm">
+                      {task.projectAssignments?.[0]?.project.name || 
+                       task.workerAssignments?.[0]?.project.name || 
+                       'Sin proyecto asignado'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>
+                    <p className="text-sm">{task.progressUnit}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Estado</p>
+                    <p className="text-sm">{task.status}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Proyecto</p>
-                  <p className="text-sm">
-                    {task.projectAssignments?.[0]?.project.name || 
-                     task.workerAssignments?.[0]?.project.name || 
-                     'Sin proyecto asignado'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Unidad de Progreso</p>
-                  <p className="text-sm">{task.progressUnit}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Estado</p>
-                  <p className="text-sm">{task.status}</p>
+                {task.description && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Descripción</p>
+                    <p className="text-sm">{task.description}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Currently Assigned */}
+            {currentlyAssignedPeople.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">Actualmente Asignados</h4>
+                <div className="flex flex-wrap gap-2">
+                  {currentlyAssignedPeople.map((person) => (
+                    <Badge key={person.id} variant="outline">
+                      {person.name}
+                    </Badge>
+                  ))}
                 </div>
               </div>
-              {task.description && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Descripción</p>
-                  <p className="text-sm">{task.description}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            )}
 
-          {/* Currently Assigned */}
-          {currentlyAssignedPeople.length > 0 && (
+            {/* User Selection */}
             <div>
-              <h4 className="font-medium mb-2">Actualmente Asignados</h4>
-              <div className="flex flex-wrap gap-2">
-                {currentlyAssignedPeople.map((person) => (
-                  <Badge key={person.id} variant="outline">
-                    {person.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* User Selection */}
-          <div>
-            <h4 className="font-medium mb-2">Seleccionar Trabajadores para Asignar</h4>
-            <Input
-              type="text"
-              placeholder="Buscar trabajadores..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="mb-4"
-            />
-            
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {filteredPeople.map((person) => {
-                const isSelected = selectedPersonIds.includes(person.id)
-                const isCurrentlyAssigned = currentlyAssignedPeople.some(assigned => assigned.id === person.id)
-                
-                return (
-                  <div
-                    key={person.id}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => handlePersonToggle(person.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm">{person.name}</p>
-                        <p className="text-xs text-gray-500">{person.email}</p>
-                        {isCurrentlyAssigned && (
-                          <p className="text-xs text-blue-600">Actualmente asignado</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isSelected && (
-                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        )}
+              <h4 className="font-medium mb-2">Seleccionar Trabajadores para Asignar</h4>
+              <Input
+                type="text"
+                placeholder="Buscar trabajadores..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="mb-4"
+              />
+              
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {filteredPeople.map((person) => {
+                  const isSelected = selectedPersonIds.includes(person.id)
+                  const isCurrentlyAssigned = currentlyAssignedPeople.some(assigned => assigned.id === person.id)
+                  
+                  return (
+                    <div
+                      key={person.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => handlePersonToggle(person.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{person.name}</p>
+                          <p className="text-xs text-gray-500">{person.email}</p>
+                          {isCurrentlyAssigned && (
+                            <p className="text-xs text-blue-600">Actualmente asignado</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isSelected && (
+                            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
+              
+              {filteredPeople.length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  {searchTerm ? 'No workers found matching your search' : 'No workers available'}
+                </p>
+              )}
             </div>
-            
-            {filteredPeople.length === 0 && (
-              <p className="text-center text-gray-500 py-4">
-                {searchTerm ? 'No workers found matching your search' : 'No workers available'}
-              </p>
+
+            {/* Summary */}
+            {selectedPersonIds.length > 0 && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Assignment Summary</h4>
+                <p className="text-sm text-gray-600">
+                  This task will be assigned to {selectedPersonIds.length} worker{selectedPersonIds.length !== 1 ? 's' : ''}.
+                  {task.workerAssignments.length > 0 && selectedPersonIds.length === 0 && (
+                    <span className="text-orange-600"> All current assignments will be removed.</span>
+                  )}
+                </p>
+              </div>
             )}
-          </div>
+          </form>
+        </div>
 
-          {/* Summary */}
-          {selectedPersonIds.length > 0 && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Assignment Summary</h4>
-              <p className="text-sm text-gray-600">
-                This task will be assigned to {selectedPersonIds.length} worker{selectedPersonIds.length !== 1 ? 's' : ''}.
-                {task.workerAssignments.length > 0 && selectedPersonIds.length === 0 && (
-                  <span className="text-orange-600"> All current assignments will be removed.</span>
-                )}
-              </p>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? 'Asignando...' : 'Asignar Tarea'}
-            </Button>
-          </div>
-        </form>
+        {/* Actions - Fixed at bottom */}
+        <div className="flex justify-end gap-2 pt-4 border-t flex-shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={loading}
+            onClick={handleSubmit}
+          >
+            {loading ? 'Asignando...' : 'Asignar Tarea'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )
