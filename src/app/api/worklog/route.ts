@@ -53,8 +53,42 @@ export async function GET(request: NextRequest) {
             in: adminCompanyIds
           }
         }
+      } else if (session.user?.role === 'SUPERVISOR') {
+        // Supervisor can see work logs from workers they supervise on the same projects
+        const supervisorProjects = await prisma.personProjects.findMany({
+          where: {
+            personId: session.user?.id,
+            status: 'ACTIVE'
+          },
+          select: { projectId: true }
+        })
+        
+        const projectIds = supervisorProjects.map(sp => sp.projectId)
+        
+        if (projectIds.length > 0) {
+          // Get all workers assigned to the same projects
+          const workerAssignments = await prisma.personProjects.findMany({
+            where: {
+              projectId: { in: projectIds },
+              status: 'ACTIVE',
+              person: {
+                role: 'WORKER'
+              }
+            },
+            select: { personId: true }
+          })
+          
+          const workerIds = workerAssignments.map(wa => wa.personId)
+          // Include supervisor's own worklogs and their workers' worklogs
+          workerIds.push(session.user?.id!)
+          
+          where.personId = { in: workerIds }
+        } else {
+          // If no projects assigned, only see own worklogs
+          where.personId = session.user?.id
+        }
       } else {
-        // WORKER/SUPERVISOR can only see their own work logs
+        // WORKER can only see their own work logs
         where.personId = session.user?.id
       }
     }
