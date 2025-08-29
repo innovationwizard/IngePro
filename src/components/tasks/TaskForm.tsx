@@ -76,46 +76,48 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
 
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit} className="form-container space-y-4 md:space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* Task Name */}
         <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-2">
-           Nombre de la Tarea *
-         </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Nombre de la Tarea *
+          </label>
           <Input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                         placeholder="Ingresa el nombre de la tarea"
+            placeholder="Ingresa el nombre de la tarea"
             required
+            className="w-full"
           />
         </div>
 
         {/* Progress Unit */}
         <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-2">
-           Unidad de Progreso *
-         </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Unidad de Progreso *
+          </label>
           <Input
             type="text"
             value={formData.progressUnit}
             onChange={(e) => setFormData(prev => ({ ...prev, progressUnit: e.target.value }))}
-                         placeholder="ej., metros lineales, metros cuadrados, unidades"
+            placeholder="ej., metros lineales, metros cuadrados, unidades"
             required
+            className="w-full"
           />
         </div>
 
         {/* Category */}
-        <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-2">
-           Categoría (Opcional)
-         </label>
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Categoría (Opcional)
+          </label>
           <Select
             value={formData.categoryId}
             onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecciona una categoría (opcional)" />
             </SelectTrigger>
             <SelectContent>
@@ -128,19 +130,17 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
             </SelectContent>
           </Select>
         </div>
-
-
       </div>
 
       {/* Description */}
       <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-2">
-           Descripción
-         </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Descripción
+        </label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                     placeholder="Ingresa la descripción de la tarea"
+          placeholder="Ingresa la descripción de la tarea"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           rows={3}
         />
@@ -154,15 +154,14 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
         </p>
       </div>
 
-
       {/* Submit Button */}
       <div className="flex justify-end">
         <Button
           type="submit"
           disabled={loading || !formData.name || !formData.progressUnit}
-          className="min-w-[120px]"
+          className="btn-mobile min-w-[120px]"
         >
-                     {loading ? 'Creando...' : 'Crear Tarea'}
+          {loading ? 'Creando...' : 'Crear Tarea'}
         </Button>
       </div>
     </form>

@@ -162,13 +162,13 @@ export default function DashboardPage() {
   // Admin Dashboard
   if (session?.user?.role === 'ADMIN') {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
               Panel de Administración
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm md:text-base text-gray-600">
               {currentTime.toLocaleDateString('es-ES', {
                 weekday: 'long',
                 year: 'numeric',
@@ -177,8 +177,8 @@ export default function DashboardPage() {
               })}
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-blue-600">
+          <div className="text-left sm:text-right">
+            <div className="text-2xl md:text-3xl font-bold text-blue-600">
               {currentTime.toLocaleTimeString('es-ES', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -196,59 +196,59 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="mobile-card">
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <Users className="h-6 w-6 text-blue-600" />
+                    <Users className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Personas</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalPeople || 0}</p>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Total Personas</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">{stats?.totalPeople || 0}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mobile-card">
                 <div className="flex items-center">
                   <div className="p-2 bg-green-100 rounded-lg">
-                    <Target className="h-6 w-6 text-green-600" />
+                    <Target className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Proyectos Activos</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalProjects || 0}</p>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Proyectos Activos</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">{stats?.totalProjects || 0}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mobile-card">
                 <div className="flex items-center">
                   <div className="p-2 bg-yellow-100 rounded-lg">
-                    <Clock className="h-6 w-6 text-yellow-600" />
+                    <Clock className="h-5 w-5 md:h-6 md:w-6 text-yellow-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Horas Trabajadas</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalWorkHours || 0}h</p>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Horas Trabajadas</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">{stats?.totalWorkHours || 0}h</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mobile-card">
                 <div className="flex items-center">
                   <div className="p-2 bg-purple-100 rounded-lg">
-                    <Activity className="h-6 w-6 text-purple-600" />
+                    <Activity className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Sesiones Activas</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.activeWorkLogs || 0}</p>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Sesiones Activas</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">{stats?.activeWorkLogs || 0}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Companies Overview */}
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mobile-card">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <Building className="h-5 w-5 mr-2" />
                   Empresas
@@ -272,7 +272,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Projects Overview */}
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mobile-card">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <Target className="h-5 w-5 mr-2" />
                   Proyectos
@@ -303,7 +303,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="mobile-card">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Calendar className="h-5 w-5 mr-2" />
                 Actividad Reciente
@@ -333,13 +333,13 @@ export default function DashboardPage() {
   // Supervisor Dashboard
   if (session?.user?.role === 'SUPERVISOR') {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
               Panel de Supervisión
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm md:text-base text-gray-600">
               {currentTime.toLocaleDateString('es-ES', {
                 weekday: 'long',
                 year: 'numeric',
@@ -348,8 +348,8 @@ export default function DashboardPage() {
               })}
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-blue-600">
+          <div className="text-left sm:text-right">
+            <div className="text-2xl md:text-3xl font-bold text-blue-600">
               {currentTime.toLocaleTimeString('es-ES', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -367,58 +367,58 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Key Metrics for Supervisor */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="mobile-card">
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <Users className="h-6 w-6 text-blue-600" />
+                    <Users className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Personas Asignadas</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalPeople || 0}</p>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Personas Asignadas</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">{stats?.totalPeople || 0}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mobile-card">
                 <div className="flex items-center">
                   <div className="p-2 bg-green-100 rounded-lg">
-                    <Target className="h-6 w-6 text-green-600" />
+                    <Target className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Mis Proyectos</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalProjects || 0}</p>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Mis Proyectos</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">{stats?.totalProjects || 0}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mobile-card">
                 <div className="flex items-center">
                   <div className="p-2 bg-yellow-100 rounded-lg">
-                    <Clock className="h-6 w-6 text-yellow-600" />
+                    <Clock className="h-5 w-5 md:h-6 md:w-6 text-yellow-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Horas del Equipo</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalWorkHours || 0}h</p>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Horas del Equipo</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">{stats?.totalWorkHours || 0}h</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mobile-card">
                 <div className="flex items-center">
                   <div className="p-2 bg-purple-100 rounded-lg">
-                    <Activity className="h-6 w-6 text-purple-600" />
+                    <Activity className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Sesiones Activas</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.activeWorkLogs || 0}</p>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm font-medium text-gray-600">Sesiones Activas</p>
+                    <p className="text-xl md:text-2xl font-bold text-gray-900">{stats?.activeWorkLogs || 0}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Projects Overview for Supervisor */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="mobile-card">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Target className="h-5 w-5 mr-2" />
                 Mis Proyectos
@@ -448,7 +448,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Recent Activity for Supervisor */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="mobile-card">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <Calendar className="h-5 w-5 mr-2" />
                 Actividad Reciente del Equipo
@@ -477,13 +477,13 @@ export default function DashboardPage() {
 
   // Worker Dashboard (existing functionality)
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">
             {es.dashboard.welcome}, {session?.user?.name}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm md:text-base text-gray-600">
             {currentTime.toLocaleDateString('es-ES', {
               weekday: 'long',
               year: 'numeric',
@@ -492,8 +492,8 @@ export default function DashboardPage() {
             })}
           </p>
         </div>
-        <div className="text-right">
-          <div className="text-3xl font-bold text-blue-600">
+        <div className="text-left sm:text-right">
+          <div className="text-2xl md:text-3xl font-bold text-blue-600">
             {currentTime.toLocaleTimeString('es-ES', {
               hour: '2-digit',
               minute: '2-digit',
@@ -504,8 +504,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <div className="space-y-4 md:space-y-6">
           <ClockInCard />
           <ProjectSelector />
           <LocationTracker />

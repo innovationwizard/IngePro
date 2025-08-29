@@ -73,7 +73,7 @@ export function RecentWorkLogs() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="mobile-card">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">{es.workLogs.recentWorkLogs}</h2>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -87,7 +87,7 @@ export function RecentWorkLogs() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="mobile-card">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">{es.workLogs.recentWorkLogs}</h2>
       
       <div className="space-y-3">
@@ -95,24 +95,24 @@ export function RecentWorkLogs() {
           workLogs.map((log) => (
             <div
               key={log.id}
-              className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors space-y-2 sm:space-y-0"
             >
-              <div className="flex items-center space-x-3">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <div>
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
                   <div className="font-medium text-gray-900">{formatDate(log.startTime)}</div>
                   <div className="text-sm text-gray-500">
                     {formatTime(log.startTime)} - {log.endTime ? formatTime(log.endTime) : 'En progreso'}
                   </div>
                   {log.project && (
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-400 truncate">
                       {log.project.name} ({log.project.company.name})
                     </div>
                   )}
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-shrink-0">
                 {log.status === 'COMPLETED' ? (
                   <CheckCircle className="h-4 w-4 text-green-500" />
                 ) : (

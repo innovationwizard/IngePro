@@ -48,7 +48,7 @@ export function ProjectSelector() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="mobile-card">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">{es.projects.currentProject}</h2>
         <div className="animate-pulse">
           <div className="h-12 bg-gray-200 rounded-lg"></div>
@@ -58,7 +58,7 @@ export function ProjectSelector() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="mobile-card">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">{es.projects.currentProject}</h2>
       
       <div className="relative">
@@ -66,25 +66,25 @@ export function ProjectSelector() {
           onClick={() => setIsOpen(!isOpen)}
           className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
         >
-          <div className="flex items-center space-x-3">
-            <Building2 className="h-5 w-5 text-gray-400" />
-            <div className="text-left">
-              <div className="font-medium text-gray-900">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <Building2 className="h-5 w-5 text-gray-400 flex-shrink-0" />
+            <div className="text-left min-w-0 flex-1">
+              <div className="font-medium text-gray-900 truncate">
                 {currentProject?.name || es.projects.selectProject}
               </div>
               {currentProject?.description && (
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 truncate">
                   {currentProject.description}
                 </div>
               )}
               {currentProject?.company && (
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-gray-400 truncate">
                   {currentProject.company.name}
                 </div>
               )}
             </div>
           </div>
-          <ChevronDown className="h-4 w-4 text-gray-400" />
+          <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
         </button>
 
         {isOpen && (
@@ -99,9 +99,9 @@ export function ProjectSelector() {
                   }}
                   className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                 >
-                  <div className="font-medium text-gray-900">{project.name}</div>
-                  <div className="text-sm text-gray-500">{project.description}</div>
-                  <div className="text-xs text-gray-400">{project.company.name}</div>
+                  <div className="font-medium text-gray-900 truncate">{project.name}</div>
+                  <div className="text-sm text-gray-500 truncate">{project.description}</div>
+                  <div className="text-xs text-gray-400 truncate">{project.company.name}</div>
                 </button>
               ))
             ) : (

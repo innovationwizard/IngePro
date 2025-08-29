@@ -47,30 +47,10 @@ export async function POST(
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the task belongs to the person's company
+    // First, check if the task exists
     const task = await prisma.tasks.findFirst({
       where: {
-        id: taskId,
-        OR: [
-          {
-            projectAssignments: {
-              some: {
-                project: {
-                  companyId: companyId
-                }
-              }
-            }
-          },
-          {
-            workerAssignments: {
-              some: {
-                project: {
-                  companyId: companyId
-                }
-              }
-            }
-          }
-        ]
+        id: taskId
       },
       include: {
         projectAssignments: {
@@ -88,6 +68,14 @@ export async function POST(
 
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
+    // Check if task belongs to the person's company
+    const hasProjectAssignment = task.projectAssignments.some(pa => pa.project.companyId === companyId)
+    const hasWorkerAssignment = task.workerAssignments.some(wa => wa.project.companyId === companyId)
+    
+    if (!hasProjectAssignment && !hasWorkerAssignment) {
+      return NextResponse.json({ error: 'Task not found in your company' }, { status: 404 })
     }
 
     // Verify all people belong to the same company and are WORKERs
@@ -196,35 +184,35 @@ export async function DELETE(
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the task belongs to the person's company
+    // First, check if the task exists
     const task = await prisma.tasks.findFirst({
       where: {
-        id: taskId,
-        OR: [
-          {
-            projectAssignments: {
-              some: {
-                project: {
-                  companyId: companyId
-                }
-              }
-            }
-          },
-          {
-            workerAssignments: {
-              some: {
-                project: {
-                  companyId: companyId
-                }
-              }
-            }
+        id: taskId
+      },
+      include: {
+        projectAssignments: {
+          include: {
+            project: true
           }
-        ]
+        },
+        workerAssignments: {
+          include: {
+            project: true
+          }
+        }
       }
     })
 
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
+    // Check if task belongs to the person's company
+    const hasProjectAssignment = task.projectAssignments.some(pa => pa.project.companyId === companyId)
+    const hasWorkerAssignment = task.workerAssignments.some(wa => wa.project.companyId === companyId)
+    
+    if (!hasProjectAssignment && !hasWorkerAssignment) {
+      return NextResponse.json({ error: 'Task not found in your company' }, { status: 404 })
     }
 
     // Build where clause for deletion

@@ -201,31 +201,33 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Action Buttons */}
       {(personRole === 'ADMIN' || personRole === 'SUPERVISOR') && (
         <div className="flex justify-end">
           <Button
             onClick={() => setShowProjectAssignmentModal(true)}
-            className="flex items-center gap-2"
+            className="btn-mobile flex items-center gap-2"
           >
             <Target className="h-4 w-4" />
-            Asignar Tarea a Proyecto
+            <span className="hidden sm:inline">Asignar Tarea a Proyecto</span>
+            <span className="sm:hidden">Asignar</span>
           </Button>
         </div>
       )}
 
       {/* Filters */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <Input
             placeholder="Buscar tareas, categorías o proyectos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -249,38 +251,33 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
           const canValidate = (personRole === 'ADMIN' || personRole === 'SUPERVISOR') && pendingUpdates.length > 0
 
           return (
-            <Card key={task.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
+            <Card key={task.id} className="mobile-card hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{task.name}</CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-lg truncate">{task.name}</CardTitle>
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
                   </div>
-
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Categoría</p>
-                    <p className="text-sm">{task.category?.name || 'Sin categoría'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Proyectos</p>
-                    <p className="text-sm">
+              <CardContent className="pt-0">
+                <div className="mobile-table">
+                  <div className="mobile-table-row">
+                    <div className="mobile-table-cell" data-label="Categoría">
+                      {task.category?.name || 'Sin categoría'}
+                    </div>
+                    <div className="mobile-table-cell" data-label="Proyectos">
                       {task.projectAssignments && task.projectAssignments.length > 0 
                         ? `${task.projectAssignments.length} proyecto(s)`
                         : 'Sin proyectos asignados'
                       }
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Unidad de Medida</p>
-                    <p className="text-sm">{task.progressUnit}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Progreso Total</p>
-                    <p className="text-sm font-semibold">{totalProgress.toFixed(2)} {task.progressUnit}</p>
+                    </div>
+                    <div className="mobile-table-cell" data-label="Unidad">
+                      {task.progressUnit}
+                    </div>
+                    <div className="mobile-table-cell" data-label="Progreso">
+                      <span className="font-semibold">{totalProgress.toFixed(2)} {task.progressUnit}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -299,13 +296,14 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {(personRole === 'ADMIN' || personRole === 'SUPERVISOR') && (
                     <>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditTask(task)}
+                        className="flex-1 sm:flex-none"
                       >
                         Editar
                       </Button>
@@ -313,6 +311,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                         variant="outline"
                         size="sm"
                         onClick={() => handleAssignTask(task)}
+                        className="flex-1 sm:flex-none"
                       >
                         {isAssigned ? 'Reasignar' : 'Asignar'}
                       </Button>
@@ -320,43 +319,47 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                   )}
                   
                   {canLogProgress && (
-                                         <Button
-                       size="sm"
-                       onClick={() => handleLogProgress(task)}
-                     >
-                       Registrar Progreso
-                     </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleLogProgress(task)}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <span className="hidden sm:inline">Registrar Progreso</span>
+                      <span className="sm:hidden">Progreso</span>
+                    </Button>
                   )}
 
                   {canValidate && (
-                                         <Button
-                       variant="secondary"
-                       size="sm"
-                       onClick={() => handleValidateProgress(task)}
-                     >
-                       Validar ({pendingUpdates.length})
-                     </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleValidateProgress(task)}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Validar ({pendingUpdates.length})
+                    </Button>
                   )}
 
                   <Dialog>
                     <DialogTrigger asChild>
-                                         <Button variant="ghost" size="sm">
-                     Ver Detalles
-                   </Button>
+                      <Button variant="ghost" size="sm" className="flex-1 sm:flex-none">
+                        <span className="hidden sm:inline">Ver Detalles</span>
+                        <span className="sm:hidden">Detalles</span>
+                      </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>{task.name}</DialogTitle>
+                        <DialogTitle className="text-lg">{task.name}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
-                                                 <div>
-                           <h4 className="font-medium mb-2">Actualizaciones de Progreso</h4>
+                        <div>
+                          <h4 className="font-medium mb-2">Actualizaciones de Progreso</h4>
                           <div className="space-y-2 max-h-64 overflow-y-auto">
                             {task.progressUpdates.length > 0 ? (
                               task.progressUpdates.map((update) => (
                                 <div key={update.id} className="border rounded p-3">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div>
+                                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 space-y-2 sm:space-y-0">
+                                    <div className="min-w-0 flex-1">
                                       <p className="font-medium">{update.worker.name}</p>
                                       <p className="text-sm text-gray-600">
                                         {update.project.nameEs || update.project.name} • {new Date(update.createdAt).toLocaleString()}
@@ -374,8 +377,8 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                                       {update.validationStatus}
                                     </Badge>
                                   </div>
-                                                                     <p className="text-sm">
-                                     Completado: {update.amountCompleted} {task.progressUnit}
+                                  <p className="text-sm">
+                                    Completado: {update.amountCompleted} {task.progressUnit}
                                     {update.additionalAttributes && (
                                       <span className="text-gray-600 ml-2">
                                         ({update.additionalAttributes})
@@ -385,8 +388,8 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                                   {(update.materialConsumptions.length > 0 || update.materialLosses.length > 0) && (
                                     <div className="mt-2 text-sm">
                                       {update.materialConsumptions.length > 0 && (
-                                                                                 <div>
-                                           <span className="font-medium">Consumido:</span>
+                                        <div>
+                                          <span className="font-medium">Consumido:</span>
                                           {update.materialConsumptions.map((consumption, index) => (
                                             <span key={index} className="ml-1">
                                               {consumption.quantity} {consumption.material.unit} {consumption.material.name}
@@ -396,8 +399,8 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                                         </div>
                                       )}
                                       {update.materialLosses.length > 0 && (
-                                                                                 <div>
-                                           <span className="font-medium">Perdido:</span>
+                                        <div>
+                                          <span className="font-medium">Perdido:</span>
                                           {update.materialLosses.map((loss, index) => (
                                             <span key={index} className="ml-1">
                                               {loss.quantity} {loss.material.unit} {loss.material.name}

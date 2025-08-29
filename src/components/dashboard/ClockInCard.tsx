@@ -43,8 +43,8 @@ export function ClockInCard() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="mobile-card">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
         <h2 className="text-lg font-semibold text-gray-900">Seguimiento de Tiempo</h2>
         <div className="flex items-center space-x-2">
           <MapPin className="h-4 w-4 text-gray-400" />
@@ -57,7 +57,7 @@ export function ClockInCard() {
           <button
             onClick={handleClockIn}
             disabled={isLoading || !currentProject}
-            className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+            className="btn-mobile bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Clock className="h-6 w-6" />
             <span>
@@ -80,7 +80,7 @@ export function ClockInCard() {
             
             <button
               onClick={handleClockOut}
-              className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+              className="btn-mobile bg-red-600 text-white hover:bg-red-700"
             >
               {es.dashboard.clockOut}
             </button>

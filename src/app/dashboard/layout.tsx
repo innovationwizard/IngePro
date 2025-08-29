@@ -2,12 +2,15 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Sidebar from '@/components/dashboard/Sidebar'
+import { Header } from '@/components/dashboard/Header'
+import { MobileNavigation } from '@/components/dashboard/MobileNavigation'
 
 export default function DashboardLayout({ children, }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Add debugging
   useEffect(() => {
@@ -25,11 +28,16 @@ export default function DashboardLayout({ children, }: { children: React.ReactNo
     }
   }, [status, session, router])
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [router])
+
   // Show loading while checking authentication
   if (status === 'loading') {
     console.log('Dashboard Layout - Loading...')
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     )
@@ -41,13 +49,43 @@ export default function DashboardLayout({ children, }: { children: React.ReactNo
     return null
   }
 
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const handleMobileMenuClose = () => {
+    setIsMobileMenuOpen(false)
+  }
+
   console.log('Dashboard Layout - Rendering dashboard with session:', session.user?.name)
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6">{children}</main>
-      </div>
+      {/* Mobile Header */}
+      <Header onMobileMenuClick={handleMobileMenuToggle} />
+      
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="sidebar-overlay md:hidden"
+          onClick={handleMobileMenuClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <Sidebar 
+        isMobileOpen={isMobileMenuOpen}
+        onMobileClose={handleMobileMenuClose}
+      />
+      
+      {/* Main Content */}
+      <main className="md:ml-64 min-h-screen-safe pb-20 md:pb-0">
+        <div className="p-4 md:p-6">
+          {children}
+        </div>
+      </main>
+
+      {/* Mobile Navigation */}
+      <MobileNavigation />
     </div>
   )
 }

@@ -1,0 +1,111 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import {
+  Home,
+  Clock,
+  CheckSquare,
+  Package,
+  Users,
+  FolderOpen,
+  Building,
+  BarChart3,
+  Settings
+} from 'lucide-react'
+
+export function MobileNavigation() {
+  const { data: session } = useSession()
+  const pathname = usePathname()
+  
+  if (!session) return null
+
+  const userRole = session?.user?.role || 'WORKER'
+
+  const menuItems = [
+    {
+      name: 'Inicio',
+      href: '/dashboard',
+      icon: Home,
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Trabajo',
+      href: '/dashboard/work-logs',
+      icon: Clock,
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Tareas',
+      href: '/dashboard/tasks',
+      icon: CheckSquare,
+      roles: ['WORKER', 'SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Materiales',
+      href: '/dashboard/materials',
+      icon: Package,
+      roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Usuarios',
+      href: '/dashboard/admin/people',
+      icon: Users,
+      roles: ['ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Proyectos',
+      href: '/dashboard/projects',
+      icon: FolderOpen,
+      roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Empresas',
+      href: '/dashboard/admin/tenants',
+      icon: Building,
+      roles: ['ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'Análisis',
+      href: '/dashboard/analysis',
+      icon: BarChart3,
+      roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
+    },
+    {
+      name: 'SuperUser',
+      href: '/dashboard/superuser',
+      icon: Settings,
+      roles: ['SUPERUSER']
+    }
+  ]
+
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(userRole)
+  )
+
+  // Show only the first 4 items for mobile navigation
+  const visibleItems = filteredMenuItems.slice(0, 4)
+
+  return (
+    <nav className="mobile-nav">
+      <div className="flex justify-around">
+        {visibleItems.map((item) => {
+          const Icon = item.icon
+          const isActive = pathname === item.href
+          
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`mobile-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <Icon />
+              <span>{item.name}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </nav>
+  )
+}
