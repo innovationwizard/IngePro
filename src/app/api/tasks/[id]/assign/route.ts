@@ -8,7 +8,7 @@ export const runtime = 'nodejs'
 
 // Validation schema for task assignment
 const assignmentSchema = z.object({
-  userIds: z.array(z.string()).min(1, 'At least one user must be assigned'),
+  personIds: z.array(z.string()).min(1, 'At least one user must be assigned'),
 })
 
 // POST - Assign task to users
@@ -67,7 +67,7 @@ export async function POST(
     // Verify all people belong to the same company and are WORKERs
     const people = await prisma.people.findMany({
       where: {
-        id: { in: validatedData.userIds },
+        id: { in: validatedData.personIds },
         personTenants: {
           some: {
             companyId: companyId,
@@ -78,7 +78,7 @@ export async function POST(
       }
     })
 
-    if (people.length !== validatedData.userIds.length) {
+    if (people.length !== validatedData.personIds.length) {
       return NextResponse.json({ 
         error: 'Some people not found or not authorized for this company' 
       }, { status: 400 })
@@ -93,8 +93,8 @@ export async function POST(
 
       // Create new assignments
       const assignments = await tx.personTasks.createMany({
-        data: validatedData.userIds.map(userId => ({
-          personId: userId,
+        data: validatedData.personIds.map(personId => ({
+          personId: personId,
           taskId: taskId,
           assignedBy: session.user?.id || '',
         }))
