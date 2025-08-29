@@ -68,7 +68,6 @@ export async function POST(
         where: {
           personId: session.user.id,
           projectId: projectId,
-          role: 'SUPERVISOR',
           status: 'ACTIVE'
         }
       });
