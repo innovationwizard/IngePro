@@ -5,8 +5,9 @@ import { useSession } from 'next-auth/react'
 import { useWorkLogStore, useProjectStore } from '@/store'
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
 import { toast } from 'sonner'
-import { Clock, MapPin, AlertCircle } from 'lucide-react'
+import { Clock, MapPin, AlertCircle, FileText, Plus } from 'lucide-react'
 import { es } from '@/lib/translations/es'
+import WorklogEntryForm from '@/components/worklog/WorklogEntryForm'
 
 // Vercel logging function
 const logToVercel = (action: string, details: any = {}) => {
@@ -19,6 +20,7 @@ export function ClockInCard() {
   const { isClockedIn, clockIn, clockOut, currentWorkLog, setCurrentWorkLog } = useWorkLogStore()
   const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [showWorklogEntry, setShowWorklogEntry] = useState(false)
 
   const handleClockIn = async () => {
     logToVercel('CLOCK_IN_ATTEMPTED', {
@@ -147,6 +149,11 @@ export function ClockInCard() {
     }
   }
 
+  const handleWorklogEntrySaved = () => {
+    // Refresh worklog data if needed
+    toast.success('Registro de trabajo actualizado')
+  }
+
   const handleClockOut = async () => {
     logToVercel('CLOCK_OUT_ATTEMPTED', {
       worklogId: currentWorkLog?.id,
@@ -271,12 +278,23 @@ export function ClockInCard() {
               )}
             </div>
             
-            <button
-              onClick={handleClockOut}
-              className="btn-mobile bg-red-600 text-white hover:bg-red-700"
-            >
-              {es.dashboard.clockOut}
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                onClick={() => setShowWorklogEntry(true)}
+                className="btn-mobile bg-green-600 text-white hover:bg-green-700 flex items-center justify-center gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                <span>Registrar Trabajo</span>
+              </button>
+              
+              <button
+                onClick={handleClockOut}
+                className="btn-mobile bg-red-600 text-white hover:bg-red-700 flex items-center justify-center gap-2"
+              >
+                <Clock className="h-4 w-4" />
+                <span>{es.dashboard.clockOut}</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -289,6 +307,18 @@ export function ClockInCard() {
           </div>
         )}
       </div>
+
+      {/* Worklog Entry Form */}
+      {showWorklogEntry && currentWorkLog && currentProject && (
+        <WorklogEntryForm
+          isOpen={showWorklogEntry}
+          onClose={() => setShowWorklogEntry(false)}
+          onEntrySaved={handleWorklogEntrySaved}
+          currentWorklogId={currentWorkLog.id}
+          projectId={currentProject.id}
+          projectName={currentProject.name}
+        />
+      )}
     </div>
   )
 }
