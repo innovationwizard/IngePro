@@ -12,6 +12,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface Task {
   id: string
   name: string
@@ -81,13 +87,39 @@ export default function TasksPage() {
   }, [session, status, router])
 
   const fetchTasks = async () => {
+    logToVercel('TASKS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/tasks')
       if (response.ok) {
         const data = await response.json()
         setTasks(data.tasks)
+        
+        logToVercel('TASKS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          tasksCount: data.tasks?.length || 0,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('TASKS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
       }
     } catch (error) {
+      logToVercel('TASKS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching tasks:', error)
     } finally {
       setLoading(false)
@@ -95,25 +127,77 @@ export default function TasksPage() {
   }
 
   const fetchCategories = async () => {
+    logToVercel('TASKS_CATEGORIES_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/task-categories')
       if (response.ok) {
         const data = await response.json()
         setCategories(data.taskCategories)
+        
+        logToVercel('TASKS_CATEGORIES_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          categoriesCount: data.taskCategories?.length || 0,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('TASKS_CATEGORIES_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
       }
     } catch (error) {
+      logToVercel('TASKS_CATEGORIES_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching categories:', error)
     }
   }
 
   const fetchProjects = async () => {
+    logToVercel('TASKS_PROJECTS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/projects')
       if (response.ok) {
         const data = await response.json()
         setProjects(data.projects)
+        
+        logToVercel('TASKS_PROJECTS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectsCount: data.projects?.length || 0,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('TASKS_PROJECTS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
       }
     } catch (error) {
+      logToVercel('TASKS_PROJECTS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching projects:', error)
     }
   }
@@ -123,14 +207,37 @@ export default function TasksPage() {
 
 
   const handleTaskCreated = () => {
+    logToVercel('TASKS_TASK_CREATED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     fetchTasks()
     setActiveTab('tasks')
   }
 
   const handleCategoryCreated = () => {
+    logToVercel('TASKS_CATEGORY_CREATED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     fetchCategories()
   }
 
+  const handleTabChange = (value: string) => {
+    logToVercel('TASKS_TAB_CHANGED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      fromTab: activeTab,
+      toTab: value,
+      timestamp: new Date().toISOString()
+    })
+    
+    setActiveTab(value)
+  }
 
 
   if (status === 'loading' || loading) {
@@ -158,7 +265,7 @@ export default function TasksPage() {
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="flex w-full gap-1 sm:gap-2 p-1 sm:p-2 tabs-list-mobile overflow-x-auto min-h-[3rem] bg-gray-100 rounded-lg shadow-sm">
           <TabsTrigger value="tasks" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Tareas</TabsTrigger>
           {(isAdmin || isSupervisor) && (

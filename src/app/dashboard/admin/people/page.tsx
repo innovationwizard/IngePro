@@ -5,6 +5,12 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Plus, Edit, Eye, User, Mail, Building, Calendar, Clock, Copy, Check } from 'lucide-react'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface Person {
   id: string
   name: string
@@ -54,15 +60,40 @@ export default function AdminPeoplePage() {
   }, [])
 
   const fetchPeople = async () => {
+    logToVercel('ADMIN_PEOPLE_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/people')
       if (response.ok) {
         const data = await response.json()
         setPeople(data.people)
+        
+        logToVercel('ADMIN_PEOPLE_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          peopleCount: data.people?.length || 0,
+          timestamp: new Date().toISOString()
+        })
       } else {
+        logToVercel('ADMIN_PEOPLE_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         console.error('Failed to fetch people')
       }
     } catch (error) {
+      logToVercel('ADMIN_PEOPLE_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching people:', error)
     } finally {
       setIsLoading(false)
@@ -70,11 +101,26 @@ export default function AdminPeoplePage() {
   }
 
   const handleAddPerson = () => {
+    logToVercel('ADMIN_ADD_PERSON_MODAL_OPENED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     setFormData({ name: '', email: '', role: 'WORKER' })
     setIsAddModalOpen(true)
   }
 
   const handleEditPerson = (person: Person) => {
+    logToVercel('ADMIN_EDIT_PERSON_MODAL_OPENED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      targetPersonId: person.id,
+      targetPersonName: person.name,
+      targetPersonRole: person.role,
+      timestamp: new Date().toISOString()
+    })
+    
     setSelectedPerson(person)
     // Initialize form data with the person's current values
     setFormData({
@@ -85,12 +131,17 @@ export default function AdminPeoplePage() {
     setIsEditModalOpen(true)
   }
 
-
-
-
-
   const handleCreatePerson = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    logToVercel('ADMIN_CREATE_PERSON_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      newPersonName: formData.name,
+      newPersonEmail: formData.email,
+      newPersonRole: formData.role,
+      timestamp: new Date().toISOString()
+    })
     
     try {
       const response = await fetch('/api/people', {
@@ -102,13 +153,41 @@ export default function AdminPeoplePage() {
       const data = await response.json()
 
       if (response.ok) {
+        logToVercel('ADMIN_CREATE_PERSON_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          newPersonName: formData.name,
+          newPersonEmail: formData.email,
+          newPersonRole: formData.role,
+          timestamp: new Date().toISOString()
+        })
+        
         setInvitationData(data.invitation)
         setIsAddModalOpen(false)
         fetchPeople() // Refresh people list
       } else {
+        logToVercel('ADMIN_CREATE_PERSON_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          newPersonName: formData.name,
+          newPersonEmail: formData.email,
+          newPersonRole: formData.role,
+          error: data.error,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         alert(data.error || 'Error creating person')
       }
     } catch (error) {
+      logToVercel('ADMIN_CREATE_PERSON_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        newPersonName: formData.name,
+        newPersonEmail: formData.email,
+        newPersonRole: formData.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error creating person:', error)
       alert('Error creating person')
     }
@@ -117,6 +196,16 @@ export default function AdminPeoplePage() {
   const handleUpdatePerson = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedPerson) return
+
+    logToVercel('ADMIN_UPDATE_PERSON_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      targetPersonId: selectedPerson.id,
+      targetPersonName: selectedPerson.name,
+      oldRole: selectedPerson.role,
+      newRole: formData.role,
+      timestamp: new Date().toISOString()
+    })
 
     try {
       const response = await fetch('/api/people', {
@@ -133,19 +222,53 @@ export default function AdminPeoplePage() {
       const data = await response.json()
 
       if (response.ok) {
+        logToVercel('ADMIN_UPDATE_PERSON_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          targetPersonId: selectedPerson.id,
+          targetPersonName: selectedPerson.name,
+          oldRole: selectedPerson.role,
+          newRole: formData.role,
+          timestamp: new Date().toISOString()
+        })
+        
         setIsEditModalOpen(false)
         setSelectedPerson(null)
         fetchPeople() // Refresh people list
       } else {
+        logToVercel('ADMIN_UPDATE_PERSON_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          targetPersonId: selectedPerson.id,
+          targetPersonName: selectedPerson.name,
+          error: data.error,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         alert(data.error || 'Error updating person')
       }
     } catch (error) {
+      logToVercel('ADMIN_UPDATE_PERSON_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        targetPersonId: selectedPerson.id,
+        targetPersonName: selectedPerson.name,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error updating person:', error)
       alert('Error updating person')
     }
   }
 
   const copyToClipboard = async (text: string, type: 'link' | 'password') => {
+    logToVercel('ADMIN_COPY_TO_CLIPBOARD_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      copyType: type,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       await navigator.clipboard.writeText(text)
       if (type === 'link') {
@@ -155,8 +278,53 @@ export default function AdminPeoplePage() {
         setCopiedPassword(true)
         setTimeout(() => setCopiedPassword(false), 2000)
       }
+      
+      logToVercel('ADMIN_COPY_TO_CLIPBOARD_SUCCESS', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        copyType: type,
+        timestamp: new Date().toISOString()
+      })
     } catch (error) {
+      logToVercel('ADMIN_COPY_TO_CLIPBOARD_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        copyType: type,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Failed to copy:', error)
+    }
+  }
+
+  const handleViewPersonDetails = (person: Person) => {
+    logToVercel('ADMIN_VIEW_PERSON_DETAILS_CLICKED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      targetPersonId: person.id,
+      targetPersonName: person.name,
+      targetPersonRole: person.role,
+      timestamp: new Date().toISOString()
+    })
+    
+    router.push(`/dashboard/admin/people/${person.id}`)
+  }
+
+  const handleModalClose = (modalType: 'add' | 'edit' | 'invitation') => {
+    logToVercel('ADMIN_MODAL_CLOSED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      modalType,
+      timestamp: new Date().toISOString()
+    })
+    
+    if (modalType === 'add') {
+      setIsAddModalOpen(false)
+    } else if (modalType === 'edit') {
+      setIsEditModalOpen(false)
+      setSelectedPerson(null)
+    } else if (modalType === 'invitation') {
+      setInvitationData(null)
     }
   }
 
@@ -305,7 +473,7 @@ export default function AdminPeoplePage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => router.push(`/dashboard/admin/people/${person.id}`)}
+                          onClick={() => handleViewPersonDetails(person)}
                           className="text-blue-600 hover:text-blue-900"
                           title="Ver Detalles"
                         >
@@ -395,7 +563,7 @@ export default function AdminPeoplePage() {
                 <div className="flex space-x-3">
                   <button
                     type="button"
-                    onClick={() => setIsAddModalOpen(false)}
+                    onClick={() => handleModalClose('add')}
                     className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
                   >
                     Cancelar
@@ -455,7 +623,7 @@ export default function AdminPeoplePage() {
                 <div className="flex space-x-3">
                   <button
                     type="button"
-                    onClick={() => setIsEditModalOpen(false)}
+                    onClick={() => handleModalClose('edit')}
                     className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
                   >
                     Cancelar
@@ -525,7 +693,7 @@ export default function AdminPeoplePage() {
                   </ul>
                 </div>
                 <button
-                  onClick={() => setInvitationData(null)}
+                  onClick={() => handleModalClose('invitation')}
                   className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                 >
                   Cerrar

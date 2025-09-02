@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Building, Users, Calendar, Target, Building2 } from 'lucide-react'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface Project {
   id: string
   name: string
@@ -140,6 +146,12 @@ export default function ProjectsPage() {
   }
 
   const fetchProjects = async () => {
+    logToVercel('PROJECTS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       console.log('Fetching projects and stats...')
       const [projectsRes, statsRes] = await Promise.all([
@@ -166,11 +178,31 @@ export default function ProjectsPage() {
         })
         
         setProjects(projectsWithStats || [])
+        
+        logToVercel('PROJECTS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectsCount: projectsWithStats?.length || 0,
+          timestamp: new Date().toISOString()
+        })
       } else {
+        logToVercel('PROJECTS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectsStatus: projectsRes.status,
+          statsStatus: statsRes.status,
+          timestamp: new Date().toISOString()
+        })
         console.error('Error fetching data:', projectsRes.status, statsRes.status)
         setProjects([]) // Set empty array on error
       }
     } catch (error) {
+      logToVercel('PROJECTS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching projects:', error)
       setProjects([]) // Set empty array on error
     } finally {
@@ -179,20 +211,52 @@ export default function ProjectsPage() {
   }
 
   const fetchCompanies = async () => {
+    logToVercel('PROJECTS_COMPANIES_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/companies', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setCompanies(data.companies || [])
+        
+        logToVercel('PROJECTS_COMPANIES_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          companiesCount: data.companies?.length || 0,
+          timestamp: new Date().toISOString()
+        })
       } else {
+        logToVercel('PROJECTS_COMPANIES_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         console.error('Error fetching companies')
       }
     } catch (error) {
+      logToVercel('PROJECTS_COMPANIES_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching companies:', error)
     }
   }
 
   const fetchAvailablePeople = async (companyId: string) => {
+    logToVercel('PROJECTS_AVAILABLE_PEOPLE_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      companyId,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch(`/api/people?companyId=${companyId}`);
       if (response.ok) {
@@ -207,13 +271,46 @@ export default function ProjectsPage() {
             person.role === 'WORKER' || person.role === 'SUPERVISOR'
           ));
         }
+        
+        logToVercel('PROJECTS_AVAILABLE_PEOPLE_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          companyId,
+          availablePeopleCount: data.people?.length || 0,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('PROJECTS_AVAILABLE_PEOPLE_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          companyId,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
+        console.error('Error fetching available people:', error);
       }
     } catch (error) {
+      logToVercel('PROJECTS_AVAILABLE_PEOPLE_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        companyId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching available people:', error);
     }
   };
 
   const handleOpenAssignmentModal = (project: Project) => {
+    logToVercel('PROJECTS_ASSIGNMENT_MODAL_OPENED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      projectId: project.id,
+      projectName: project.name,
+      companyId: project.companyId,
+      timestamp: new Date().toISOString()
+    })
+    
     setSelectedProject(project);
     setSelectedPeople([]);
     setSelectedRole('WORKER');
@@ -223,6 +320,16 @@ export default function ProjectsPage() {
 
   const handleAssignPeople = async () => {
     if (!selectedProject || selectedPeople.length === 0) return;
+
+    logToVercel('PROJECTS_ASSIGN_PEOPLE_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      projectId: selectedProject.id,
+      projectName: selectedProject.name,
+      selectedPeopleCount: selectedPeople.length,
+      selectedRole,
+      timestamp: new Date().toISOString()
+    })
 
     try {
       const response = await fetch(`/api/projects/${selectedProject.id}/assign-users`, {
@@ -236,20 +343,55 @@ export default function ProjectsPage() {
       });
 
       if (response.ok) {
+        logToVercel('PROJECTS_ASSIGN_PEOPLE_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectId: selectedProject.id,
+          projectName: selectedProject.name,
+          selectedPeopleCount: selectedPeople.length,
+          selectedRole,
+          timestamp: new Date().toISOString()
+        })
+        
         setMessage('Personas asignadas exitosamente');
         setIsAssignmentModalOpen(false);
         // Refresh projects to show updated people counts
         setTimeout(() => fetchProjects(), 100);
       } else {
         const error = await response.json();
+        logToVercel('PROJECTS_ASSIGN_PEOPLE_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectId: selectedProject.id,
+          projectName: selectedProject.name,
+          error: error.message,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         setMessage(`Error: ${error.message}`);
       }
     } catch (error) {
+      logToVercel('PROJECTS_ASSIGN_PEOPLE_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        projectId: selectedProject.id,
+        projectName: selectedProject.name,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       setMessage('Error al asignar personas');
     }
   };
 
   const handleUnassignPerson = async (projectId: string, personId: string) => {
+    logToVercel('PROJECTS_UNASSIGN_PERSON_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      projectId,
+      personId,
+      timestamp: new Date().toISOString()
+    })
+
     try {
       const response = await fetch(`/api/projects/${projectId}/unassign-user`, {
         method: 'DELETE',
@@ -259,14 +401,39 @@ export default function ProjectsPage() {
       });
 
       if (response.ok) {
+        logToVercel('PROJECTS_UNASSIGN_PERSON_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectId,
+          personId,
+          timestamp: new Date().toISOString()
+        })
+        
         setMessage('Persona desasignada exitosamente');
         // Refresh projects to show updated people counts
         setTimeout(() => fetchProjects(), 100);
       } else {
         const error = await response.json();
+        logToVercel('PROJECTS_UNASSIGN_PERSON_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectId,
+          personId,
+          error: error.message,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         setMessage(`Error: ${error.message}`);
       }
     } catch (error) {
+      logToVercel('PROJECTS_UNASSIGN_PERSON_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        projectId,
+        personId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       setMessage('Error al desasignar persona');
     }
   };
@@ -277,6 +444,12 @@ export default function ProjectsPage() {
   }, [])
 
   const handleCreateProject = () => {
+    logToVercel('PROJECTS_CREATE_MODAL_OPENED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     setIsEditMode(false)
     setFormData({
       id: '',
@@ -289,6 +462,15 @@ export default function ProjectsPage() {
   }
 
   const handleEditProject = (project: Project) => {
+    logToVercel('PROJECTS_EDIT_MODAL_OPENED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      projectId: project.id,
+      projectName: project.name,
+      projectStatus: project.status,
+      timestamp: new Date().toISOString()
+    })
+    
     setIsEditMode(true)
     setFormData({
       id: project.id,

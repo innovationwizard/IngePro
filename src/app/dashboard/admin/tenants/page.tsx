@@ -5,6 +5,12 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Plus, Edit, Trash2, Building, Users, Calendar } from 'lucide-react'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface Company {
   id: string
   name: string
@@ -46,16 +52,41 @@ export default function AdminTenantsPage() {
   }, [])
 
   const fetchCompanies = async () => {
+    logToVercel('ADMIN_TENANTS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/companies')
       if (response.ok) {
         const data = await response.json()
         setCompanies(data.companies)
+        
+        logToVercel('ADMIN_TENANTS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          companiesCount: data.companies?.length || 0,
+          timestamp: new Date().toISOString()
+        })
       } else {
+        logToVercel('ADMIN_TENANTS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         console.error('Failed to fetch companies')
         setMessage('Error al cargar las empresas')
       }
     } catch (error) {
+      logToVercel('ADMIN_TENANTS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching companies:', error)
       setMessage('Error de conexión')
     } finally {
@@ -64,11 +95,26 @@ export default function AdminTenantsPage() {
   }
 
   const handleAddCompany = () => {
+    logToVercel('ADMIN_ADD_COMPANY_MODAL_OPENED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     setFormData({ name: '', nameEs: '', status: 'ACTIVE' })
     setIsAddModalOpen(true)
   }
 
   const handleEditCompany = (company: Company) => {
+    logToVercel('ADMIN_EDIT_COMPANY_MODAL_OPENED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      targetCompanyId: company.id,
+      targetCompanyName: company.name,
+      targetCompanyStatus: company.status,
+      timestamp: new Date().toISOString()
+    })
+    
     setSelectedCompany(company)
     setFormData({
       name: company.name,
@@ -80,6 +126,15 @@ export default function AdminTenantsPage() {
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    logToVercel('ADMIN_CREATE_COMPANY_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      companyName: formData.name,
+      companyNameEs: formData.nameEs,
+      companyStatus: formData.status,
+      timestamp: new Date().toISOString()
+    })
     
     try {
       const response = await fetch('/api/companies', {
@@ -94,6 +149,15 @@ export default function AdminTenantsPage() {
       const data = await response.json()
 
       if (response.ok) {
+        logToVercel('ADMIN_CREATE_COMPANY_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          companyName: formData.name,
+          companyNameEs: formData.nameEs,
+          companyStatus: formData.status,
+          timestamp: new Date().toISOString()
+        })
+        
         setIsAddModalOpen(false)
         setMessage('Empresa creada exitosamente. Redirigiendo...')
         // Refresh the page to update the session and show the new company
@@ -101,9 +165,28 @@ export default function AdminTenantsPage() {
           window.location.reload()
         }, 1500)
       } else {
+        logToVercel('ADMIN_CREATE_COMPANY_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          companyName: formData.name,
+          companyNameEs: formData.nameEs,
+          companyStatus: formData.status,
+          error: data.error,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         setMessage(data.error || 'Error al crear empresa')
       }
     } catch (error) {
+      logToVercel('ADMIN_CREATE_COMPANY_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        companyName: formData.name,
+        companyNameEs: formData.nameEs,
+        companyStatus: formData.status,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error creating company:', error)
       setMessage('Error de conexión')
     }
@@ -112,6 +195,16 @@ export default function AdminTenantsPage() {
   const handleUpdateCompany = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedCompany) return
+
+    logToVercel('ADMIN_UPDATE_COMPANY_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      targetCompanyId: selectedCompany.id,
+      targetCompanyName: selectedCompany.name,
+      oldStatus: selectedCompany.status,
+      newStatus: formData.status,
+      timestamp: new Date().toISOString()
+    })
 
     const updateData = {
       id: selectedCompany.id,
@@ -129,16 +222,59 @@ export default function AdminTenantsPage() {
       const data = await response.json()
 
       if (response.ok) {
+        logToVercel('ADMIN_UPDATE_COMPANY_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          targetCompanyId: selectedCompany.id,
+          targetCompanyName: selectedCompany.name,
+          oldStatus: selectedCompany.status,
+          newStatus: formData.status,
+          timestamp: new Date().toISOString()
+        })
+        
         setIsEditModalOpen(false)
         setSelectedCompany(null)
         fetchCompanies()
         setMessage('Empresa actualizada exitosamente')
       } else {
+        logToVercel('ADMIN_UPDATE_COMPANY_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          targetCompanyId: selectedCompany.id,
+          targetCompanyName: selectedCompany.name,
+          error: data.error,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         setMessage(data.error || 'Error al actualizar empresa')
       }
     } catch (error) {
+      logToVercel('ADMIN_UPDATE_COMPANY_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        targetCompanyId: selectedCompany.id,
+        targetCompanyName: selectedCompany.name,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error updating company:', error)
       setMessage('Error de conexión')
+    }
+  }
+
+  const handleModalClose = (modalType: 'add' | 'edit') => {
+    logToVercel('ADMIN_TENANTS_MODAL_CLOSED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      modalType,
+      timestamp: new Date().toISOString()
+    })
+    
+    if (modalType === 'add') {
+      setIsAddModalOpen(false)
+    } else if (modalType === 'edit') {
+      setIsEditModalOpen(false)
+      setSelectedCompany(null)
     }
   }
 
@@ -318,7 +454,7 @@ export default function AdminTenantsPage() {
                 <div className="flex space-x-3">
                   <button
                     type="button"
-                    onClick={() => setIsAddModalOpen(false)}
+                    onClick={() => handleModalClose('add')}
                     className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
                   >
                     Cancelar
@@ -388,7 +524,7 @@ export default function AdminTenantsPage() {
                 <div className="flex space-x-3">
                   <button
                     type="button"
-                    onClick={() => setIsEditModalOpen(false)}
+                    onClick={() => handleModalClose('edit')}
                     className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
                   >
                     Cancelar

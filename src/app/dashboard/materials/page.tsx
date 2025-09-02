@@ -11,6 +11,12 @@ import ProgressHistory from '@/components/tasks/ProgressHistory'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface Project {
   id: string
   name: string
@@ -75,37 +81,115 @@ export default function MaterialsPage() {
   }, [session, status, router])
 
   const fetchProjects = async () => {
+    logToVercel('MATERIALS_PROJECTS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/projects')
       if (response.ok) {
         const data = await response.json()
         setProjects(data.projects)
+        
+        logToVercel('MATERIALS_PROJECTS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectsCount: data.projects?.length || 0,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('MATERIALS_PROJECTS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
       }
     } catch (error) {
+      logToVercel('MATERIALS_PROJECTS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching projects:', error)
     }
   }
 
   const fetchMaterials = async () => {
+    logToVercel('MATERIALS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/materials')
       if (response.ok) {
         const data = await response.json()
         setMaterials(data.materials)
+        
+        logToVercel('MATERIALS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          materialsCount: data.materials?.length || 0,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('MATERIALS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
       }
     } catch (error) {
+      logToVercel('MATERIALS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching materials:', error)
     }
   }
 
   const fetchTasks = async () => {
+    logToVercel('MATERIALS_TASKS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/tasks')
       if (response.ok) {
         const data = await response.json()
         setTasks(data.tasks)
+        
+        logToVercel('MATERIALS_TASKS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          tasksCount: data.tasks?.length || 0,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('MATERIALS_TASKS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
       }
     } catch (error) {
+      logToVercel('MATERIALS_TASKS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching tasks:', error)
     } finally {
       setLoading(false)
@@ -113,6 +197,14 @@ export default function MaterialsPage() {
   }
 
   const handleCreateMaterial = async (materialData: any) => {
+    logToVercel('MATERIALS_CREATE_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      materialName: materialData.name,
+      materialUnit: materialData.unit,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/materials', {
         method: 'POST',
@@ -124,17 +216,64 @@ export default function MaterialsPage() {
       const data = await response.json()
 
       if (response.ok) {
+        logToVercel('MATERIALS_CREATE_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          materialName: materialData.name,
+          materialUnit: materialData.unit,
+          timestamp: new Date().toISOString()
+        })
+        
         setMessage('Material creado exitosamente')
         setIsCreateModalOpen(false)
         // Refresh materials list
         fetchMaterials()
       } else {
+        logToVercel('MATERIALS_CREATE_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          materialName: materialData.name,
+          materialUnit: materialData.unit,
+          error: data.error,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         setMessage(`Error: ${data.error || 'Error al crear material'}`)
       }
     } catch (error) {
+      logToVercel('MATERIALS_CREATE_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        materialName: materialData.name,
+        materialUnit: materialData.unit,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error creating material:', error)
       setMessage('Error de conexión')
     }
+  }
+
+  const handleTabChange = (value: string) => {
+    logToVercel('MATERIALS_TAB_CHANGED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      fromTab: activeTab,
+      toTab: value,
+      timestamp: new Date().toISOString()
+    })
+    
+    setActiveTab(value)
+  }
+
+  const handleCreateMaterialModalOpen = () => {
+    logToVercel('MATERIALS_CREATE_MODAL_OPENED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
+    setIsCreateModalOpen(true)
   }
 
   if (status === 'loading' || loading) {
@@ -169,7 +308,7 @@ export default function MaterialsPage() {
             </p>
           </div>
           <button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={handleCreateMaterialModalOpen}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -186,7 +325,7 @@ export default function MaterialsPage() {
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="flex w-full gap-1 sm:gap-2 p-1 sm:p-2 tabs-list-mobile overflow-x-auto min-h-[3rem] bg-gray-100 rounded-lg shadow-sm">
           <TabsTrigger value="consumption" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Consumo</TabsTrigger>
           <TabsTrigger value="inventory" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Inventario</TabsTrigger>

@@ -9,6 +9,12 @@ import AIInsights from '@/components/ai-insights/AIInsights'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface Project {
   id: string
   name: string
@@ -41,18 +47,50 @@ export default function AnalysisPage() {
   }, [session, status, router])
 
   const fetchProjects = async () => {
+    logToVercel('ANALYSIS_PROJECTS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/projects')
       if (response.ok) {
         const data = await response.json()
         setProjects(data.projects)
+        
+        logToVercel('ANALYSIS_PROJECTS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          projectsCount: data.projects?.length || 0,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('ANALYSIS_PROJECTS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
       }
     } catch (error) {
+      logToVercel('ANALYSIS_PROJECTS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching projects:', error)
     }
   }
 
   const fetchWorkers = async () => {
+    logToVercel('ANALYSIS_WORKERS_FETCH_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const response = await fetch('/api/people')
       if (response.ok) {
@@ -60,12 +98,44 @@ export default function AnalysisPage() {
         // Filter only WORKER people
         const workerPeople = (data.people || []).filter((person: any) => person.role === 'WORKER')
         setWorkers(workerPeople)
+        
+        logToVercel('ANALYSIS_WORKERS_FETCH_SUCCESS', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          workersCount: workerPeople.length,
+          timestamp: new Date().toISOString()
+        })
+      } else {
+        logToVercel('ANALYSIS_WORKERS_FETCH_FAILED', {
+          userId: session?.user?.id,
+          userRole: session?.user?.role,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
       }
     } catch (error) {
+      logToVercel('ANALYSIS_WORKERS_FETCH_ERROR', {
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       console.error('Error fetching workers:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleTabChange = (value: string) => {
+    logToVercel('ANALYSIS_TAB_CHANGED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      fromTab: activeTab,
+      toTab: value,
+      timestamp: new Date().toISOString()
+    })
+    
+    setActiveTab(value)
   }
 
   if (status === 'loading' || loading) {
@@ -98,7 +168,7 @@ export default function AnalysisPage() {
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="flex w-full gap-1 sm:gap-2 p-1 sm:p-2 tabs-list-mobile overflow-x-auto min-h-[3rem] bg-gray-100 rounded-lg shadow-sm">
           <TabsTrigger value="analytics" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Análisis Avanzado</TabsTrigger>
           <TabsTrigger value="ai-insights" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">IA</TabsTrigger>
