@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation'
 import TaskList from '@/components/tasks/TaskList'
 import TaskForm from '@/components/tasks/TaskForm'
 import TaskCategoryManager from '@/components/tasks/TaskCategoryManager'
+import TaskProjectAssignmentModal from '@/components/tasks/TaskProjectAssignmentModal'
 
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Target } from 'lucide-react'
 
 // Vercel logging function
 const logToVercel = (action: string, details: any = {}) => {
@@ -72,6 +74,7 @@ export default function TasksPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('tasks')
+  const [showProjectAssignmentModal, setShowProjectAssignmentModal] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -255,6 +258,7 @@ export default function TasksPage() {
   const isAdmin = session.user?.role === 'ADMIN'
   const isSupervisor = session.user?.role === 'SUPERVISOR'
   const isWorker = session.user?.role === 'WORKER'
+  const personRole = session.user?.role || ''
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-full overflow-x-hidden">
@@ -285,7 +289,7 @@ export default function TasksPage() {
               <TaskList 
                 tasks={tasks} 
                 onTaskUpdated={fetchTasks}
-                personRole={session.user?.role || ''}
+                personRole={personRole}
               />
             </CardContent>
           </Card>
@@ -327,6 +331,16 @@ export default function TasksPage() {
           </>
         )}
       </Tabs>
+
+      {/* Task Project Assignment Modal */}
+      <TaskProjectAssignmentModal
+        open={showProjectAssignmentModal}
+        onOpenChange={setShowProjectAssignmentModal}
+        onSuccess={() => {
+          setShowProjectAssignmentModal(false)
+          fetchTasks()
+        }}
+      />
     </div>
   )
 }

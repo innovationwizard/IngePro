@@ -29,6 +29,7 @@ model People {
   workerAssignments TaskWorkerAssignments[]
   progressUpdates   TaskProgressUpdates[]
   locationUpdates   LocationUpdates[]
+  worklogEntries    WorklogEntries[]
 
   // Audit trail
   auditLogs AuditLogs[]
@@ -96,6 +97,7 @@ model Projects {
   materials            ProjectMaterials[]
   progressUpdates      TaskProgressUpdates[]
   materialConsumptions MaterialConsumptions[]
+  worklogEntries       WorklogEntries[]
 
   @@map("projects")
 }
@@ -212,10 +214,74 @@ model WorkLogs {
   company        Companies? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   companyId      String?    @map("company_id")
 
+  // Relationships
+  entries WorklogEntries[]
+
   @@index([personId])
   @@index([projectId])
   @@index([companyId])
   @@map("work_logs")
+}
+
+// Detailed worklog entries for granular work tracking
+model WorklogEntries {
+  id                String   @id @default(cuid()) @map("id")
+  worklogId         String   @map("worklog_id")
+  worklog           WorkLogs @relation(fields: [worklogId], references: [id], onDelete: Cascade)
+  personId          String   @map("person_id")
+  person            People   @relation(fields: [personId], references: [id], onDelete: Restrict)
+  projectId         String   @map("project_id")
+  project           Projects @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  taskId            String?  @map("task_id")
+  task              Tasks?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  description       String   @map("description")
+  timeSpent         Int      @default(0) @map("time_spent") // Minutes
+  notes             String?  @map("notes")
+  locationLatitude  Float?   @map("location_latitude")
+  locationLongitude Float?   @map("location_longitude")
+  locationAccuracy  Float?   @map("location_accuracy")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relationships
+  materialUsage WorklogMaterialUsage[]
+  photos       WorklogPhotos[]
+
+  @@index([worklogId])
+  @@index([personId])
+  @@index([projectId])
+  @@index([taskId])
+  @@map("worklog_entries")
+}
+
+// Material usage tracking for worklog entries
+model WorklogMaterialUsage {
+  id         String   @id @default(cuid()) @map("id")
+  entryId    String   @map("entry_id")
+  entry      WorklogEntries @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  materialId String   @map("material_id")
+  material   Materials @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  quantity   Float    @map("quantity")
+  unit       String   @map("unit")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([entryId])
+  @@index([materialId])
+  @@map("worklog_material_usage")
+}
+
+// Photo documentation for worklog entries
+model WorklogPhotos {
+  id         String   @id @default(cuid()) @map("id")
+  entryId    String   @map("entry_id")
+  entry      WorklogEntries @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  url        String   @map("url")
+  caption    String?  @map("caption")
+  timestamp  DateTime @map("timestamp") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([entryId])
+  @@map("worklog_photos")
 }
 
 // Location tracking for workers
@@ -334,6 +400,9 @@ model Tasks {
   // Progress updates
   progressUpdates TaskProgressUpdates[]
 
+  // Worklog entries
+  worklogEntries WorklogEntries[]
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -402,6 +471,7 @@ model Materials {
   losses             MaterialLosses[]
   inventoryMovements InventoryMovements[]
   reorderRequests    ReorderRequests[]
+  worklogUsage       WorklogMaterialUsage[]
 
   @@map("materials")
 }

@@ -209,7 +209,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
           </div>
 
           {/* Additional Attributes */}
-          <div>
+          <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Atributos Adicionales (Opcional)
             </label>
@@ -219,36 +219,80 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
               onChange={(e) => setFormData(prev => ({ ...prev, additionalAttributes: e.target.value }))}
               placeholder="ej., habitación A, pared norte, etc."
               maxLength={100}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-                          <p className="text-xs text-gray-500 mt-1">
-                {formData.additionalAttributes.length}/100 caracteres
+            <div className="flex justify-between items-center">
+              <p className="text-xs text-gray-500">
+                Agrega detalles específicos sobre dónde o cómo completaste el trabajo.
               </p>
+              <span className={`text-xs font-medium ${
+                formData.additionalAttributes.length >= 90 ? 'text-red-500' : 
+                formData.additionalAttributes.length >= 70 ? 'text-yellow-500' : 'text-gray-500'
+              }`}>
+                {formData.additionalAttributes.length}/100
+              </span>
+            </div>
           </div>
 
           {/* Note: Materials are tracked at project level, not task level */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <strong>Nota:</strong> Los materiales se asignan y rastrean a nivel de proyecto, no de tarea individual. 
-              El consumo y pérdida de materiales se registra automáticamente desde el inventario del proyecto.
-            </p>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 text-sm">ℹ️</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-blue-800 mb-1">Información sobre Materiales</h4>
+                <p className="text-sm text-blue-700 leading-relaxed">
+                  Los materiales se asignan y rastrean a nivel de proyecto, no de tarea individual. 
+                  El consumo y pérdida de materiales se registra automáticamente desde el inventario del proyecto 
+                  cuando registras tu progreso.
+                </p>
+              </div>
+            </div>
           </div>
 
-
+          {/* Success Message Preview */}
+          {formData.projectId && formData.amountCompleted && parseFloat(formData.amountCompleted) > 0 && (
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 text-sm">✅</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-green-800 mb-1">Formulario Completo</h4>
+                  <p className="text-sm text-green-700">
+                    Todos los campos requeridos están completos. Puedes proceder a registrar tu progreso.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              className="flex-1 sm:flex-none px-6 py-3 text-gray-700 border-gray-300 hover:bg-gray-50"
             >
-              Cancelar
+              ❌ Cancelar
             </Button>
             <Button
               type="submit"
               disabled={loading || !formData.projectId || !formData.amountCompleted || parseFloat(formData.amountCompleted) <= 0}
+              className="flex-1 sm:flex-none px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Registrando...' : 'Registrar Progreso'}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Registrando...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  📊 Registrar Progreso
+                </div>
+              )}
             </Button>
           </div>
         </form>

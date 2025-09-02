@@ -200,6 +200,21 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
     return (task.progressUpdates || []).filter(update => update.validationStatus === 'PENDING')
   }
 
+  const getProgressPercentage = (task: Task) => {
+    // For now, we'll use a simple calculation. In the future, this could be based on task.targetAmount
+    const totalProgress = getTotalProgress(task)
+    // Assuming a default target of 100 units if not specified
+    const targetAmount = 100
+    return Math.min((totalProgress / targetAmount) * 100, 100)
+  }
+
+  const getProgressColor = (percentage: number) => {
+    if (percentage >= 80) return 'bg-green-500'
+    if (percentage >= 50) return 'bg-blue-500'
+    if (percentage >= 25) return 'bg-yellow-500'
+    return 'bg-gray-300'
+  }
+
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Action Buttons */}
@@ -261,22 +276,54 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="mobile-table">
-                  <div className="mobile-table-row">
-                    <div className="mobile-table-cell" data-label="Categoría">
-                      {task.category?.name || 'Sin categoría'}
+                {/* Progress Section - Enhanced for Mobile */}
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-gray-700">Progreso de la Tarea</h4>
+                    <span className="text-xs text-gray-500">
+                      {totalProgress.toFixed(2)} {task.progressUnit}
+                    </span>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                    <div 
+                      className={`h-3 rounded-full transition-all duration-300 ${getProgressColor(getProgressPercentage(task))}`}
+                      style={{ width: `${getProgressPercentage(task)}%` }}
+                    ></div>
+                  </div>
+                  
+                  {/* Progress Details */}
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-gray-500">Categoría:</span>
+                      <p className="font-medium">{task.category?.name || 'Sin categoría'}</p>
                     </div>
-                    <div className="mobile-table-cell" data-label="Proyectos">
-                      {task.projectAssignments && task.projectAssignments.length > 0 
-                        ? `${task.projectAssignments.length} proyecto(s)`
-                        : 'Sin proyectos asignados'
-                      }
+                    <div>
+                      <span className="text-gray-500">Unidad:</span>
+                      <p className="font-medium">{task.progressUnit}</p>
                     </div>
-                    <div className="mobile-table-cell" data-label="Unidad">
-                      {task.progressUnit}
+                    <div>
+                      <span className="text-gray-500">Proyectos:</span>
+                      <p className="font-medium">
+                        {task.projectAssignments && task.projectAssignments.length > 0 
+                          ? `${task.projectAssignments.length} proyecto(s)`
+                          : 'Sin proyectos asignados'
+                        }
+                      </p>
                     </div>
-                    <div className="mobile-table-cell" data-label="Progreso">
-                      <span className="font-semibold">{totalProgress.toFixed(2)} {task.progressUnit}</span>
+                    <div>
+                      <span className="text-gray-500">Estado:</span>
+                      <Badge 
+                        className={
+                          task.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                          task.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                          task.status === 'OBSTACLE_PERMIT' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }
+                      >
+                        {task.status}
+                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -318,15 +365,41 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                     </>
                   )}
                   
+                  {/* Enhanced Progress Button Section */}
                   {canLogProgress && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleLogProgress(task)}
-                      className="flex-1 sm:flex-none"
-                    >
-                      <span className="hidden sm:inline">Registrar Progreso</span>
-                      <span className="sm:hidden">Progreso</span>
-                    </Button>
+                    <div className="w-full">
+                      <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          <span className="text-xs font-medium text-blue-700">Tarea Asignada - Puedes Registrar Progreso</span>
+                        </div>
+                        <p className="text-xs text-blue-600 mb-3">
+                          Haz clic en el botón para registrar tu progreso, materiales utilizados y fotos del trabajo realizado.
+                        </p>
+                        <Button
+                          size="lg"
+                          onClick={() => handleLogProgress(task)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 shadow-lg hover:shadow-xl transition-all duration-200"
+                        >
+                          <span className="hidden sm:inline">📊 Registrar Progreso</span>
+                          <span className="sm:hidden">📊 Progreso</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!canLogProgress && personRole === 'WORKER' && (
+                    <div className="w-full">
+                      <div className="mb-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          <span className="text-xs font-medium text-gray-600">Tarea No Asignada</span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Esta tarea no está asignada a ti. Contacta a tu supervisor para que te asigne la tarea.
+                        </p>
+                      </div>
+                    </div>
                   )}
 
                   {canValidate && (
