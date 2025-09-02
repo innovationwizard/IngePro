@@ -47,6 +47,9 @@ export async function POST(
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
+    // At this point, companyId is guaranteed to be defined
+    const finalCompanyId = companyId
+
     // First, check if the task exists
     const task = await prisma.tasks.findFirst({
       where: {
@@ -71,8 +74,8 @@ export async function POST(
     }
 
     // Check if task belongs to the person's company
-    const hasProjectAssignment = task.projectAssignments.some(pa => pa.project.companyId === companyId)
-    const hasWorkerAssignment = task.workerAssignments.some(wa => wa.project.companyId === companyId)
+    const hasProjectAssignment = task.projectAssignments.some(pa => pa.project.companyId === finalCompanyId)
+    const hasWorkerAssignment = task.workerAssignments.some(wa => wa.project.companyId === finalCompanyId)
     
     if (!hasProjectAssignment && !hasWorkerAssignment) {
       return NextResponse.json({ error: 'Task not found in your company' }, { status: 404 })
@@ -84,7 +87,7 @@ export async function POST(
         id: { in: validatedData.personIds },
         personTenants: {
           some: {
-            companyId: companyId,
+            companyId: finalCompanyId,
             status: 'ACTIVE'
           }
         },
@@ -100,27 +103,30 @@ export async function POST(
 
     // Assign task to users in transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Remove existing assignments for this task
-      await tx.personTasks.deleteMany({
+      // Remove existing worker assignments for this task
+      await tx.taskWorkerAssignments.deleteMany({
         where: { taskId: taskId }
       })
 
-      // Create new assignments
-      const assignments = await tx.personTasks.createMany({
-        data: validatedData.personIds.map(personId => ({
-          personId: personId,
-          taskId: taskId,
-          assignedBy: session.user?.id || '',
-        }))
-      })
+      // Create new worker assignments
+      const assignments = await Promise.all(
+        validatedData.personIds.map(async (personId) => {
+          // Get the first project assignment for this task to use as projectId
+          const projectAssignment = task.projectAssignments[0]
+          if (!projectAssignment) {
+            throw new Error('Task must be assigned to a project before assigning to workers')
+          }
 
-      // Update task status to IN_PROGRESS if it was NOT_STARTED
-      if (task.status === 'NOT_STARTED') {
-        await tx.tasks.update({
-          where: { id: taskId },
-          data: { status: 'IN_PROGRESS' }
+          return tx.taskWorkerAssignments.create({
+            data: {
+              taskId: taskId,
+              projectId: projectAssignment.projectId,
+              workerId: personId,
+              assignedBy: session.user?.id || '',
+            }
+          })
         })
-      }
+      )
 
       return assignments
     })
@@ -136,7 +142,7 @@ export async function POST(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }
@@ -219,26 +225,21 @@ export async function DELETE(
     const whereClause: any = { taskId: taskId }
     
     if (userId) {
-      whereClause.userId = userId
+      whereClause.workerId = userId
     }
 
-    // Remove assignments
-    const result = await prisma.personTasks.deleteMany({
+    // Remove worker assignments
+    const result = await prisma.taskWorkerAssignments.deleteMany({
       where: whereClause
     })
 
-    // Check if task has any remaining assignments
-    const remainingAssignments = await prisma.personTasks.count({
+    // Check if task has any remaining worker assignments
+    const remainingAssignments = await prisma.taskWorkerAssignments.count({
       where: { taskId: taskId }
     })
 
-    // If no assignments remain, set task status back to NOT_STARTED
-    if (remainingAssignments === 0) {
-      await prisma.tasks.update({
-        where: { id: taskId },
-        data: { status: 'NOT_STARTED' }
-      })
-    }
+    // Note: Tasks are universal and don't have status, so no need to update status
+    // The task remains available for future assignments
 
     return NextResponse.json({
       success: true,
