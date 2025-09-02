@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Clock, User, LogOut, Menu } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface HeaderProps {
   onMobileMenuClick?: () => void
 }
@@ -14,8 +20,32 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
   const router = useRouter()
 
   const handleLogout = async () => {
+    logToVercel('HEADER_LOGOUT_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     await signOut({ redirect: false })
     router.push('/')
+    
+    logToVercel('HEADER_LOGOUT_SUCCESS', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+  }
+
+  const handleMobileMenuClick = () => {
+    logToVercel('MOBILE_MENU_BUTTON_CLICKED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
+    if (onMobileMenuClick) {
+      onMobileMenuClick()
+    }
   }
 
   return (
@@ -25,7 +55,7 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
           {/* Mobile menu button */}
           <div className="flex items-center">
             <button
-              onClick={onMobileMenuClick}
+              onClick={handleMobileMenuClick}
               className="md:hidden p-2 rounded-md hover:bg-gray-100 mr-2"
             >
               <Menu className="h-6 w-6 text-gray-600" />

@@ -5,6 +5,12 @@ import { Clock, Calendar, CheckCircle, XCircle } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 import { useSession } from 'next-auth/react'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface WorkLog {
   id: string
   startTime: string
@@ -34,16 +40,37 @@ export function RecentWorkLogs() {
     const fetchRecentWorkLogs = async () => {
       if (!session) return
       
+      logToVercel('RECENT_WORKLOGS_FETCH_ATTEMPTED', {
+        userId: session.user?.id,
+        timestamp: new Date().toISOString()
+      })
+      
       try {
         setIsLoading(true)
         const response = await fetch('/api/worklog?limit=5')
         if (response.ok) {
           const data = await response.json()
           setWorkLogs(data.workLogs || [])
+          
+          logToVercel('RECENT_WORKLOGS_FETCH_SUCCESS', {
+            userId: session.user?.id,
+            worklogCount: data.workLogs?.length || 0,
+            timestamp: new Date().toISOString()
+          })
         } else {
+          logToVercel('RECENT_WORKLOGS_FETCH_FAILED', {
+            userId: session.user?.id,
+            status: response.status,
+            timestamp: new Date().toISOString()
+          })
           console.error('Error fetching work logs')
         }
       } catch (error) {
+        logToVercel('RECENT_WORKLOGS_FETCH_ERROR', {
+          userId: session.user?.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString()
+        })
         console.error('Error fetching work logs:', error)
       } finally {
         setIsLoading(false)
@@ -134,7 +161,13 @@ export function RecentWorkLogs() {
       
       <div className="mt-4 pt-4 border-t border-gray-200">
         <button 
-          onClick={() => window.location.href = '/dashboard/work-logs'}
+          onClick={() => {
+            logToVercel('VIEW_ALL_WORKLOGS_CLICKED', {
+              userId: session?.user?.id,
+              timestamp: new Date().toISOString()
+            })
+            window.location.href = '/dashboard/work-logs'
+          }}
           className="w-full text-blue-600 hover:text-blue-700 text-sm font-medium"
         >
           {es.workLogs.viewAllWorkLogs}

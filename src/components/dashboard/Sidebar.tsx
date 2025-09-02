@@ -20,6 +20,12 @@ import {
   X
 } from 'lucide-react'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface SidebarProps {
   isMobileOpen?: boolean
   onMobileClose?: () => void
@@ -46,8 +52,45 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
   const userRole = session?.user?.role || 'WORKER'
 
   const handleLogout = async () => {
+    logToVercel('LOGOUT_ATTEMPTED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+    
     await signOut({ redirect: false })
     router.push('/')
+    
+    logToVercel('LOGOUT_SUCCESS', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      timestamp: new Date().toISOString()
+    })
+  }
+
+  const handleMobileClose = () => {
+    logToVercel('MOBILE_SIDEBAR_CLOSED', {
+      userId: session?.user?.id,
+      timestamp: new Date().toISOString()
+    })
+    
+    if (onMobileClose) {
+      onMobileClose()
+    }
+  }
+
+  const handleLinkClick = (href: string, name: string) => {
+    logToVercel('SIDEBAR_NAVIGATION_CLICKED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      destination: href,
+      linkName: name,
+      timestamp: new Date().toISOString()
+    })
+    
+    if (onMobileClose) {
+      onMobileClose()
+    }
   }
 
   const menuItems = [
@@ -111,12 +154,6 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
     item.roles.includes(userRole)
   )
 
-  const handleLinkClick = () => {
-    if (onMobileClose) {
-      onMobileClose()
-    }
-  }
-
   return (
     <>
       {/* Mobile Sidebar */}
@@ -124,7 +161,7 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h1 className="text-lg font-bold text-gray-900">IngePro</h1>
           <button
-            onClick={onMobileClose}
+            onClick={handleMobileClose}
             className="p-2 rounded-md hover:bg-gray-100"
           >
             <X className="h-5 w-5" />
@@ -164,7 +201,7 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    onClick={handleLinkClick}
+                    onClick={() => handleLinkClick(item.href, item.name)}
                     className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
                       isActive
                         ? 'bg-blue-100 text-blue-700'
@@ -227,6 +264,7 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    onClick={() => handleLinkClick(item.href, item.name)}
                     className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive
                         ? 'bg-blue-100 text-blue-700'

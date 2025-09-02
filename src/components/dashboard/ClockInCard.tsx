@@ -1,24 +1,48 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { useWorkLogStore, useProjectStore } from '@/store'
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Clock, MapPin, AlertCircle } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 export function ClockInCard() {
+  const { data: session } = useSession()
   const { isClockedIn, clockIn, clockOut, currentWorkLog, setCurrentWorkLog } = useWorkLogStore()
   const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleClockIn = async () => {
+    logToVercel('CLOCK_IN_ATTEMPTED', {
+      userId: session?.user?.id,
+      projectId: currentProject?.id,
+      timestamp: new Date().toISOString(),
+      businessHours: isWithinBusinessHours()
+    })
+
     if (!isWithinBusinessHours()) {
+      logToVercel('CLOCK_IN_FAILED_BUSINESS_HOURS', {
+        userId: session?.user?.id,
+        projectId: currentProject?.id,
+        timestamp: new Date().toISOString()
+      })
       toast.error(es.dashboard.businessHoursError)
       return
     }
 
     if (!currentProject) {
+      logToVercel('CLOCK_IN_FAILED_NO_PROJECT', {
+        userId: session?.user?.id,
+        timestamp: new Date().toISOString()
+      })
       toast.error('Por favor selecciona un proyecto antes de hacer clock in')
       return
     }
@@ -26,6 +50,15 @@ export function ClockInCard() {
     setIsLoading(true)
     try {
       const location = await getCurrentLocation()
+      
+      logToVercel('LOCATION_OBTAINED', {
+        userId: currentProject?.id,
+        projectId: currentProject?.id,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy,
+        timestamp: new Date().toISOString()
+      })
       
       // Call API to create worklog in database
       const response = await fetch('/api/worklog', {
@@ -41,10 +74,29 @@ export function ClockInCard() {
 
       if (!response.ok) {
         const errorData = await response.json()
+        logToVercel('CLOCK_IN_API_ERROR', {
+          userId: currentProject?.id,
+          projectId: currentProject?.id,
+          error: errorData.error,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         throw new Error(errorData.error || 'Failed to create worklog')
       }
 
       const data = await response.json()
+      
+      logToVercel('CLOCK_IN_SUCCESS', {
+        userId: currentProject?.id,
+        projectId: currentProject?.id,
+        worklogId: data.workLog?.id,
+        timestamp: new Date().toISOString(),
+        location: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: location.accuracy
+        }
+      })
       
       // Update local state with the created worklog
       clockIn(currentProject.id, location)
@@ -69,6 +121,13 @@ export function ClockInCard() {
     } catch (error) {
       console.error('Error creating worklog:', error)
       
+      logToVercel('CLOCK_IN_ERROR', {
+        userId: currentProject?.id,
+        projectId: currentProject?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
+      
       // Mobile-specific error messages
       if (error instanceof Error) {
         if (error.message.includes('Geolocation is not supported')) {
@@ -89,7 +148,17 @@ export function ClockInCard() {
   }
 
   const handleClockOut = async () => {
+    logToVercel('CLOCK_OUT_ATTEMPTED', {
+      worklogId: currentWorkLog?.id,
+      userId: currentWorkLog?.personId,
+      projectId: currentWorkLog?.projectId,
+      timestamp: new Date().toISOString()
+    })
+
     if (!currentWorkLog?.id) {
+      logToVercel('CLOCK_OUT_FAILED_NO_WORKLOG', {
+        timestamp: new Date().toISOString()
+      })
       toast.error('No hay un registro de trabajo activo')
       return
     }
@@ -110,14 +179,36 @@ export function ClockInCard() {
 
       if (!response.ok) {
         const errorData = await response.json()
+        logToVercel('CLOCK_OUT_API_ERROR', {
+          worklogId: currentWorkLog.id,
+          userId: currentWorkLog.personId,
+          projectId: currentWorkLog.projectId,
+          error: errorData.error,
+          status: response.status,
+          timestamp: new Date().toISOString()
+        })
         throw new Error(errorData.error || 'Failed to update worklog')
       }
+
+      logToVercel('CLOCK_OUT_SUCCESS', {
+        worklogId: currentWorkLog.id,
+        userId: currentWorkLog.personId,
+        projectId: currentWorkLog.projectId,
+        timestamp: new Date().toISOString()
+      })
 
       // Update local state
       clockOut()
       toast.success(es.dashboard.successClockOut)
     } catch (error) {
       console.error('Error updating worklog:', error)
+      logToVercel('CLOCK_OUT_ERROR', {
+        worklogId: currentWorkLog.id,
+        userId: currentWorkLog.personId,
+        projectId: currentWorkLog.projectId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })
       toast.error(error instanceof Error ? error.message : 'Error al actualizar el registro de trabajo')
     }
   }

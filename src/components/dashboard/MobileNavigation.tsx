@@ -15,6 +15,12 @@ import {
   Settings
 } from 'lucide-react'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 export function MobileNavigation() {
   const { data: session } = useSession()
   const pathname = usePathname()
@@ -87,6 +93,16 @@ export function MobileNavigation() {
   // Show only the first 4 items for mobile navigation
   const visibleItems = filteredMenuItems.slice(0, 4)
 
+  const handleNavigationClick = (href: string, name: string) => {
+    logToVercel('MOBILE_NAVIGATION_CLICKED', {
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      destination: href,
+      linkName: name,
+      timestamp: new Date().toISOString()
+    })
+  }
+
   return (
     <nav className="mobile-nav">
       <div className="flex justify-around">
@@ -98,6 +114,7 @@ export function MobileNavigation() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => handleNavigationClick(item.href, item.name)}
               className={`mobile-nav-item ${isActive ? 'active' : ''}`}
             >
               <Icon />

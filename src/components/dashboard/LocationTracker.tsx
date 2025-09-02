@@ -5,6 +5,13 @@ import { useWorkLogStore } from '@/store'
 import { getCurrentLocation } from '@/lib/utils'
 import { MapPin, Wifi, WifiOff, Activity } from 'lucide-react'
 import { es } from '@/lib/translations/es'
+import { useSession } from 'next-auth/react'
+
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
 
 // Constants for delta thresholds
 const DISTANCE_THRESHOLD = 10 // 10 meters
@@ -12,6 +19,7 @@ const HEADING_THRESHOLD = 15 // 15 degrees
 const POLLING_INTERVALS = [60000, 120000, 240000, 480000, 960000] // 60s, 120s, 240s, 480s, 960s
 
 export function LocationTracker() {
+  const { data: session } = useSession()
   const { currentLocation, updateLocation } = useWorkLogStore()
   const [isTracking, setIsTracking] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -181,17 +189,43 @@ export function LocationTracker() {
   }, [isTracking, startAdaptivePolling])
 
   const startTracking = async () => {
+    logToVercel('LOCATION_TRACKING_STARTED', {
+      userId: session?.user?.id,
+      timestamp: new Date().toISOString()
+    })
+    
     try {
       const location = await getCurrentLocation()
+      
+      logToVercel('LOCATION_OBTAINED_FOR_TRACKING', {
+        userId: session?.user?.id,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy,
+        timestamp: new Date().toISOString()
+      })
+      
       updateLocation(location)
       setIsTracking(true)
       setError(null)
     } catch (err) {
-      setError('Acceso a ubicación denegado')
+      const errorMessage = 'Acceso a ubicación denegado'
+      logToVercel('LOCATION_TRACKING_ERROR', {
+        userId: session?.user?.id,
+        error: errorMessage,
+        timestamp: new Date().toISOString()
+      })
+      setError(errorMessage)
     }
   }
 
   const stopTracking = () => {
+    logToVercel('LOCATION_TRACKING_STOPPED', {
+      userId: session?.user?.id,
+      updateCount,
+      timestamp: new Date().toISOString()
+    })
+    
     setIsTracking(false)
   }
 

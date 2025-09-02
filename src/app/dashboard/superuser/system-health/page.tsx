@@ -300,7 +300,7 @@ export default function SystemHealthPage() {
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Alerts</h3>
         <div className="space-y-3">
-          {alerts.filter(alert => !alert.resolved).map((alert) => (
+          {(alerts || []).filter(alert => !alert.resolved).map((alert) => (
             <div 
               key={alert.id}
               className={`flex items-center justify-between p-3 rounded-lg ${

@@ -58,7 +58,7 @@ export default function AnalysisPage() {
       if (response.ok) {
         const data = await response.json()
         // Filter only WORKER people
-        const workerPeople = data.people.filter((person: any) => person.role === 'WORKER')
+        const workerPeople = (data.people || []).filter((person: any) => person.role === 'WORKER')
         setWorkers(workerPeople)
       }
     } catch (error) {

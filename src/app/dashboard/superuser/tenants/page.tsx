@@ -149,7 +149,7 @@ export default function MultiTenantOversightPage() {
     }
   ]
 
-  const filteredCompanies = companies.filter(company => {
+  const filteredCompanies = (companies || []).filter(company => {
     const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          company.nameEs.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = filterStatus === 'all' || company.status === filterStatus
@@ -216,7 +216,7 @@ export default function MultiTenantOversightPage() {
             <TrendingUp className="h-8 w-8 text-purple-600" />
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Active Tenants</p>
-              <p className="text-2xl font-bold text-gray-900">{companies.filter(c => c.status === 'ACTIVE').length}</p>
+              <p className="text-2xl font-bold text-gray-900">{(companies || []).filter(c => c.status === 'ACTIVE').length}</p>
             </div>
           </div>
         </div>

@@ -200,10 +200,10 @@ export default function ProjectsPage() {
         // Filter people based on role permissions
         if (session?.user?.role === 'SUPERVISOR') {
           // Supervisors can only assign workers
-          setAvailablePeople(data.people.filter((person: Person) => person.role === 'WORKER'));
+          setAvailablePeople((data.people || []).filter((person: Person) => person.role === 'WORKER'));
         } else {
           // Admins can assign both workers and supervisors
-          setAvailablePeople(data.people.filter((person: Person) => 
+          setAvailablePeople((data.people || []).filter((person: Person) => 
             person.role === 'WORKER' || person.role === 'SUPERVISOR'
           ));
         }
@@ -704,9 +704,9 @@ export default function ProjectsPage() {
                       checked={selectedPeople.includes(user.id)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedPeople([...selectedPeople, user.id]);
+                          setSelectedPeople([...(selectedPeople || []), user.id]);
                         } else {
-                          setSelectedPeople(selectedPeople.filter(id => id !== user.id));
+                          setSelectedPeople((selectedPeople || []).filter(id => id !== user.id));
                         }
                       }}
                       className="mr-2"

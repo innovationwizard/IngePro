@@ -443,7 +443,7 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Stock Bajo</p>
                     <p className="text-2xl font-bold text-red-600">
-                      {materials.filter(m => getStockStatus(m) === 'low').length}
+                      {(materials || []).filter(m => getStockStatus(m) === 'low').length}
                     </p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-red-600" />
@@ -457,7 +457,7 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Reordenes Pendientes</p>
                     <p className="text-2xl font-bold text-yellow-600">
-                      {reorderRequests.filter(req => req.status === 'PENDING').length}
+                      {(reorderRequests || []).filter(req => req.status === 'PENDING').length}
                     </p>
                   </div>
                   <Clock className="w-8 h-8 text-yellow-600" />
@@ -471,7 +471,7 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Valor Total</p>
                     <p className="text-2xl font-bold text-green-600">
-                      ${materials.reduce((sum, m) => sum + (m.currentStock * (m.unitCost || 0)), 0).toLocaleString()}
+                      ${(materials || []).reduce((sum, m) => sum + (m.currentStock * (m.unitCost || 0)), 0).toLocaleString()}
                     </p>
                   </div>
                   <DollarSign className="w-8 h-8 text-green-600" />
@@ -487,7 +487,7 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {materials.filter(m => getStockStatus(m) === 'low').map((material) => (
+                {(materials || []).filter(m => getStockStatus(m) === 'low').map((material) => (
                   <div key={material.id} className="flex items-center justify-between p-3 border border-red-200 rounded-lg bg-red-50">
                     <div>
                       <p className="font-medium text-red-800">{material.nameEs || material.name}</p>
@@ -512,7 +512,7 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
                     </Button>
                   </div>
                 ))}
-                {materials.filter(m => getStockStatus(m) === 'low').length === 0 && (
+                {(materials || []).filter(m => getStockStatus(m) === 'low').length === 0 && (
                   <p className="text-center text-gray-500 py-4">No hay alertas de stock bajo</p>
                 )}
               </div>
@@ -528,7 +528,7 @@ export default function InventoryManager({ materials }: InventoryManagerProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {materials.map((material) => (
+                {(materials || []).map((material) => (
                   <div key={material.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">

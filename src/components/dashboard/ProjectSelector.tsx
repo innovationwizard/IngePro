@@ -6,6 +6,12 @@ import { Building2, ChevronDown } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 import { useSession } from 'next-auth/react'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 interface Project {
   id: string
   name: string
@@ -27,16 +33,37 @@ export function ProjectSelector() {
     const fetchProjects = async () => {
       if (!session) return
       
+      logToVercel('PROJECTS_FETCH_ATTEMPTED', {
+        userId: session.user?.id,
+        timestamp: new Date().toISOString()
+      })
+      
       try {
         setIsLoading(true)
         const response = await fetch('/api/projects')
         if (response.ok) {
           const data = await response.json()
           setProjects(data.projects || [])
+          
+          logToVercel('PROJECTS_FETCH_SUCCESS', {
+            userId: session.user?.id,
+            projectCount: data.projects?.length || 0,
+            timestamp: new Date().toISOString()
+          })
         } else {
+          logToVercel('PROJECTS_FETCH_FAILED', {
+            userId: session.user?.id,
+            status: response.status,
+            timestamp: new Date().toISOString()
+          })
           console.error('Error fetching projects')
         }
       } catch (error) {
+        logToVercel('PROJECTS_FETCH_ERROR', {
+          userId: session.user?.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString()
+        })
         console.error('Error fetching projects:', error)
       } finally {
         setIsLoading(false)
@@ -45,6 +72,28 @@ export function ProjectSelector() {
 
     fetchProjects()
   }, [setProjects, session])
+
+  const handleDropdownToggle = () => {
+    logToVercel('PROJECT_DROPDOWN_TOGGLED', {
+      userId: session?.user?.id,
+      isOpen: !isOpen,
+      timestamp: new Date().toISOString()
+    })
+    setIsOpen(!isOpen)
+  }
+
+  const handleProjectSelection = (project: Project) => {
+    logToVercel('PROJECT_SELECTED', {
+      userId: session?.user?.id,
+      projectId: project.id,
+      projectName: project.name,
+      companyName: project.company.name,
+      timestamp: new Date().toISOString()
+    })
+    
+    setCurrentProject(project)
+    setIsOpen(false)
+  }
 
   if (isLoading) {
     return (
@@ -63,7 +112,7 @@ export function ProjectSelector() {
       
       <div className="relative">
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleDropdownToggle}
           className="w-full flex items-center justify-between p-3 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
         >
           <div className="flex items-center space-x-3 min-w-0 flex-1">
@@ -93,10 +142,7 @@ export function ProjectSelector() {
               projects.map((project: Project) => (
                 <button
                   key={project.id}
-                  onClick={() => {
-                    setCurrentProject(project)
-                    setIsOpen(false)
-                  }}
+                  onClick={() => handleProjectSelection(project)}
                   className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                 >
                   <div className="font-medium text-gray-900 truncate">{project.name}</div>
