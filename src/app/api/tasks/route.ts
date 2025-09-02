@@ -70,24 +70,78 @@ export async function GET(request: NextRequest) {
         include: {
           task: {
             include: {
-              category: true
+              category: true,
+              projectAssignments: {
+                include: {
+                  project: {
+                    select: {
+                      id: true,
+                      name: true,
+                      nameEs: true
+                    }
+                  }
+                }
+              },
+              workerAssignments: {
+                include: {
+                  worker: {
+                    select: {
+                      id: true,
+                      name: true,
+                      role: true
+                    }
+                  },
+                  project: {
+                    select: {
+                      id: true,
+                      name: true,
+                      nameEs: true
+                    }
+                  }
+                }
+              },
+              progressUpdates: {
+                include: {
+                  worker: {
+                    select: {
+                      id: true,
+                      name: true
+                    }
+                  },
+                  project: {
+                    select: {
+                      id: true,
+                      name: true
+                    }
+                  },
+                  materialConsumptions: {
+                    include: {
+                      material: true
+                    }
+                  },
+                  materialLosses: {
+                    include: {
+                      material: true
+                    }
+                  }
+                },
+                orderBy: {
+                  createdAt: 'desc'
+                }
+              },
+              _count: {
+                select: {
+                  progressUpdates: true
+                }
+              }
             }
           }
         }
       })
       
-      // Return only assigned tasks for workers
+      // Return tasks with full data structure including workerAssignments
       return NextResponse.json({ 
-        tasks: workerAssignments.map(assignment => ({
-          id: assignment.task.id,
-          name: assignment.task.name,
-          description: assignment.task.description,
-          category: assignment.task.category,
-          progressUnit: assignment.task.progressUnit,
-          projectId: assignment.projectId,
-          assignedAt: assignment.assignedAt,
-          assignedBy: assignment.assignedBy
-        }))
+        tasks: workerAssignments.map(assignment => assignment.task)
       })
     }
 
