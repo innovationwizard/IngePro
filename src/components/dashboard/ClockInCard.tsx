@@ -148,6 +148,23 @@ export function ClockInCard() {
           </button>
         ) : (
           <div className="space-y-4">
+            {/* Prominent green banner for shift confirmation */}
+            <div className="bg-green-500 border-2 border-green-600 rounded-lg p-4 text-center shadow-lg">
+              <div className="flex items-center justify-center space-x-3">
+                <Clock className="h-8 w-8 text-white" />
+                <div>
+                  <h3 className="text-lg font-bold text-white">¡Su jornada ha iniciado!</h3>
+                  <p className="text-green-100 text-sm">
+                    Entrada registrada a las {currentWorkLog?.clockIn.toLocaleTimeString('es-ES', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Project and status info */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center space-x-2">
                 <Clock className="h-5 w-5 text-green-600" />
@@ -156,6 +173,11 @@ export function ClockInCard() {
               <p className="text-sm text-green-700 mt-1">
                 {es.dashboard.clockedInAt} {currentWorkLog?.clockIn.toLocaleTimeString()}
               </p>
+              {currentProject && (
+                <div className="mt-2 text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                  Proyecto: {currentProject.name}
+                </div>
+              )}
             </div>
             
             <button

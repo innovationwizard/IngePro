@@ -101,9 +101,9 @@ export default function DashboardPage() {
           const totalPeople = companiesData.companies.reduce((acc: number, company: any) => 
             acc + (company.people || 0), 0)
           const totalProjects = projectsData.projects.length
-          const totalWorkHours = workLogsData.workLogs.reduce((acc: number, log: any) => 
+          const totalWorkHours = (workLogsData.workLogs || []).reduce((acc: number, log: any) => 
             acc + (log.duration || 0), 0) / 60 // Convert minutes to hours
-          const activeWorkLogs = workLogsData.workLogs.filter((log: any) => 
+          const activeWorkLogs = (workLogsData.workLogs || []).filter((log: any) => 
             log.status === 'ACTIVE').length
 
           setStats({
@@ -111,16 +111,16 @@ export default function DashboardPage() {
             totalProjects,
             totalWorkHours: Math.round(totalWorkHours * 10) / 10,
             activeWorkLogs,
-            companies: companiesData.companies.map((company: any) => ({
+            companies: (companiesData.companies || []).map((company: any) => ({
               id: company.id,
               name: company.name,
               peopleCount: company.people || 0,
               projectCount: company.projects || 0,
               totalHours: Math.round((company.workLogs || 0) / 60 * 10) / 10 // Convert workLogs to hours
             })),
-            projects: projectsData.projects.map((project: any) => {
+            projects: (projectsData.projects || []).map((project: any) => {
               // Find matching stats for this project
-              const projectStats = projectStatsData.projectStats.find((stats: any) => stats.id === project.id)
+              const projectStats = (projectStatsData.projectStats || []).find((stats: any) => stats.id === project.id)
               
               return {
                 id: project.id,
@@ -131,7 +131,7 @@ export default function DashboardPage() {
                 status: project.status
               }
             }),
-            recentActivity: workLogsData.workLogs.slice(0, 5).map((log: any) => ({
+            recentActivity: (workLogsData.workLogs || []).slice(0, 5).map((log: any) => ({
               id: log.id,
               type: 'work_log',
               description: `${log.person.name} ${log.status === 'ACTIVE' ? 'inició' : 'completó'} trabajo`,
@@ -254,7 +254,7 @@ export default function DashboardPage() {
                   Empresas
                 </h2>
                 <div className="space-y-4">
-                  {stats?.companies.map((company) => (
+                  {(stats?.companies || []).map((company) => (
                     <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <div className="font-medium text-gray-900">{company.name}</div>
@@ -278,7 +278,7 @@ export default function DashboardPage() {
                   Proyectos
                 </h2>
                 <div className="space-y-4">
-                  {stats?.projects.slice(0, 5).map((project) => (
+                  {(stats?.projects || []).slice(0, 5).map((project) => (
                     <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <div className="font-medium text-gray-900">{project.name}</div>
@@ -309,7 +309,7 @@ export default function DashboardPage() {
                 Actividad Reciente
               </h2>
               <div className="space-y-3">
-                {stats?.recentActivity.map((activity) => (
+                {(stats?.recentActivity || []).map((activity) => (
                   <div key={activity.id} className="flex items-center space-x-3 p-3 border rounded-lg">
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <Activity className="h-4 w-4 text-blue-600" />
@@ -454,7 +454,7 @@ export default function DashboardPage() {
                 Actividad Reciente del Equipo
               </h2>
               <div className="space-y-3">
-                {stats?.recentActivity.map((activity) => (
+                {(stats?.recentActivity || []).map((activity) => (
                   <div key={activity.id} className="flex items-center space-x-3 p-3 border rounded-lg">
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <Activity className="h-4 w-4 text-blue-600" />
@@ -503,6 +503,31 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Active Shift Banner - Show when worker is clocked in */}
+      {isClockedIn && currentWorkLog && (
+        <div className="bg-gradient-to-r from-green-500 to-green-600 border-2 border-green-700 rounded-xl p-6 text-center shadow-xl">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="p-3 bg-white bg-opacity-20 rounded-full">
+              <Clock className="h-10 w-10 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-2">¡Su jornada está activa!</h2>
+              <p className="text-green-100 text-lg">
+                Entrada registrada a las {currentWorkLog.clockIn.toLocaleTimeString('es-ES', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+              <div className="mt-3 inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-full">
+                <span className="text-white font-medium">
+                  ⏱️ Tiempo transcurrido: {Math.floor((currentTime.getTime() - currentWorkLog.clockIn.getTime()) / (1000 * 60))} minutos
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <div className="space-y-4 md:space-y-6">

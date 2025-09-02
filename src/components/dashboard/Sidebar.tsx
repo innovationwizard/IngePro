@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useWorkLogStore } from '@/store'
 import {
   Home,
   Clock,
@@ -26,6 +27,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   const { data: session, status } = useSession()
+  const { isClockedIn, currentWorkLog } = useWorkLogStore()
   const pathname = usePathname()
   const router = useRouter()
   
@@ -132,6 +134,24 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
         <div className="p-4 border-b border-gray-200">
           <p className="text-sm text-gray-600 font-medium">{session?.user?.name}</p>
           <p className="text-xs text-gray-500">{userRole}</p>
+          
+          {/* Active Shift Indicator - Mobile */}
+          {isClockedIn && currentWorkLog && (
+            <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-4 w-4 text-green-600" />
+                <div className="text-xs">
+                  <div className="font-medium text-green-800">Turno Activo</div>
+                  <div className="text-green-600">
+                    Desde: {currentWorkLog.clockIn.toLocaleTimeString('es-ES', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <nav className="flex-1 p-4">
@@ -177,6 +197,24 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
           <h1 className="text-xl font-bold text-gray-900">IngePro</h1>
           <p className="text-sm text-gray-600">{session?.user?.name}</p>
           <p className="text-xs text-gray-500">{userRole}</p>
+          
+          {/* Active Shift Indicator */}
+          {isClockedIn && currentWorkLog && (
+            <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-4 w-4 text-green-600" />
+                <div className="text-xs">
+                  <div className="font-medium text-green-800">Turno Activo</div>
+                  <div className="text-green-600">
+                    Desde: {currentWorkLog.clockIn.toLocaleTimeString('es-ES', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <nav className="flex-1 p-4">
