@@ -225,25 +225,15 @@ export async function POST(request: NextRequest) {
       console.log('DEBUG: Requested projectId:', projectId)
 
       if (activeWorkLog) {
-        // Worker is already clocked in, validate project matches
-        if (projectId && projectId !== activeWorkLog.projectId) {
-          console.log('DEBUG: Project mismatch - Active:', activeWorkLog.projectId, 'Requested:', projectId)
-          return NextResponse.json({ 
-            error: `No puedes crear un registro de trabajo para el proyecto ${projectId} mientras estás trabajando en ${activeWorkLog.project?.name}. Debes hacer clock out primero.` 
-          }, { status: 400 })
-        }
-        // If no projectId provided, use the current active worklog's project
-        if (!projectId) {
-          projectId = activeWorkLog.projectId
-          console.log('DEBUG: Using active worklog project:', projectId)
-        }
-      } else {
-        // Worker is not clocked in, they cannot create worklogs
-        console.log('DEBUG: Worker not clocked in, cannot create worklog')
+        // Worker is already clocked in, they cannot create another worklog
+        console.log('DEBUG: Worker already clocked in, cannot create new worklog')
         return NextResponse.json({ 
-          error: 'Debes hacer clock in antes de crear un registro de trabajo' 
+          error: `Ya estás trabajando en ${activeWorkLog.project?.name}. Debes hacer clock out antes de crear un nuevo registro.` 
         }, { status: 400 })
       }
+      
+      // Worker is not clocked in, they can create a worklog (this is the clock-in process)
+      console.log('DEBUG: Worker not clocked in, proceeding with worklog creation')
     }
 
     // Validate project exists and person has access
@@ -281,7 +271,9 @@ export async function POST(request: NextRequest) {
         })
         
         if (!personProject) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 400 })
+          return NextResponse.json({ 
+            error: `No tienes acceso al proyecto. Contacta a tu supervisor para ser asignado.` 
+          }, { status: 400 })
         }
       }
     }
