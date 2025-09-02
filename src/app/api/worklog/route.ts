@@ -292,8 +292,12 @@ export async function POST(request: NextRequest) {
         personId: session.user?.id!,
         projectId: projectId || null,
         clockIn: new Date(),
+        tasksCompleted: [],
+        materialsUsed: [],
+        photos: [],
         notes: description || '',
         notesEs: description || '',
+        companyId: project?.company?.id || null,
         createdAt: new Date(),
         updatedAt: new Date()
       },

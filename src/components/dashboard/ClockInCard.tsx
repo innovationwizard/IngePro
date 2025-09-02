@@ -8,7 +8,7 @@ import { Clock, MapPin, AlertCircle } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 
 export function ClockInCard() {
-  const { isClockedIn, clockIn, clockOut, currentWorkLog } = useWorkLogStore()
+  const { isClockedIn, clockIn, clockOut, currentWorkLog, setCurrentWorkLog } = useWorkLogStore()
   const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -27,19 +27,84 @@ export function ClockInCard() {
     try {
       const location = await getCurrentLocation()
       
+      // Call API to create worklog in database
+      const response = await fetch('/api/worklog', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: currentProject.id,
+          description: `Clock in at ${new Date().toLocaleTimeString()}`
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create worklog')
+      }
+
+      const data = await response.json()
+      
+      // Update local state with the created worklog
       clockIn(currentProject.id, location)
+      
+      // Update the currentWorkLog with the actual data from the database
+      if (data.workLog) {
+        setCurrentWorkLog({
+          id: data.workLog.id,
+          personId: data.workLog.person.id,
+          projectId: data.workLog.project?.id || '',
+          clockIn: new Date(data.workLog.startTime),
+          tasksCompleted: '[]',
+          materialsUsed: '[]',
+          photos: [],
+          approved: false,
+          createdAt: new Date(data.workLog.createdAt),
+        })
+      }
+      
       toast.success(es.dashboard.successClockIn)
     } catch (error) {
-      console.error('Error getting location:', error)
-      toast.error(es.dashboard.locationError)
+      console.error('Error creating worklog:', error)
+      toast.error(error instanceof Error ? error.message : 'Error al crear el registro de trabajo')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleClockOut = () => {
-    clockOut()
-    toast.success(es.dashboard.successClockOut)
+  const handleClockOut = async () => {
+    if (!currentWorkLog?.id) {
+      toast.error('No hay un registro de trabajo activo')
+      return
+    }
+
+    try {
+      // Call API to update worklog with clock out time
+      const response = await fetch('/api/worklog', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: currentWorkLog.id,
+          endTime: new Date().toISOString(),
+          description: `Clock out at ${new Date().toLocaleTimeString()}`
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update worklog')
+      }
+
+      // Update local state
+      clockOut()
+      toast.success(es.dashboard.successClockOut)
+    } catch (error) {
+      console.error('Error updating worklog:', error)
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar el registro de trabajo')
+    }
   }
 
   return (

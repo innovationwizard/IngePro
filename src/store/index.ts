@@ -17,6 +17,7 @@ interface WorkLogState {
   clockIn: (projectId: string, location: LocationData) => void
   clockOut: () => void
   updateLocation: (location: LocationData) => void
+  setCurrentWorkLog: (workLog: WorkLog) => void
 }
 
 interface ProjectState {
@@ -57,8 +58,10 @@ export const useWorkLogStore = create<WorkLogState>((set) => ({
   clockOut: () => set({
     isClockedIn: false,
     currentWorkLog: null,
+    currentLocation: null,
   }),
   updateLocation: (location) => set({ currentLocation: location }),
+  setCurrentWorkLog: (workLog) => set({ currentWorkLog: workLog }),
 }))
 
 export const useProjectStore = create<ProjectState>((set) => ({
