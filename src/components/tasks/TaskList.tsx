@@ -91,6 +91,7 @@ interface TaskListProps {
   tasks: Task[]
   onTaskUpdated: () => void
   personRole: string
+  currentUserId: string
 }
 
 const taskStatusColors = {
@@ -119,7 +120,7 @@ const taskStatusLabels = {
   'OBSTACLE_OTHER': 'Otro Obstáculo',
 }
 
-export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListProps) {
+export default function TaskList({ tasks, onTaskUpdated, personRole, currentUserId }: TaskListProps) {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>(tasks)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -261,8 +262,12 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
         {filteredTasks && filteredTasks.length > 0 ? filteredTasks.map((task) => {
           const totalProgress = getTotalProgress(task)
           const pendingUpdates = getPendingUpdates(task)
-          const isAssigned = task.workerAssignments && task.workerAssignments.length > 0
-          const canLogProgress = personRole === 'WORKER' && isAssigned
+          
+          // Check if the current worker is assigned to this specific task
+          const isAssignedToCurrentWorker = task.workerAssignments && 
+            task.workerAssignments.some(assignment => assignment.worker.id === currentUserId)
+          
+          const canLogProgress = personRole === 'WORKER' && isAssignedToCurrentWorker
           const canValidate = (personRole === 'ADMIN' || personRole === 'SUPERVISOR') && pendingUpdates.length > 0
 
           return (
@@ -360,7 +365,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                         onClick={() => handleAssignTask(task)}
                         className="flex-1 sm:flex-none"
                       >
-                        {isAssigned ? 'Reasignar' : 'Asignar'}
+                        {isAssignedToCurrentWorker ? 'Reasignar' : 'Asignar'}
                       </Button>
                     </>
                   )}

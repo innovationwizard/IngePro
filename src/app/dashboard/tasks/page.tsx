@@ -290,6 +290,7 @@ export default function TasksPage() {
                 tasks={tasks} 
                 onTaskUpdated={fetchTasks}
                 personRole={personRole}
+                currentUserId={session.user?.id || ''}
               />
             </CardContent>
           </Card>
