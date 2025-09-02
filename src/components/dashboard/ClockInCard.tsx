@@ -61,13 +61,28 @@ export function ClockInCard() {
           photos: [],
           approved: false,
           createdAt: new Date(data.workLog.createdAt),
+          updatedAt: new Date(),
         })
       }
       
       toast.success(es.dashboard.successClockIn)
     } catch (error) {
       console.error('Error creating worklog:', error)
-      toast.error(error instanceof Error ? error.message : 'Error al crear el registro de trabajo')
+      
+      // Mobile-specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('Geolocation is not supported')) {
+          toast.error('Tu dispositivo no soporta geolocalización. Por favor, activa la ubicación en tu navegador.')
+        } else if (error.message.includes('Permission denied')) {
+          toast.error('Permiso de ubicación denegado. Por favor, permite el acceso a la ubicación en tu navegador.')
+        } else if (error.message.includes('timeout')) {
+          toast.error('Tiempo de espera agotado al obtener ubicación. Verifica tu conexión GPS.')
+        } else {
+          toast.error(error.message)
+        }
+      } else {
+        toast.error('Error al crear el registro de trabajo')
+      }
     } finally {
       setIsLoading(false)
     }
