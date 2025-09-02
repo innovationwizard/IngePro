@@ -237,8 +237,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate project exists and person has access
+    let project = null;
     if (projectId) {
-      const project = await prisma.projects.findUnique({
+      project = await prisma.projects.findUnique({
         where: { id: projectId },
         include: { company: true }
       })
