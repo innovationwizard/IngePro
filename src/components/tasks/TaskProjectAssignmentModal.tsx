@@ -89,7 +89,7 @@ export default function TaskProjectAssignmentModal({
       if (workersResponse.ok) {
         const workersData = await workersResponse.json()
         // Filter to only show WORKER role people
-        const workerPeople = workersData.people.filter((person: Person) => person.role === 'WORKER')
+        const workerPeople = (workersData.people || []).filter((person: Person) => person.role === 'WORKER')
         setWorkers(workerPeople)
       }
     } catch (error) {
@@ -153,7 +153,7 @@ export default function TaskProjectAssignmentModal({
     )
   }
 
-  const filteredWorkers = workers.filter(worker =>
+  const filteredWorkers = (workers || []).filter(worker =>
     worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     worker.email.toLowerCase().includes(searchTerm.toLowerCase())
   )

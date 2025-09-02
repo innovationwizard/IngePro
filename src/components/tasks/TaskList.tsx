@@ -43,7 +43,7 @@ interface Task {
       role: string
     }
   }>
-  progressUpdates: Array<{
+  progressUpdates?: Array<{
     id: string
     amountCompleted: number
     status: string
@@ -149,15 +149,15 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
   }, [])
 
   useEffect(() => {
-    let filtered = tasks
+    let filtered = tasks || []
 
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(task =>
         task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.category?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.projectAssignments?.some(pa => pa.project.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        task.workerAssignments?.some(wa => wa.project.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        task.category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (task.projectAssignments || [])?.some(pa => pa.project.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (task.workerAssignments || [])?.some(wa => wa.project.name.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     }
 
@@ -190,14 +190,14 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
   }
 
   const getTotalProgress = (task: Task) => {
-    const validUpdates = task.progressUpdates.filter(update => 
+    const validUpdates = (task.progressUpdates || []).filter(update => 
       update.validationStatus === 'VALIDATED'
     )
     return validUpdates.reduce((total, update) => total + update.amountCompleted, 0)
   }
 
   const getPendingUpdates = (task: Task) => {
-    return task.progressUpdates.filter(update => update.validationStatus === 'PENDING')
+    return (task.progressUpdates || []).filter(update => update.validationStatus === 'PENDING')
   }
 
   return (
@@ -243,7 +243,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
 
       {/* Task List */}
       <div className="grid gap-4">
-        {filteredTasks.map((task) => {
+        {filteredTasks && filteredTasks.length > 0 ? filteredTasks.map((task) => {
           const totalProgress = getTotalProgress(task)
           const pendingUpdates = getPendingUpdates(task)
           const isAssigned = task.workerAssignments && task.workerAssignments.length > 0
@@ -355,8 +355,8 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                         <div>
                           <h4 className="font-medium mb-2">Actualizaciones de Progreso</h4>
                           <div className="space-y-2 max-h-64 overflow-y-auto">
-                            {task.progressUpdates.length > 0 ? (
-                              task.progressUpdates.map((update) => (
+                            {(task.progressUpdates || []).length > 0 ? (
+                              (task.progressUpdates || []).map((update) => (
                                 <div key={update.id} className="border rounded p-3">
                                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 space-y-2 sm:space-y-0">
                                     <div className="min-w-0 flex-1">
@@ -385,26 +385,26 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
                                       </span>
                                     )}
                                   </p>
-                                  {(update.materialConsumptions.length > 0 || update.materialLosses.length > 0) && (
+                                  {((update.materialConsumptions || []).length > 0 || (update.materialLosses || []).length > 0) && (
                                     <div className="mt-2 text-sm">
-                                      {update.materialConsumptions.length > 0 && (
+                                      {(update.materialConsumptions || []).length > 0 && (
                                         <div>
                                           <span className="font-medium">Consumido:</span>
-                                          {update.materialConsumptions.map((consumption, index) => (
+                                          {(update.materialConsumptions || []).map((consumption, index) => (
                                             <span key={index} className="ml-1">
                                               {consumption.quantity} {consumption.material.unit} {consumption.material.name}
-                                              {index < update.materialConsumptions.length - 1 ? ', ' : ''}
+                                              {index < (update.materialConsumptions || []).length - 1 ? ', ' : ''}
                                             </span>
                                           ))}
                                         </div>
                                       )}
-                                      {update.materialLosses.length > 0 && (
+                                      {(update.materialLosses || []).length > 0 && (
                                         <div>
                                           <span className="font-medium">Perdido:</span>
-                                          {update.materialLosses.map((loss, index) => (
+                                          {(update.materialLosses || []).map((loss, index) => (
                                             <span key={index} className="ml-1">
                                               {loss.quantity} {loss.material.unit} {loss.material.name}
-                                              {index < update.materialLosses.length - 1 ? ', ' : ''}
+                                              {index < (update.materialLosses || []).length - 1 ? ', ' : ''}
                                             </span>
                                           ))}
                                         </div>
@@ -425,7 +425,11 @@ export default function TaskList({ tasks, onTaskUpdated, personRole }: TaskListP
               </CardContent>
             </Card>
           )
-        })}
+        }) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No hay tareas disponibles</p>
+          </div>
+        )}
       </div>
 
       {filteredTasks.length === 0 && (

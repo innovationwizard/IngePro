@@ -161,7 +161,7 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
   }
 
   const addModifiedMaterialConsumption = () => {
-    const availableMaterials = selectedUpdate.materialConsumptions.filter(material => 
+    const availableMaterials = (selectedUpdate.materialConsumptions || []).filter(material => 
       !modifiedMaterialConsumptions.some(consumption => consumption.materialId === material.material.name)
     )
     
@@ -187,7 +187,7 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
   }
 
   const addModifiedMaterialLoss = () => {
-    const availableMaterials = selectedUpdate.materialLosses.filter(material => 
+    const availableMaterials = (selectedUpdate.materialLosses || []).filter(material => 
       !modifiedMaterialLosses.some(loss => loss.materialId === material.material.name)
     )
     
@@ -212,7 +212,7 @@ export default function TaskValidationModal({ task, open, onOpenChange, onSucces
     ))
   }
 
-  const pendingUpdates = task.progressUpdates.filter(update => update.validationStatus === 'PENDING')
+      const pendingUpdates = (task.progressUpdates || []).filter(update => update.validationStatus === 'PENDING')
 
   if (!selectedUpdate) {
     return (

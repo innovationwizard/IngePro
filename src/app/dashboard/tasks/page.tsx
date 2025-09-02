@@ -97,7 +97,7 @@ export default function TasksPage() {
       const response = await fetch('/api/tasks')
       if (response.ok) {
         const data = await response.json()
-        setTasks(data.tasks)
+        setTasks(data.tasks || [])
         
         logToVercel('TASKS_FETCH_SUCCESS', {
           userId: session?.user?.id,
@@ -137,7 +137,7 @@ export default function TasksPage() {
       const response = await fetch('/api/task-categories')
       if (response.ok) {
         const data = await response.json()
-        setCategories(data.taskCategories)
+        setCategories(data.taskCategories || [])
         
         logToVercel('TASKS_CATEGORIES_FETCH_SUCCESS', {
           userId: session?.user?.id,
@@ -175,7 +175,7 @@ export default function TasksPage() {
       const response = await fetch('/api/projects')
       if (response.ok) {
         const data = await response.json()
-        setProjects(data.projects)
+        setProjects(data.projects || [])
         
         logToVercel('TASKS_PROJECTS_FETCH_SUCCESS', {
           userId: session?.user?.id,

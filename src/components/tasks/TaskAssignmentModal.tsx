@@ -73,7 +73,7 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
       if (response.ok) {
         const data = await response.json()
         // Filter to only show WORKER people
-        const workerPeople = data.people.filter((person: Person) => person.role === 'WORKER')
+        const workerPeople = (data.people || []).filter((person: Person) => person.role === 'WORKER')
         setPeople(workerPeople)
       }
     } catch (error) {
@@ -122,7 +122,7 @@ export default function TaskAssignmentModal({ task, open, onOpenChange, onSucces
     )
   }
 
-  const filteredPeople = people.filter(person =>
+  const filteredPeople = (people || []).filter(person =>
     person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     person.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
