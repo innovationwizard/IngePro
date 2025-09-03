@@ -261,9 +261,9 @@ function ClockInCardComponent() {
       if (!response.ok) {
         const errorData = await response.json()
         logToVercel('CLOCK_OUT_API_ERROR', {
-          worklogId: currentWorkLog.id,
-          userId: currentWorkLog.personId,
-          projectId: currentWorkLog.projectId,
+          worklogId: wl.id,
+          userId: wl.personId,
+          projectId: wl.projectId,
           error: errorData.error,
           status: response.status,
           timestamp: new Date().toISOString()
