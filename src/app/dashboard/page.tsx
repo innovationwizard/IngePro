@@ -90,7 +90,8 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
         
         data.workLogs.forEach((log: any) => {
           if (log.person.role === 'WORKER') {
-            const isClockedIn = log.status === 'ACTIVE'
+            // A worker is clocked in if they have a worklog with no clockOut time
+            const isClockedIn = !log.clockOut
             workerMap.set(log.person.id, {
               id: log.person.id,
               name: log.person.name,
