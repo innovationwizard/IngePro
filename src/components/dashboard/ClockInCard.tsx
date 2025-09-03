@@ -19,7 +19,8 @@ export function ClockInCard() {
   console.log('🚀 ClockInCard component rendering...')
   
   const { data: session } = useSession()
-  const { isClockedIn, clockIn, clockOut, currentWorkLog, setCurrentWorkLog } = useWorkLogStore()
+  const { currentWorkLog, setCurrentWorkLog, getIsClockedIn } = useWorkLogStore()
+  const isClockedIn = getIsClockedIn()
   const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)
