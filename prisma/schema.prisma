@@ -391,6 +391,11 @@ model Tasks {
   // Progress tracking
   progressUnit String @map("progress_unit") // e.g., "linear meters", "square meters", "units"
 
+  // Soft delete - tasks are never actually deleted, just marked as deleted
+  deleted   Boolean  @default(false) @map("deleted")
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+  deletedBy String?  @map("deleted_by") // Person ID who deleted the task
+
   // Universal tasks have no status - they just exist
 
   // Assignment relationships

@@ -51,8 +51,10 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('categoryId')
     const status = searchParams.get('status')
 
-    // Build where clause - tasks are universal
-    const whereClause: any = {}
+    // Build where clause - tasks are universal, but exclude soft-deleted tasks
+    const whereClause: any = {
+      deleted: false  // Only show non-deleted tasks
+    }
 
     if (categoryId) {
       whereClause.categoryId = categoryId
@@ -66,6 +68,9 @@ export async function GET(request: NextRequest) {
           workerId: session.user?.id,
           project: {
             companyId: companyId
+          },
+          task: {
+            deleted: false  // Only show non-deleted tasks
           }
         },
         include: {
@@ -473,48 +478,27 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // IMPORTANT: We NEVER delete progress updates - they are real work records!
-    // Instead, we'll use a soft delete approach or only remove active assignments
+    // IMPORTANT: We use SOFT DELETE to preserve progress updates (real work records)
+    // This allows admins to delete mistaken tasks while preserving all work history
     
-    console.log('🗑️ Preserving progress updates (real work records)')
+    console.log('🗑️ Using soft delete to preserve progress updates (real work records)')
     console.log('🗑️ Progress updates count:', existingTask._count.progressUpdates)
     
-    if (existingTask._count.progressUpdates > 0) {
-      console.log('🗑️ Cannot hard delete task - it has progress updates (real work records)')
-      return NextResponse.json({ 
-        error: 'Cannot delete task - it has progress updates representing real completed work. These records must be preserved for audit and historical purposes.',
-        details: {
-          progressUpdates: existingTask._count.progressUpdates,
-          projectAssignments: existingTask._count.projectAssignments,
-          workerAssignments: existingTask._count.workerAssignments
-        }
-      }, { status: 400 })
-    }
-    
-    // Only proceed if there are NO progress updates
-    // Delete active assignments (project/worker assignments)
-    if (existingTask._count.projectAssignments > 0) {
-      console.log('🗑️ Deleting project assignments...')
-      await prisma.taskProjectAssignments.deleteMany({
-        where: { taskId: taskId }
-      })
-      console.log('🗑️ Project assignments deleted')
-    }
-    
-    if (existingTask._count.workerAssignments > 0) {
-      console.log('🗑️ Deleting worker assignments...')
-      await prisma.taskWorkerAssignments.deleteMany({
-        where: { taskId: taskId }
-      })
-      console.log('🗑️ Worker assignments deleted')
-    }
-    
-    // Now delete the task itself (only if no progress updates exist)
-    console.log('🗑️ Deleting task (no progress updates to preserve)...')
-    await prisma.tasks.delete({
-      where: { id: taskId }
+    // Soft delete the task - mark as deleted but keep all data
+    console.log('🗑️ Soft deleting task...')
+    await prisma.tasks.update({
+      where: { id: taskId },
+      data: {
+        deleted: true,
+        deletedAt: new Date(),
+        deletedBy: session.user?.id
+      }
     })
-    console.log('🗑️ Task deleted successfully')
+    console.log('🗑️ Task soft deleted successfully')
+    
+    // Note: We do NOT delete project assignments or worker assignments
+    // They remain in the database for audit purposes
+    // Progress updates remain linked to the task for historical purposes
 
     return NextResponse.json({
       success: true,
