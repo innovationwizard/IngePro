@@ -83,7 +83,26 @@ export async function POST(
 
     // If personIds is empty, we're removing all workers
     if (validatedData.personIds.length === 0) {
-      // Remove all worker assignments for this task
+      // Check if any assignments have progress updates
+      const assignmentsWithProgress = await prisma.taskWorkerAssignments.findMany({
+        where: { taskId: taskId },
+        include: {
+          progressUpdates: true
+        }
+      })
+      
+      const hasProgressUpdates = assignmentsWithProgress.some(assignment => 
+        assignment.progressUpdates && assignment.progressUpdates.length > 0
+      )
+      
+      if (hasProgressUpdates) {
+        return NextResponse.json({
+          error: 'Cannot remove workers who have progress updates. Progress updates represent actual work done and must be preserved. Please reassign the task to another worker instead of removing the current worker.',
+          status: 400
+        })
+      }
+      
+      // Safe to remove all worker assignments
       await prisma.taskWorkerAssignments.deleteMany({
         where: { taskId: taskId }
       })
@@ -167,6 +186,32 @@ export async function POST(
       )
 
       if (assignmentsToDelete.length > 0) {
+        // For assignments with progress updates, disconnect them instead of deleting
+        const assignmentsWithProgress = await tx.taskWorkerAssignments.findMany({
+          where: { 
+            id: { in: assignmentsToDelete.map(a => a.id) }
+          },
+          include: {
+            progressUpdates: true
+          }
+        })
+        
+        // For assignments with progress updates, we need to preserve the work history
+        // by disconnecting progress updates from the assignment before deletion
+        for (const assignment of assignmentsWithProgress) {
+          if (assignment.progressUpdates && assignment.progressUpdates.length > 0) {
+            // Update progress updates to remove the assignment reference
+            // This preserves the work data while allowing worker removal
+            await tx.taskProgressUpdates.updateMany({
+              where: { assignmentId: assignment.id },
+              data: { 
+                assignmentId: null // Remove reference to the assignment being deleted
+              }
+            })
+          }
+        }
+        
+        // Now safe to delete worker assignments
         await tx.taskWorkerAssignments.deleteMany({
           where: { 
             id: { in: assignmentsToDelete.map(a => a.id) }
