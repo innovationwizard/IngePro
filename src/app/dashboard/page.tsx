@@ -88,20 +88,43 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
         // Extract unique workers and their current status
         const workerMap = new Map<string, Worker>()
         
+        // Group worklogs by worker and find the most recent active one for each
+        const workerWorklogs = new Map<string, any[]>()
+        
+        // First, group all worklogs by worker ID
         data.workLogs.forEach((log: any) => {
           if (log.person.role === 'WORKER') {
-            // A worker is clocked in if they have a worklog with no clockOut time
-            const isClockedIn = !log.clockOut
-            workerMap.set(log.person.id, {
-              id: log.person.id,
-              name: log.person.name,
-              email: log.person.email,
-              role: log.person.role,
-              isClockedIn,
-              currentWorkLogId: isClockedIn ? log.id : undefined,
-              clockInTime: isClockedIn ? log.clockIn : undefined
-            })
+            if (!workerWorklogs.has(log.person.id)) {
+              workerWorklogs.set(log.person.id, [])
+            }
+            workerWorklogs.get(log.person.id)!.push(log)
           }
+        })
+        
+        // For each worker, find their most recent active worklog (or most recent if none active)
+        workerWorklogs.forEach((logs, workerId) => {
+          // Sort by creation date, newest first
+          const sortedLogs = logs.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+          
+          // Find the most recent active worklog (no clockOut time)
+          const activeWorklog = sortedLogs.find(log => !log.clockOut)
+          
+          // Use active worklog if found, otherwise use most recent completed one
+          const mostRecentLog = activeWorklog || sortedLogs[0]
+          
+          const isClockedIn = !mostRecentLog.clockOut
+          
+          workerMap.set(workerId, {
+            id: mostRecentLog.person.id,
+            name: mostRecentLog.person.name,
+            email: mostRecentLog.person.email,
+            role: mostRecentLog.person.role,
+            isClockedIn,
+            currentWorkLogId: isClockedIn ? mostRecentLog.id : undefined,
+            clockInTime: isClockedIn ? mostRecentLog.clockIn : undefined
+          })
         })
         
         setWorkers(Array.from(workerMap.values()))
