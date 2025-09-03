@@ -15,6 +15,7 @@ import TaskProgressModal from './TaskProgressModal'
 import TaskValidationModal from './TaskValidationModal'
 import TaskEditForm from './TaskEditForm'
 import TaskUnassignModal from './TaskUnassignModal'
+import TaskProjectUnassignModal from './TaskProjectUnassignModal'
 
 interface Task {
   id: string
@@ -134,6 +135,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [showValidationModal, setShowValidationModal] = useState(false)
   const [showUnassignModal, setShowUnassignModal] = useState(false)
+  const [showProjectUnassignModal, setShowProjectUnassignModal] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [categories, setCategories] = useState<TaskCategory[]>([])
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -209,6 +211,11 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const handleUnassignTask = (task: Task) => {
     setSelectedTask(task)
     setShowUnassignModal(true)
+  }
+
+  const handleUnassignProject = (task: Task) => {
+    setSelectedTask(task)
+    setShowProjectUnassignModal(true)
   }
 
   const handleDeleteTask = (task: Task) => {
@@ -448,7 +455,15 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                         onClick={() => handleUnassignTask(task)}
                         className="flex-1 sm:flex-none"
                       >
-                        Desasignar
+                        Desasignar Trabajadores
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUnassignProject(task)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        Desasignar Proyectos
                       </Button>
                       <Button
                         variant="outline"
@@ -662,6 +677,17 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
             onOpenChange={setShowUnassignModal}
             onSuccess={() => {
               setShowUnassignModal(false)
+              setSelectedTask(null) // Clear selected task to force refresh
+              onTaskUpdated()
+            }}
+          />
+
+          <TaskProjectUnassignModal
+            task={selectedTask}
+            open={showProjectUnassignModal}
+            onOpenChange={setShowProjectUnassignModal}
+            onSuccess={() => {
+              setShowProjectUnassignModal(false)
               setSelectedTask(null) // Clear selected task to force refresh
               onTaskUpdated()
             }}
