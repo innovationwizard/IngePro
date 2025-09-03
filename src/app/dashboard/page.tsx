@@ -83,18 +83,30 @@ export default function DashboardPage() {
   // Fetch dashboard stats for Admin and Supervisor users
   useEffect(() => {
     const fetchDashboardStats = async () => {
+      console.log('🔍 fetchDashboardStats called with session:', session)
+      console.log('🔍 User role:', session?.user?.role)
+      
       if (!session || !['ADMIN', 'SUPERVISOR'].includes(session.user?.role || '')) {
+        console.log('❌ Session or role check failed, setting loading to false')
         setIsLoading(false)
         return
       }
 
       try {
+        console.log('🚀 Making API calls for role:', session.user?.role)
         const [companiesRes, projectsRes, workLogsRes, projectStatsRes] = await Promise.all([
-          fetch('/api/companies'),
-          fetch('/api/projects'),
-          fetch('/api/worklog'),
-          fetch('/api/projects/stats')
+          fetch('/api/companies', { credentials: 'include' }),
+          fetch('/api/projects', { credentials: 'include' }),
+          fetch('/api/worklog', { credentials: 'include' }),
+          fetch('/api/projects/stats', { credentials: 'include' })
         ])
+        
+        console.log('📊 API responses:', {
+          companies: companiesRes.status,
+          projects: projectsRes.status,
+          workLogs: workLogsRes.status,
+          projectStats: projectStatsRes.status
+        })
 
         if (companiesRes.ok && projectsRes.ok && workLogsRes.ok && projectStatsRes.ok) {
           const [companiesData, projectsData, workLogsData, projectStatsData] = await Promise.all([
@@ -103,6 +115,13 @@ export default function DashboardPage() {
             workLogsRes.json(),
             projectStatsRes.json()
           ])
+          
+          console.log('📈 Parsed data:', {
+            companies: companiesData.companies?.length || 0,
+            projects: projectsData.projects?.length || 0,
+            workLogs: workLogsData.workLogs?.length || 0,
+            projectStats: projectStatsData.projectStats?.length || 0
+          })
 
           // Calculate stats
           const totalPeople = companiesData.companies.reduce((acc: number, company: any) => 
@@ -113,7 +132,7 @@ export default function DashboardPage() {
           const activeWorkLogs = (workLogsData.workLogs || []).filter((log: any) => 
             log.status === 'ACTIVE').length
 
-          setStats({
+          const calculatedStats = {
             totalPeople,
             totalProjects,
             totalWorkHours: Math.round(totalWorkHours * 10) / 10,
@@ -145,7 +164,35 @@ export default function DashboardPage() {
               timestamp: log.createdAt,
               person: log.person.name
             }))
+          }
+          
+          console.log('🎯 Final calculated stats:', calculatedStats)
+          setStats(calculatedStats)
+        } else {
+          console.log('❌ Some API calls failed:', {
+            companies: companiesRes.status,
+            projects: projectsRes.status,
+            workLogs: workLogsRes.status,
+            projectStats: projectStatsRes.status
           })
+          
+          // Log response details for failed calls
+          if (!companiesRes.ok) {
+            const errorText = await companiesRes.text()
+            console.log('❌ Companies API error:', errorText)
+          }
+          if (!projectsRes.ok) {
+            const errorText = await projectsRes.text()
+            console.log('❌ Projects API error:', errorText)
+          }
+          if (!workLogsRes.ok) {
+            const errorText = await workLogsRes.text()
+            console.log('❌ WorkLogs API error:', errorText)
+          }
+          if (!projectStatsRes.ok) {
+            const errorText = await projectStatsRes.text()
+            console.log('❌ ProjectStats API error:', errorText)
+          }
         }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error)
@@ -342,6 +389,11 @@ export default function DashboardPage() {
 
   // Supervisor Dashboard
   if (session?.user?.role === 'SUPERVISOR') {
+    console.log('🔍 Rendering Supervisor Dashboard')
+    console.log('🔍 Session:', session)
+    console.log('🔍 Stats:', stats)
+    console.log('🔍 Loading:', isLoading)
+    
     return (
       <div className="space-y-4 md:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
@@ -379,6 +431,19 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* Debug Info */}
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4">
+              <strong>Debug Info:</strong><br/>
+              Loading: {isLoading.toString()}<br/>
+              Stats: {stats ? 'Loaded' : 'Not loaded'}<br/>
+              Total People: {stats?.totalPeople || 'N/A'}<br/>
+              Total Projects: {stats?.totalProjects || 'N/A'}<br/>
+              Total Work Hours: {stats?.totalWorkHours || 'N/A'}<br/>
+              Active Work Logs: {stats?.activeWorkLogs || 'N/A'}<br/>
+              Session Role: {session?.user?.role || 'N/A'}<br/>
+              Session ID: {session?.user?.id || 'N/A'}
+            </div>
+            
             {/* Key Metrics for Supervisor */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <div className="mobile-card">
