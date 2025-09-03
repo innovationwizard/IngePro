@@ -103,12 +103,7 @@ export async function POST(
 
     // Assign task to users in transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Remove existing worker assignments for this task
-      await tx.taskWorkerAssignments.deleteMany({
-        where: { taskId: taskId }
-      })
-
-      // Create new worker assignments
+      // Create new worker assignments first
       const assignments = await Promise.all(
         validatedData.personIds.map(async (personId) => {
           // Get the first project assignment for this task to use as projectId
@@ -127,6 +122,14 @@ export async function POST(
           })
         })
       )
+
+      // Now safely delete old assignments (new ones are already created)
+      await tx.taskWorkerAssignments.deleteMany({
+        where: { 
+          taskId: taskId,
+          id: { notIn: assignments.map(a => a.id) }
+        }
+      })
 
       return assignments
     })
