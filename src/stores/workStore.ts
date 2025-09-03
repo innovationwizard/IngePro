@@ -27,7 +27,7 @@ const createWorkStore = () =>
     },
     isClockedIn: () => {
       const currentWorkLog = get().currentWorkLog;
-      return !!currentWorkLog && currentWorkLog.clockOut === null;
+      return !!currentWorkLog && (currentWorkLog.clockOut === null || currentWorkLog.clockOut === undefined);
     },
   }));
 
