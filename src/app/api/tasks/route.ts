@@ -409,14 +409,20 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete task (Admin only)
 export async function DELETE(request: NextRequest) {
   try {
+    console.log('🗑️ DELETE /api/tasks called')
     const session = await getServerSession(authOptions)
     
+    console.log('🗑️ Session user role:', session?.user?.role)
+    
     if (!session || session.user?.role !== 'ADMIN') {
+      console.log('🗑️ Unauthorized - user role:', session?.user?.role)
       return NextResponse.json({ error: 'Only admins can delete tasks' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const taskId = searchParams.get('id')
+    
+    console.log('🗑️ Task ID to delete:', taskId)
     
     if (!taskId) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
@@ -443,12 +449,21 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if task has any active usage
+    console.log('🗑️ Task usage counts:', {
+      projectAssignments: existingTask._count.projectAssignments,
+      workerAssignments: existingTask._count.workerAssignments,
+      progressUpdates: existingTask._count.progressUpdates
+    })
+    
     const hasActiveUsage = 
       existingTask._count.projectAssignments > 0 ||
       existingTask._count.workerAssignments > 0 ||
       existingTask._count.progressUpdates > 0
 
+    console.log('🗑️ Has active usage:', hasActiveUsage)
+
     if (hasActiveUsage) {
+      console.log('🗑️ Cannot delete - task has active usage')
       return NextResponse.json({ 
         error: 'Cannot delete task - it has active assignments, progress updates, or worklog entries',
         details: {

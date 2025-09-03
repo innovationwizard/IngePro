@@ -219,18 +219,26 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const confirmDeleteTask = async () => {
     if (!deletingTask) return
 
+    console.log('🗑️ Attempting to delete task:', deletingTask.id, deletingTask.name)
+
     try {
       const response = await fetch(`/api/tasks?id=${deletingTask.id}`, {
         method: 'DELETE',
       })
 
+      console.log('🗑️ Delete response status:', response.status)
+      console.log('🗑️ Delete response ok:', response.ok)
+
       if (response.ok) {
+        const result = await response.json()
+        console.log('🗑️ Delete successful, result:', result)
         toast.success('Tarea eliminada exitosamente')
         setShowDeleteModal(false)
         setDeletingTask(null)
         onTaskUpdated()
       } else {
         const errorData = await response.json()
+        console.log('🗑️ Delete failed, error data:', errorData)
         if (errorData.error.includes('Cannot delete task - it has active usage')) {
           toast.error('No se puede eliminar la tarea - tiene uso activo. Desasigna primero todas las asignaciones.')
         } else {
@@ -238,7 +246,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
         }
       }
     } catch (error) {
-      console.error('Error deleting task:', error)
+      console.error('🗑️ Error deleting task:', error)
       toast.error('Error al eliminar la tarea')
     }
   }
