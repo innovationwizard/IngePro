@@ -432,8 +432,7 @@ export async function DELETE(request: NextRequest) {
           select: {
             projectAssignments: true,
             workerAssignments: true,
-            progressUpdates: true,
-            worklogEntries: true
+            progressUpdates: true
           }
         }
       }
@@ -447,8 +446,7 @@ export async function DELETE(request: NextRequest) {
     const hasActiveUsage = 
       existingTask._count.projectAssignments > 0 ||
       existingTask._count.workerAssignments > 0 ||
-      existingTask._count.progressUpdates > 0 ||
-      existingTask._count.worklogEntries > 0
+      existingTask._count.progressUpdates > 0
 
     if (hasActiveUsage) {
       return NextResponse.json({ 
@@ -456,8 +454,7 @@ export async function DELETE(request: NextRequest) {
         details: {
           projectAssignments: existingTask._count.projectAssignments,
           workerAssignments: existingTask._count.workerAssignments,
-          progressUpdates: existingTask._count.progressUpdates,
-          worklogEntries: existingTask._count.worklogEntries
+          progressUpdates: existingTask._count.progressUpdates
         }
       }, { status: 400 })
     }
