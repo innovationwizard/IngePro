@@ -194,6 +194,13 @@ export async function GET(request: NextRequest) {
 // POST - Create a new work log (simplified for time tracking)
 export async function POST(request: NextRequest) {
   console.log('🔵 POST method called - Creating new worklog')
+  
+  // Ensure this is actually a POST request
+  if (request.method !== 'POST') {
+    console.log('🔵 POST method called but request.method is:', request.method)
+    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
+  }
+  
   try {
     const session = await getServerSession(authOptions)
     
@@ -348,6 +355,14 @@ export async function POST(request: NextRequest) {
 // PUT - Update work log (end time tracking)
 export async function PUT(request: NextRequest) {
   console.log('🔴 PUT method called - Updating worklog')
+  console.log('🔴 Actual request method:', request.method)
+  
+  // Ensure this is actually a PUT request
+  if (request.method !== 'PUT') {
+    console.log('🔴 PUT method called but request.method is:', request.method)
+    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
+  }
+  
   try {
     const session = await getServerSession(authOptions)
     
@@ -439,4 +454,20 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// Catch-all handler for unexpected HTTP methods
+export async function GET(request: NextRequest) {
+  console.log('🟡 GET method called - Not supported')
+  return NextResponse.json({ error: 'Method not supported' }, { status: 405 })
+}
+
+export async function DELETE(request: NextRequest) {
+  console.log('🟡 DELETE method called - Not supported')
+  return NextResponse.json({ error: 'Method not supported' }, { status: 405 })
+}
+
+export async function PATCH(request: NextRequest) {
+  console.log('🟡 PATCH method called - Not supported')
+  return NextResponse.json({ error: 'Method not supported' }, { status: 405 })
 }
