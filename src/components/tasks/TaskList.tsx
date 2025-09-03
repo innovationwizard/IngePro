@@ -279,6 +279,16 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {/* PROMINENT DEBUG BANNER */}
+      <div className="bg-blue-500 text-white p-4 rounded-lg text-center">
+        <h3 className="text-lg font-bold mb-2">🔍 TASKLIST DEBUG INFO</h3>
+        <p><strong>Person Role:</strong> {personRole}</p>
+        <p><strong>Current User ID:</strong> {currentUserId}</p>
+        <p><strong>Tasks Count:</strong> {tasks?.length || 0}</p>
+        <p><strong>Is Admin:</strong> {personRole === 'ADMIN' ? 'YES' : 'NO'}</p>
+        <p><strong>Show Delete Button:</strong> {personRole === 'ADMIN' ? 'SHOULD SHOW' : 'HIDDEN'}</p>
+      </div>
+
       {/* Action Buttons */}
       {(personRole === 'ADMIN' || personRole === 'SUPERVISOR') && (
         <div className="flex justify-end">

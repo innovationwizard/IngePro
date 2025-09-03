@@ -276,10 +276,16 @@ export default function TasksPage() {
         <p className="text-gray-600 mt-2 text-sm sm:text-base">
           Gestiona tareas, categorías y materiales para tus proyectos de construcción
         </p>
-        {/* Debug info */}
-        <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
-          Debug: User Role = {session.user?.role} | personRole = {personRole} | isAdmin = {isAdmin.toString()}
-        </div>
+      </div>
+
+      {/* PROMINENT DEBUG BANNER */}
+      <div className="bg-red-500 text-white p-4 rounded-lg mb-6 text-center">
+        <h3 className="text-lg font-bold mb-2">🔍 DEBUG INFO - TASK DELETION ISSUE</h3>
+        <p><strong>Session User Role:</strong> {session.user?.role}</p>
+        <p><strong>Person Role:</strong> {personRole}</p>
+        <p><strong>Is Admin:</strong> {isAdmin.toString()}</p>
+        <p><strong>Tasks Count:</strong> {tasks?.length || 0}</p>
+        <p><strong>Session User ID:</strong> {session.user?.id}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
