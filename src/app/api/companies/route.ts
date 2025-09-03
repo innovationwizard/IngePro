@@ -22,14 +22,14 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || !['ADMIN', 'SUPERUSER'].includes(session.user?.role || '')) {
+    if (!session || !['ADMIN', 'SUPERVISOR', 'SUPERUSER'].includes(session.user?.role || '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const prisma = await getPrisma()
 
-    // If admin, show all their companies
-    if (session.user?.role === 'ADMIN') {
+    // If admin or supervisor, show their companies
+    if (['ADMIN', 'SUPERVISOR'].includes(session.user?.role || '')) {
       const personTenants = await prisma.personTenants.findMany({
         where: { 
           personId: session.user.id,

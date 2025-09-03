@@ -10,8 +10,49 @@ export async function GET(req: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Get all projects with people counts
+    // Filter projects based on user role
+    let whereClause: any = {}
+    
+    if (session.user.role === 'SUPERUSER') {
+      // SUPERUSER sees all projects
+    } else if (session.user.role === 'ADMIN') {
+      // ADMIN sees projects from their companies
+      const personTenants = await prisma.personTenants.findMany({
+        where: {
+          personId: session.user.id,
+          status: 'ACTIVE'
+        },
+        select: { companyId: true }
+      })
+      const companyIds = personTenants.map(ut => ut.companyId)
+      whereClause.companyId = { in: companyIds }
+    } else if (session.user.role === 'SUPERVISOR') {
+      // SUPERVISOR sees projects they are assigned to
+      const personProjects = await prisma.personProjects.findMany({
+        where: {
+          personId: session.user.id,
+          status: 'ACTIVE'
+        },
+        select: { projectId: true }
+      })
+      const projectIds = personProjects.map(pp => pp.projectId)
+      whereClause.id = { in: projectIds }
+    } else {
+      // WORKER sees only their assigned projects
+      const personProjects = await prisma.personProjects.findMany({
+        where: {
+          personId: session.user.id,
+          status: 'ACTIVE'
+        },
+        select: { projectId: true }
+      })
+      const projectIds = personProjects.map(pp => pp.projectId)
+      whereClause.id = { in: projectIds }
+    }
+    
+    // Get filtered projects with people counts
     const projects = await prisma.projects.findMany({
+      where: whereClause,
       select: {
         id: true,
         name: true,
