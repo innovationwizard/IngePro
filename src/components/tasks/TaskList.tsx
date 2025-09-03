@@ -455,7 +455,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDeleteTask(task)}
-                      className="flex-1 sm:flex-none"
+                      className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white border border-red-700 rounded px-3 py-2 font-medium"
                     >
                       Eliminar
                     </Button>
@@ -515,7 +515,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
 
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                      <Button variant="outline" size="sm" className="flex-1 sm:flex-none border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 rounded px-3 py-2 font-medium">
                         <span className="hidden sm:inline">Ver Detalles</span>
                         <span className="sm:hidden">Detalles</span>
                       </Button>
