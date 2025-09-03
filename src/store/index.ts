@@ -59,7 +59,3 @@ export const useProjectStore = () => ({
   setProjects: () => {},
   setCurrentProject: () => {},
 })
-
-// Placeholder exports for compatibility
-export const useAuthStore = () => ({})
-export const useProjectStore = () => ({})
