@@ -139,8 +139,9 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
       try {
         const response = await fetch('/api/task-categories')
         if (response.ok) {
-          const data = await response.json()
-          setCategories(data.categories || [])
+                  const data = await response.json()
+        console.log('Fetched categories data:', data)
+        setCategories(data.taskCategories || [])
         }
       } catch (error) {
         console.error('Error fetching categories:', error)

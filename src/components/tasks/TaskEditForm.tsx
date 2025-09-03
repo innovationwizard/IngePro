@@ -42,6 +42,10 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
     progressUnit: ''
   })
 
+  // Debug categories
+  console.log('TaskEditForm received categories:', categories)
+  console.log('Categories length:', categories?.length)
+
   // Initialize form with task data when task changes
   useEffect(() => {
     if (task) {
@@ -167,11 +171,17 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sin categoría</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
+                  {categories && categories.length > 0 ? (
+                    categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-categories" disabled>
+                      No hay categorías disponibles
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               {/* Debug info */}
