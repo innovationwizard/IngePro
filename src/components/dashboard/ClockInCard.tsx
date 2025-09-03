@@ -23,7 +23,10 @@ function ClockInCardComponent() {
   const currentWorkLog = useWorkStore((s: any) => s.currentWorkLog)
   const setCurrentWorkLog = useWorkStore((s: any) => s.setCurrentWorkLog)
   const clockOut = useWorkStore((s: any) => s.clockOut)
-  const isClockedIn = useWorkStore((s: any) => s.isClockedIn())
+  const isClockedIn = useWorkStore((s: any) => {
+    const workLog = s.currentWorkLog;
+    return !!workLog && (workLog.clockOut === null || workLog.clockOut === undefined);
+  })
   const currentProject = useProjectStore((s: any) => s.currentProject)
   const [isLoading, setIsLoading] = useState(false)
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)
