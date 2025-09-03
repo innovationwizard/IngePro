@@ -48,7 +48,7 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
       setFormData({
         name: task.name || '',
         description: task.description || '',
-        categoryId: task.categoryId || '',
+        categoryId: task.categoryId || 'none',
         progressUnit: task.progressUnit || ''
       })
     }
@@ -59,12 +59,12 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
     setLoading(true)
 
     try {
-      // Prepare form data - remove categoryId if empty string
+      // Prepare form data - remove categoryId if 'none' or empty string
       const submitData = {
         id: task.id,
         name: formData.name,
         description: formData.description,
-        categoryId: formData.categoryId || undefined,
+        categoryId: formData.categoryId === 'none' ? undefined : formData.categoryId,
         progressUnit: formData.progressUnit
       }
 
@@ -100,7 +100,7 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
       setFormData({
         name: task.name || '',
         description: task.description || '',
-        categoryId: task.categoryId || '',
+        categoryId: task.categoryId || 'none',
         progressUnit: task.progressUnit || ''
       })
     }
@@ -157,7 +157,7 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
                   <SelectValue placeholder="Selecciona una categoría (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin categoría</SelectItem>
+                  <SelectItem value="none">Sin categoría</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
