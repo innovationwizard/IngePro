@@ -572,6 +572,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
             onOpenChange={setShowUnassignModal}
             onSuccess={() => {
               setShowUnassignModal(false)
+              setSelectedTask(null) // Clear selected task to force refresh
               onTaskUpdated()
             }}
           />
