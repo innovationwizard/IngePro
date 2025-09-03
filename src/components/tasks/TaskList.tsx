@@ -135,6 +135,8 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [categories, setCategories] = useState<TaskCategory[]>([])
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   // Fetch categories when component mounts
   useEffect(() => {
@@ -197,6 +199,38 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const handleUnassignTask = (task: Task) => {
     setSelectedTask(task)
     setShowUnassignModal(true)
+  }
+
+  const handleDeleteTask = (task: Task) => {
+    setDeletingTask(task)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDeleteTask = async () => {
+    if (!deletingTask) return
+
+    try {
+      const response = await fetch(`/api/tasks?id=${deletingTask.id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        toast.success('Tarea eliminada exitosamente')
+        setShowDeleteModal(false)
+        setDeletingTask(null)
+        onTaskUpdated()
+      } else {
+        const errorData = await response.json()
+        if (errorData.error.includes('Cannot delete task - it has active usage')) {
+          toast.error('No se puede eliminar la tarea - tiene uso activo. Desasigna primero todas las asignaciones.')
+        } else {
+          toast.error(errorData.error || 'Error al eliminar la tarea')
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error)
+      toast.error('Error al eliminar la tarea')
+    }
   }
 
   const getTotalProgress = (task: Task) => {
@@ -385,6 +419,18 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                         {isAssignedToCurrentWorker ? 'Reasignar' : 'Asignar'}
                       </Button>
                     </>
+                  )}
+                  
+                  {/* Delete button - Admin only */}
+                  {personRole === 'ADMIN' && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteTask(task)}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Eliminar
+                    </Button>
                   )}
                   
                   {/* Enhanced Progress Button Section */}
@@ -606,6 +652,40 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
           onTaskUpdated()
         }}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Eliminación</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              ¿Estás seguro de que quieres eliminar la tarea <strong>"{deletingTask?.name}"</strong>?
+            </p>
+            <p className="text-sm text-red-600">
+              ⚠️ Esta acción no se puede deshacer. La tarea se eliminará permanentemente.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setDeletingTask(null)
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteTask}
+              >
+                Eliminar Tarea
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

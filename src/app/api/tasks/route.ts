@@ -5,6 +5,7 @@ import { getPrisma } from '@/lib/prisma'
 import { z } from 'zod'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 // Validation schema for task
 const taskSchema = z.object({
@@ -400,6 +401,82 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(
       { error: 'Failed to update task' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE - Delete task (Admin only)
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user?.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Only admins can delete tasks' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const taskId = searchParams.get('id')
+    
+    if (!taskId) {
+      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
+    }
+
+    const prisma = await getPrisma()
+
+    // Check if task exists
+    const existingTask = await prisma.tasks.findUnique({
+      where: { id: taskId },
+      include: {
+        _count: {
+          select: {
+            projectAssignments: true,
+            workerAssignments: true,
+            progressUpdates: true,
+            worklogEntries: true
+          }
+        }
+      }
+    })
+
+    if (!existingTask) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
+    // Check if task has any active usage
+    const hasActiveUsage = 
+      existingTask._count.projectAssignments > 0 ||
+      existingTask._count.workerAssignments > 0 ||
+      existingTask._count.progressUpdates > 0 ||
+      existingTask._count.worklogEntries > 0
+
+    if (hasActiveUsage) {
+      return NextResponse.json({ 
+        error: 'Cannot delete task - it has active assignments, progress updates, or worklog entries',
+        details: {
+          projectAssignments: existingTask._count.projectAssignments,
+          workerAssignments: existingTask._count.workerAssignments,
+          progressUpdates: existingTask._count.progressUpdates,
+          worklogEntries: existingTask._count.worklogEntries
+        }
+      }, { status: 400 })
+    }
+
+    // Delete the task (safe to delete since no active usage)
+    await prisma.tasks.delete({
+      where: { id: taskId }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Task deleted successfully',
+      deletedTaskId: taskId
+    })
+
+  } catch (error) {
+    console.error('Error deleting task:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete task' },
       { status: 500 }
     )
   }
