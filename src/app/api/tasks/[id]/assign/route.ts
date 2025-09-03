@@ -91,18 +91,21 @@ export async function POST(
         }
       })
       
-      const hasProgressUpdates = assignmentsWithProgress.some(assignment => 
-        assignment.progressUpdates && assignment.progressUpdates.length > 0
-      )
-      
-      if (hasProgressUpdates) {
-        return NextResponse.json({
-          error: 'Cannot remove workers who have progress updates. Progress updates represent actual work done and must be preserved. Please reassign the task to another worker instead of removing the current worker.',
-          status: 400
-        })
+      // Handle progress updates by disconnecting them from assignments
+      for (const assignment of assignmentsWithProgress) {
+        if (assignment.progressUpdates && assignment.progressUpdates.length > 0) {
+          // Explicitly unassign progress updates from the worker assignment
+          // This preserves the work data while allowing worker removal
+          await prisma.taskProgressUpdates.updateMany({
+            where: { assignmentId: assignment.id },
+            data: { 
+              assignmentId: null // Explicitly unassign - worker is being removed
+            }
+          })
+        }
       }
       
-      // Safe to remove all worker assignments
+      // Now safe to remove all worker assignments
       await prisma.taskWorkerAssignments.deleteMany({
         where: { taskId: taskId }
       })
