@@ -485,7 +485,17 @@ export async function DELETE(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error deleting task:', error)
+    console.error('🗑️ Error deleting task:', error)
+    console.error('🗑️ Error type:', typeof error)
+    console.error('🗑️ Error message:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('🗑️ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    
+    // Check if it's a Prisma error
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('🗑️ Prisma error code:', (error as any).code)
+      console.error('🗑️ Prisma error meta:', (error as any).meta)
+    }
+    
     return NextResponse.json(
       { error: 'Failed to delete task' },
       { status: 500 }
