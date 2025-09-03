@@ -7,7 +7,7 @@ import { ClockInCard } from '@/components/dashboard/ClockInCard'
 import { ProjectSelector } from '@/components/dashboard/ProjectSelector'
 import { LocationTracker } from '@/components/dashboard/LocationTracker'
 import { RecentWorkLogs } from '@/components/dashboard/RecentWorkLogs'
-import { useWorkLogStore } from '@/store'
+import { useWorkStore } from '@/stores/workStore'
 import { es } from '@/lib/translations/es'
 import PWAStatus from '@/components/PWAStatus'
 import { 
@@ -109,12 +109,19 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
           )
           
           // Find the most recent active worklog (no clockOut time)
-          const activeWorklog = sortedLogs.find(log => !log.clockOut)
+          const activeWorklogs = sortedLogs.filter(log => !log.clockOut)
           
-          // Use active worklog if found, otherwise use most recent completed one
-          const mostRecentLog = activeWorklog || sortedLogs[0]
+          // If there are multiple active worklogs, the newest one is the current one
+          // Older ones should be considered orphaned and will be handled by the API
+          const currentActiveWorklog = activeWorklogs.length > 0 ? 
+            activeWorklogs.sort((a, b) => 
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )[0] : null
           
-          const isClockedIn = !mostRecentLog.clockOut
+          // Use current active worklog if found, otherwise use most recent completed one
+          const mostRecentLog = currentActiveWorklog || sortedLogs[0]
+          
+          const isClockedIn = !!currentActiveWorklog
           
           workerMap.set(workerId, {
             id: mostRecentLog.person.id,
@@ -122,8 +129,8 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
             email: mostRecentLog.person.email,
             role: mostRecentLog.person.role,
             isClockedIn,
-            currentWorkLogId: isClockedIn ? mostRecentLog.id : undefined,
-            clockInTime: isClockedIn ? mostRecentLog.clockIn : undefined
+            currentWorkLogId: isClockedIn ? currentActiveWorklog!.id : undefined,
+            clockInTime: isClockedIn ? currentActiveWorklog!.clockIn : undefined
           })
         })
         
@@ -147,15 +154,29 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
 
     try {
       if (newStatus) {
-        // Clock in worker
-        const response = await fetch('/api/worklog/clock-in', {
+        // Clock in worker - first close any orphaned worklogs
+        if (selectedWorker.currentWorkLogId) {
+          // Close the current active worklog first
+          await fetch(`/api/worklog`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              id: selectedWorker.currentWorkLogId,
+              endTime: new Date().toISOString(),
+              description: 'Cerrado automáticamente por supervisor al poner en turno'
+            })
+          })
+        }
+        
+        // Now create new worklog
+        const response = await fetch('/api/worklog', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            personId: selectedWorker.id,
             projectId: stats?.projects?.[0]?.id || '', // Use first available project
-            location: 'Manual entry by supervisor'
+            description: 'Entrada manual por supervisor'
           })
         })
         
@@ -166,12 +187,14 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
       } else {
         // Clock out worker
         if (selectedWorker.currentWorkLogId) {
-          const response = await fetch(`/api/worklog/${selectedWorker.currentWorkLogId}/clock-out`, {
+          const response = await fetch(`/api/worklog`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
-              location: 'Manual entry by supervisor'
+              id: selectedWorker.currentWorkLogId,
+              endTime: new Date().toISOString(),
+              description: 'Salida manual por supervisor'
             })
           })
           
@@ -279,7 +302,8 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
 export default function DashboardPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const { isClockedIn, currentWorkLog } = useWorkLogStore()
+  const isClockedIn = useWorkStore((s: any) => s.isClockedIn())
+  const currentWorkLog = useWorkStore((s: any) => s.currentWorkLog)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)

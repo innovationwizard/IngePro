@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useWorkLogStore, useProjectStore } from '@/store'
+import { useWorkStore } from '@/stores/workStore'
+import { useProjectStore } from '@/store'
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Clock, MapPin, AlertCircle, FileText, Plus } from 'lucide-react'
@@ -19,8 +20,10 @@ export function ClockInCard() {
   console.log('🚀 ClockInCard component rendering...')
   
   const { data: session } = useSession()
-  const { currentWorkLog, setCurrentWorkLog, clockOut } = useWorkLogStore()
-  const isClockedIn = !!currentWorkLog && currentWorkLog.clockOut === null
+  const currentWorkLog = useWorkStore((s: any) => s.currentWorkLog)
+  const setCurrentWorkLog = useWorkStore((s: any) => s.setCurrentWorkLog)
+  const clockOut = useWorkStore((s: any) => s.clockOut)
+  const isClockedIn = useWorkStore((s: any) => s.isClockedIn())
   const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)

@@ -101,6 +101,48 @@ async function main() {
     });
   }
 
+  // Create PersonTenants relationships for all users
+  for (const userData of demoUsers) {
+    await prisma.personTenants.upsert({
+      where: { 
+        personId_companyId_startDate: {
+          personId: userData.id,
+          companyId: demoCompany.id,
+          startDate: new Date()
+        }
+      },
+      update: {},
+      create: {
+        personId: userData.id,
+        companyId: demoCompany.id,
+        startDate: new Date(),
+        status: 'ACTIVE'
+      },
+    });
+  }
+
+  // Create PersonProjects relationships for all users
+  for (const userData of demoUsers) {
+    for (const projectData of demoProjects) {
+      await prisma.personProjects.upsert({
+        where: {
+          personId_projectId_startDate: {
+            personId: userData.id,
+            projectId: projectData.id,
+            startDate: new Date()
+          }
+        },
+        update: {},
+        create: {
+          personId: userData.id,
+          projectId: projectData.id,
+          startDate: new Date(),
+          status: 'ACTIVE'
+        },
+      });
+    }
+  }
+
   console.log('✅ Seed data created successfully');
 }
 

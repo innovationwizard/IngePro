@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useWorkLogStore } from '@/store'
+import { useWorkStore } from '@/stores/workStore'
 import { getCurrentLocation } from '@/lib/utils'
 import { MapPin, Wifi, WifiOff, Activity } from 'lucide-react'
 import { es } from '@/lib/translations/es'
@@ -20,7 +20,8 @@ const POLLING_INTERVALS = [60000, 120000, 240000, 480000, 960000] // 60s, 120s, 
 
 export function LocationTracker() {
   const { data: session } = useSession()
-  const { currentLocation, updateLocation } = useWorkLogStore()
+  const currentLocation = useWorkStore((s: any) => s.currentLocation)
+  const setCurrentLocation = useWorkStore((s: any) => s.setCurrentLocation)
   const [isTracking, setIsTracking] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pollingInterval, setPollingInterval] = useState(60000) // Start with 60s
@@ -120,7 +121,7 @@ export function LocationTracker() {
           const isSignificant = distance > DISTANCE_THRESHOLD || headingChange > HEADING_THRESHOLD
           
           // Update local state
-          updateLocation(location)
+          setCurrentLocation(location)
           setLastLocation({ ...location, heading })
           
           // Send to server
@@ -141,7 +142,7 @@ export function LocationTracker() {
           }
         } else {
           // First location update
-          updateLocation(location)
+          setCurrentLocation(location)
           setLastLocation({ ...location, heading: 0 })
           await sendLocationUpdate(location, 0, 0, true)
         }
@@ -153,7 +154,7 @@ export function LocationTracker() {
     }, pollingInterval)
 
     return intervalRef.current
-  }, [pollingInterval, lastLocation, calculateDistance, calculateHeadingChange, sendLocationUpdate, updateLocation])
+  }, [pollingInterval, lastLocation, calculateDistance, calculateHeadingChange, sendLocationUpdate, setCurrentLocation])
 
   // Handle page unload with sendBeacon
   useEffect(() => {
@@ -205,7 +206,7 @@ export function LocationTracker() {
         timestamp: new Date().toISOString()
       })
       
-      updateLocation(location)
+      setCurrentLocation(location)
       setIsTracking(true)
       setError(null)
     } catch (err) {
