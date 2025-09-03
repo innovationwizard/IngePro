@@ -448,24 +448,23 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
-    // Check if task has any active usage
+    // Check if task has any active assignments (progress updates are historical and should not block deletion)
     console.log('🗑️ Task usage counts:', {
       projectAssignments: existingTask._count.projectAssignments,
       workerAssignments: existingTask._count.workerAssignments,
       progressUpdates: existingTask._count.progressUpdates
     })
     
-    const hasActiveUsage = 
+    const hasActiveAssignments = 
       existingTask._count.projectAssignments > 0 ||
-      existingTask._count.workerAssignments > 0 ||
-      existingTask._count.progressUpdates > 0
+      existingTask._count.workerAssignments > 0
 
-    console.log('🗑️ Has active usage:', hasActiveUsage)
+    console.log('🗑️ Has active assignments:', hasActiveAssignments)
 
-    if (hasActiveUsage) {
-      console.log('🗑️ Cannot delete - task has active usage')
+    if (hasActiveAssignments) {
+      console.log('🗑️ Cannot delete - task has active assignments')
       return NextResponse.json({ 
-        error: 'Cannot delete task - it has active assignments, progress updates, or worklog entries',
+        error: 'Cannot delete task - it has active project or worker assignments. Desasigna primero todas las asignaciones.',
         details: {
           projectAssignments: existingTask._count.projectAssignments,
           workerAssignments: existingTask._count.workerAssignments,

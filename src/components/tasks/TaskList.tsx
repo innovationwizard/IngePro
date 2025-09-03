@@ -249,13 +249,14 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
         console.log('🗑️ Error message:', errorData.error)
         console.log('🗑️ Error details:', errorData.details)
         
-        if (errorData.error && errorData.error.includes('Cannot delete task - it has active usage')) {
+        if (errorData.error && errorData.error.includes('Cannot delete task - it has active')) {
           const details = errorData.details || {}
-          const message = `No se puede eliminar la tarea - tiene uso activo:
+          const message = `No se puede eliminar la tarea - tiene asignaciones activas:
           
           • Asignaciones a proyectos: ${details.projectAssignments || 0}
           • Asignaciones a trabajadores: ${details.workerAssignments || 0}
-          • Actualizaciones de progreso: ${details.progressUpdates || 0}
+          
+          ⚠️ Las actualizaciones de progreso (${details.progressUpdates || 0}) son registros históricos y no bloquean la eliminación.
           
           Desasigna primero todas las asignaciones antes de eliminar.`
           
