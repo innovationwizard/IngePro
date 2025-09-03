@@ -108,7 +108,7 @@ module.exports = {
     // Technology stack mapping
     techStack: {
       'Frontend': ['Next.js', 'React', 'TypeScript', 'Tailwind CSS'],
-      'Backend': ['Node.js', 'Prisma', 'PostgreSQL', 'Redis'],
+      'Backend': ['Node.js', 'Prisma', 'PostgreSQL'],
       'Authentication': ['NextAuth.js', 'JWT', 'bcryptjs'],
       'Infrastructure': ['AWS RDS', 'AWS S3', 'AWS Lambda', 'Vercel'],
       'Development': ['ESLint', 'Prettier', 'Prisma Studio']

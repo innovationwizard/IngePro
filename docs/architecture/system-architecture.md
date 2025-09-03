@@ -17,7 +17,7 @@ graph TB
     
     subgraph "Data Layer"
         I[Prisma ORM] --> J[PostgreSQL]
-        I --> K[Redis Cache]
+        I --> K[In-Memory Cache]
     end
     
     subgraph "Infrastructure"
@@ -237,7 +237,7 @@ graph LR
     subgraph "Backend"
         F[Node.js] --> G[Prisma ORM]
         G --> H[PostgreSQL]
-        H --> I[Redis]
+    
     end
     
     subgraph "Authentication"

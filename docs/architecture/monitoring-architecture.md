@@ -16,7 +16,7 @@ graph TB
     end
     
     subgraph "External Services"
-        K[Redis] --> L[Cache Monitoring]
+        K[In-Memory Cache] --> L[Cache Monitoring]
         M[PostgreSQL] --> N[Query Performance]
     end
     
@@ -43,7 +43,7 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     services: {
       database: await checkDatabase(),
-      redis: await checkRedis(),
+      
       aws: await checkAWS(),
       external: await checkExternalServices()
     }

@@ -35,7 +35,7 @@ graph TB
     
     subgraph "Data Layer"
         I[Prisma ORM] --> J[PostgreSQL]
-        I --> K[Redis Cache]
+        I --> K[In-Memory Cache]
     end
     
     subgraph "Infrastructure"
@@ -255,7 +255,7 @@ graph LR
     subgraph "Backend"
         F[Node.js] --> G[Prisma ORM]
         G --> H[PostgreSQL]
-        H --> I[Redis]
+    
     end
     
     subgraph "Authentication"
@@ -546,7 +546,7 @@ const infrastructureDocs = `# Infrastructure & Deployment
 DATABASE_URL="postgresql://..."
 NEXTAUTH_SECRET="your-secret"
 NEXTAUTH_URL="https://your-domain.com"
-REDIS_URL="redis://..."
+
 AWS_ACCESS_KEY_ID="..."
 AWS_SECRET_ACCESS_KEY="..."
 AWS_REGION="us-east-1"

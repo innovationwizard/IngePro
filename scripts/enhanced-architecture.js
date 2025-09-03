@@ -213,7 +213,7 @@ sequenceDiagram
     participant F as Frontend
     participant A as NextAuth
     participant D as Database
-    participant R as Redis
+    
     
     U->>F: Login Request
     F->>A: Authenticate Credentials
@@ -353,7 +353,7 @@ builds:
 env:
   DATABASE_URL: @database-url
   NEXTAUTH_SECRET: @nextauth-secret
-  REDIS_URL: @redis-url
+
 
 # AWS Infrastructure
 Resources:
@@ -428,7 +428,7 @@ graph TB
     end
     
     subgraph "External Services"
-        K[Redis] --> L[Cache Monitoring]
+        K[In-Memory Cache] --> L[Cache Monitoring]
         M[PostgreSQL] --> N[Query Performance]
     end
     
@@ -455,7 +455,7 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     services: {
       database: await checkDatabase(),
-      redis: await checkRedis(),
+      
       aws: await checkAWS(),
       external: await checkExternalServices()
     }

@@ -43,7 +43,7 @@ builds:
 env:
   DATABASE_URL: @database-url
   NEXTAUTH_SECRET: @nextauth-secret
-  REDIS_URL: @redis-url
+
 
 # AWS Infrastructure
 Resources:

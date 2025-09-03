@@ -95,8 +95,7 @@ DATABASE_URL="postgresql://..."
 NEXTAUTH_SECRET="your-secret-here"
 NEXTAUTH_URL="https://your-domain.com"
 
-# Redis (for system health monitoring)
-REDIS_URL="redis://your-redis-instance:6379"
+
 
 # AWS (if using)
 AWS_ACCESS_KEY_ID="your-key"
@@ -119,7 +118,7 @@ CRON_SECRET="your-cron-secret"
 ## 📋 Pre-Restoration Checklist
 
 - [ ] **Database**: Ensure PostgreSQL is running and accessible
-- [ ] **Redis**: Verify Redis connection (if using system health monitoring)
+
 - [ ] **Environment**: Prepare all required environment variables
 - [ ] **Ports**: Ensure required ports are available (3000, 5432, 6379)
 - [ ] **Permissions**: Verify write permissions in target directory
@@ -135,8 +134,7 @@ curl http://localhost:3000/api/health
 # Check database connection
 npx prisma db pull
 
-# Check Redis connection (if applicable)
-npm run test:redis
+
 ```
 
 ### 2. **Verify Key Features**

@@ -7,7 +7,7 @@ sequenceDiagram
     participant F as Frontend
     participant A as NextAuth
     participant D as Database
-    participant R as Redis
+    
     
     U->>F: Login Request
     F->>A: Authenticate Credentials

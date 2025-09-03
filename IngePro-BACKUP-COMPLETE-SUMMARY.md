@@ -92,7 +92,7 @@ npm start
 - [ ] **Target Directory**: Ensure sufficient disk space (400MB+)
 - [ ] **Environment Variables**: Prepare production values
 - [ ] **Database**: PostgreSQL running and accessible
-- [ ] **Redis**: Connection available (if using system health)
+
 - [ ] **Ports**: 3000, 5432, 6379 available
 - [ ] **Node.js**: Version 18+ installed
 - [ ] **Permissions**: Write access to target directory
