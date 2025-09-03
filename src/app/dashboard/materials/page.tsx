@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Plus, Package } from 'lucide-react'
+import { Plus, Package, Edit, Trash2 } from 'lucide-react'
 import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
 import InventoryManager from '@/components/inventory/InventoryManager'
 import ProgressHistory from '@/components/tasks/ProgressHistory'
@@ -342,6 +342,7 @@ export default function MaterialsPage() {
           <TabsTrigger value="consumption" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Consumo</TabsTrigger>
           <TabsTrigger value="inventory" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Inventario</TabsTrigger>
           <TabsTrigger value="assignments" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Asignaciones</TabsTrigger>
+          <TabsTrigger value="manage" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Gestionar</TabsTrigger>
           <TabsTrigger value="history" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Historial</TabsTrigger>
         </TabsList>
 
@@ -399,6 +400,33 @@ export default function MaterialsPage() {
                   Abrir Asignador de Materiales
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="manage" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gestión de Materiales</CardTitle>
+              <p className="text-sm text-gray-600">
+                {isAdmin ? 'Administra todos los materiales: crear, editar y eliminar' : 'Solo administradores pueden gestionar materiales'}
+              </p>
+            </CardHeader>
+            <CardContent>
+              {isAdmin ? (
+                <MaterialsManager 
+                  materials={materials}
+                  onMaterialUpdated={fetchMaterials}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <Package className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Acceso Restringido</h3>
+                  <p className="text-gray-600">
+                    Solo los administradores pueden gestionar materiales
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -593,6 +621,324 @@ function CreateMaterialModal({ isOpen, onClose, onSubmit }: {
                 className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
                 {isSubmitting ? 'Creando...' : 'Crear Material'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Materials Manager Component for Admin CRUD operations
+function MaterialsManager({ materials, onMaterialUpdated }: {
+  materials: Material[]
+  onMaterialUpdated: () => void
+}) {
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null)
+  const [deletingMaterial, setDeletingMaterial] = useState<Material | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleEditMaterial = (material: Material) => {
+    setEditingMaterial(material)
+    setShowEditModal(true)
+  }
+
+  const handleDeleteMaterial = (material: Material) => {
+    setDeletingMaterial(material)
+    setShowDeleteModal(true)
+  }
+
+  const handleEditSubmit = async (formData: any) => {
+    if (!editingMaterial) return
+    
+    setIsSubmitting(true)
+    try {
+      const response = await fetch('/api/materials', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          id: editingMaterial.id,
+          ...formData
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setShowEditModal(false)
+        setEditingMaterial(null)
+        onMaterialUpdated()
+      } else {
+        alert(`Error: ${data.error || 'Error al actualizar material'}`)
+      }
+    } catch (error) {
+      console.error('Error updating material:', error)
+      alert('Error de conexión')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingMaterial) return
+    
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/materials?id=${deletingMaterial.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setShowDeleteModal(false)
+        setDeletingMaterial(null)
+        onMaterialUpdated()
+      } else {
+        alert(`Error: ${data.error || 'Error al eliminar material'}`)
+      }
+    } catch (error) {
+      console.error('Error deleting material:', error)
+      alert('Error de conexión')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4">
+        {materials.map((material) => (
+          <div key={material.id} className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <h4 className="font-medium">{material.nameEs || material.name}</h4>
+                <span className="text-sm text-gray-500">({material.name})</span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                Unidad: {material.unit} • Stock: {material.currentStock}
+                {material.unitCost && ` • Costo: $${material.unitCost}/${material.unit}`}
+              </p>
+              {material.description && (
+                <p className="text-sm text-gray-500 mt-1">{material.description}</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEditMaterial(material)}
+              >
+                <Edit className="w-4 h-4 mr-1" />
+                Editar
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => handleDeleteMaterial(material)}
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Eliminar
+              </Button>
+            </div>
+          </div>
+        ))}
+        {materials.length === 0 && (
+          <p className="text-center text-gray-500 py-8">No hay materiales registrados</p>
+        )}
+      </div>
+
+      {/* Edit Material Modal */}
+      {showEditModal && editingMaterial && (
+        <EditMaterialModal
+          material={editingMaterial}
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingMaterial(null)
+          }}
+          onSubmit={handleEditSubmit}
+          isSubmitting={isSubmitting}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingMaterial && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Confirmar Eliminación</h3>
+              <p className="text-gray-600 mb-4">
+                ¿Estás seguro de que quieres eliminar el material <strong>"{deletingMaterial.nameEs || deletingMaterial.name}"</strong>?
+              </p>
+              <p className="text-sm text-red-600 mb-4">
+                ⚠️ Esta acción no se puede deshacer. El material se eliminará permanentemente.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setDeletingMaterial(null)
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={isSubmitting}
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Edit Material Modal Component
+function EditMaterialModal({ material, isOpen, onClose, onSubmit, isSubmitting }: {
+  material: Material
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (data: any) => void
+  isSubmitting: boolean
+}) {
+  const [formData, setFormData] = useState({
+    name: material.name,
+    nameEs: material.nameEs || '',
+    description: material.description || '',
+    unit: material.unit,
+    unitCost: material.unitCost?.toString() || '',
+    minStockLevel: material.minStockLevel?.toString() || '',
+    maxStockLevel: material.maxStockLevel?.toString() || '',
+    currentStock: material.currentStock.toString()
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const submitData = {
+      ...formData,
+      unitCost: formData.unitCost ? parseFloat(formData.unitCost) : undefined,
+      minStockLevel: formData.minStockLevel ? parseFloat(formData.minStockLevel) : undefined,
+      maxStockLevel: formData.maxStockLevel ? parseFloat(formData.maxStockLevel) : undefined,
+      currentStock: parseFloat(formData.currentStock)
+    }
+    
+    await onSubmit(submitData)
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Material</h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Nombre *</label>
+              <input
+                type="text"
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Nombre en Español</label>
+              <input
+                type="text"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                value={formData.nameEs}
+                onChange={(e) => setFormData({ ...formData, nameEs: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Descripción</label>
+              <textarea
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                rows={3}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Unidad *</label>
+              <input
+                type="text"
+                required
+                placeholder="ej: kg, litros, unidades"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                value={formData.unit}
+                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Costo por Unidad</label>
+              <input
+                type="number"
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                value={formData.unitCost}
+                onChange={(e) => setFormData({ ...formData, unitCost: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Stock Mínimo</label>
+              <input
+                type="number"
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                value={formData.minStockLevel}
+                onChange={(e) => setFormData({ ...formData, minStockLevel: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Stock Máximo</label>
+              <input
+                type="number"
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                value={formData.maxStockLevel}
+                onChange={(e) => setFormData({ ...formData, maxStockLevel: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Stock Actual</label>
+              <input
+                type="number"
+                step="0.01"
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                value={formData.currentStock}
+                onChange={(e) => setFormData({ ...formData, currentStock: e.target.value })}
+              />
+            </div>
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Actualizando...' : 'Actualizar Material'}
               </button>
             </div>
           </form>

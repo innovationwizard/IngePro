@@ -237,3 +237,115 @@ export async function PUT(request: NextRequest) {
     )
   }
 }
+
+// DELETE - Delete material (Admin only)
+export async function DELETE(request: NextRequest) {
+  try {
+    console.log('🗑️ DELETE /api/materials called')
+    const session = await getServerSession(authOptions)
+    
+    console.log('🗑️ Session user role:', session?.user?.role)
+    
+    if (!session || session.user?.role !== 'ADMIN') {
+      console.log('🗑️ Unauthorized - user role:', session?.user?.role)
+      return NextResponse.json({ error: 'Only admins can delete materials' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const materialId = searchParams.get('id')
+    
+    console.log('🗑️ Material ID to delete:', materialId)
+    
+    if (!materialId) {
+      return NextResponse.json({ error: 'Material ID is required' }, { status: 400 })
+    }
+
+    const prisma = await getPrisma()
+
+    // Check if material exists
+    const existingMaterial = await prisma.materials.findUnique({
+      where: { id: materialId },
+      include: {
+        _count: {
+          select: {
+            projectMaterials: true,
+            consumptions: true,
+            losses: true,
+            inventoryMovements: true,
+            reorderRequests: true,
+            worklogUsage: true
+          }
+        }
+      }
+    })
+
+    if (!existingMaterial) {
+      return NextResponse.json({ error: 'Material not found' }, { status: 404 })
+    }
+
+    // Check if material has any usage (consumptions, losses, etc.)
+    console.log('🗑️ Material usage counts:', {
+      projectMaterials: existingMaterial._count.projectMaterials,
+      consumptions: existingMaterial._count.consumptions,
+      losses: existingMaterial._count.losses,
+      inventoryMovements: existingMaterial._count.inventoryMovements,
+      reorderRequests: existingMaterial._count.reorderRequests,
+      worklogUsage: existingMaterial._count.worklogUsage
+    })
+    
+    const hasUsage = 
+      existingMaterial._count.projectMaterials > 0 ||
+      existingMaterial._count.consumptions > 0 ||
+      existingMaterial._count.losses > 0 ||
+      existingMaterial._count.inventoryMovements > 0 ||
+      existingMaterial._count.reorderRequests > 0 ||
+      existingMaterial._count.worklogUsage > 0
+
+    console.log('🗑️ Has usage:', hasUsage)
+
+    if (hasUsage) {
+      console.log('🗑️ Cannot delete - material has usage records')
+      return NextResponse.json({ 
+        error: 'Cannot delete material - it has usage records (consumptions, losses, inventory movements, etc.). These records must be preserved for audit and historical purposes.',
+        details: {
+          projectMaterials: existingMaterial._count.projectMaterials,
+          consumptions: existingMaterial._count.consumptions,
+          losses: existingMaterial._count.losses,
+          inventoryMovements: existingMaterial._count.inventoryMovements,
+          reorderRequests: existingMaterial._count.reorderRequests,
+          worklogUsage: existingMaterial._count.worklogUsage
+        }
+      }, { status: 400 })
+    }
+
+    // Delete the material (safe to delete since no usage)
+    console.log('🗑️ Deleting material...')
+    await prisma.materials.delete({
+      where: { id: materialId }
+    })
+    console.log('🗑️ Material deleted successfully')
+
+    return NextResponse.json({
+      success: true,
+      message: 'Material deleted successfully',
+      deletedMaterialId: materialId
+    })
+
+  } catch (error) {
+    console.error('🗑️ Error deleting material:', error)
+    console.error('🗑️ Error type:', typeof error)
+    console.error('🗑️ Error message:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('🗑️ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    
+    // Check if it's a Prisma error
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('🗑️ Prisma error code:', (error as any).code)
+      console.error('🗑️ Prisma error meta:', (error as any).meta)
+    }
+    
+    return NextResponse.json(
+      { error: 'Failed to delete material' },
+      { status: 500 }
+    )
+  }
+}
