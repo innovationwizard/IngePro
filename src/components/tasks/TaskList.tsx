@@ -239,8 +239,20 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
       } else {
         const errorData = await response.json()
         console.log('🗑️ Delete failed, error data:', errorData)
-        if (errorData.error.includes('Cannot delete task - it has active usage')) {
-          toast.error('No se puede eliminar la tarea - tiene uso activo. Desasigna primero todas las asignaciones.')
+        console.log('🗑️ Error message:', errorData.error)
+        console.log('🗑️ Error details:', errorData.details)
+        
+        if (errorData.error && errorData.error.includes('Cannot delete task - it has active usage')) {
+          const details = errorData.details || {}
+          const message = `No se puede eliminar la tarea - tiene uso activo:
+          
+          • Asignaciones a proyectos: ${details.projectAssignments || 0}
+          • Asignaciones a trabajadores: ${details.workerAssignments || 0}
+          • Actualizaciones de progreso: ${details.progressUpdates || 0}
+          
+          Desasigna primero todas las asignaciones antes de eliminar.`
+          
+          toast.error(message, { duration: 8000 })
         } else {
           toast.error(errorData.error || 'Error al eliminar la tarea')
         }
