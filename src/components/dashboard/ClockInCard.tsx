@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useWorkStore } from '@/stores/workStore'
 import { useProjectStore } from '@/store'
@@ -16,7 +16,7 @@ const logToVercel = (action: string, details: any = {}) => {
   // In production, this will show up in Vercel logs
 }
 
-export function ClockInCard() {
+function ClockInCardComponent() {
   console.log('🚀 ClockInCard component rendering...')
   
   const { data: session } = useSession()
@@ -27,6 +27,7 @@ export function ClockInCard() {
   const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)
+  const [hasCheckedWorklog, setHasCheckedWorklog] = useState(false)
 
   // Debug store state
   console.log('ClockInCard render - isClockedIn:', isClockedIn, 'currentWorkLog:', currentWorkLog)
@@ -37,6 +38,12 @@ export function ClockInCard() {
   console.log('🔧 Setting up useEffect for current worklog check...')
   useEffect(() => {
     const checkCurrentWorklog = async () => {
+      // Prevent repeated API calls if we already checked
+      if (hasCheckedWorklog) {
+        console.log('⏭️ Skipping worklog check - already checked')
+        return
+      }
+      
       try {
         console.log('🔍 Checking current worklog for user:', session?.user?.id)
         const response = await fetch('/api/worklog/current')
@@ -60,18 +67,24 @@ export function ClockInCard() {
         } else {
           console.log('❌ Failed to fetch current worklog:', response.status)
         }
+        
+        // Mark as checked to prevent repeated calls
+        setHasCheckedWorklog(true)
       } catch (error) {
         console.error('❌ Error checking current worklog:', error)
+        setHasCheckedWorklog(true) // Mark as checked even on error
       }
     }
 
-    if (session?.user?.id) {
+    if (session?.user?.id && !hasCheckedWorklog) {
       console.log('🚀 useEffect triggered, calling checkCurrentWorklog')
       checkCurrentWorklog()
+    } else if (hasCheckedWorklog) {
+      console.log('⏭️ useEffect skipped - worklog already checked')
     } else {
       console.log('⏳ Session not ready yet, user ID:', session?.user?.id)
     }
-  }, [session?.user?.id]) // Removed setCurrentWorkLog from dependencies
+  }, [session?.user?.id, hasCheckedWorklog]) // Added hasCheckedWorklog to dependencies
 
   const handleClockIn = async () => {
     logToVercel('CLOCK_IN_ATTEMPTED', {
@@ -384,3 +397,6 @@ export function ClockInCard() {
     </div>
   )
 }
+
+// Memoize the component to prevent unnecessary re-renders
+export const ClockInCard = React.memo(ClockInCardComponent)
