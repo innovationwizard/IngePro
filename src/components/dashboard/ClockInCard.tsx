@@ -230,13 +230,13 @@ function ClockInCardComponent() {
 
   const handleClockOut = async () => {
     logToVercel('CLOCK_OUT_ATTEMPTED', {
-      worklogId: currentWorkLog?.id,
-      userId: currentWorkLog?.personId,
-      projectId: currentWorkLog?.projectId,
+      worklogId: wl?.id,
+      userId: wl?.personId,
+      projectId: wl?.projectId,
       timestamp: new Date().toISOString()
     })
 
-    if (!currentWorkLog?.id) {
+    if (!wl?.id) {
       logToVercel('CLOCK_OUT_FAILED_NO_WORKLOG', {
         timestamp: new Date().toISOString()
       })
@@ -252,7 +252,7 @@ function ClockInCardComponent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: currentWorkLog.id,
+          id: wl.id,
           endTime: new Date().toISOString(),
           description: `Clock out at ${new Date().toLocaleTimeString()}`
         }),
@@ -271,22 +271,22 @@ function ClockInCardComponent() {
         throw new Error(errorData.error || 'Failed to update worklog')
       }
 
-      logToVercel('CLOCK_OUT_SUCCESS', {
-        worklogId: currentWorkLog.id,
-        userId: currentWorkLog.personId,
-        projectId: currentWorkLog.projectId,
+              logToVercel('CLOCK_OUT_SUCCESS', {
+          worklogId: wl.id,
+          userId: wl.personId,
+          projectId: wl.projectId,
         timestamp: new Date().toISOString()
       })
 
       // Update local state
-      clockOut()
+      setCurrentWorkLog(null)
       toast.success(es.dashboard.successClockOut)
     } catch (error) {
       console.error('Error updating worklog:', error)
       logToVercel('CLOCK_OUT_ERROR', {
-        worklogId: currentWorkLog.id,
-        userId: currentWorkLog.personId,
-        projectId: currentWorkLog.projectId,
+        worklogId: wl.id,
+        userId: wl.personId,
+        projectId: wl.projectId,
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
       })
@@ -307,7 +307,7 @@ function ClockInCardComponent() {
       <div className="space-y-4">
         {/* Debug info */}
         <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-100 rounded">
-          Debug: isClockedIn={isClockedIn.toString()}, currentWorkLog={currentWorkLog ? 'exists' : 'null'}, clockOut={currentWorkLog?.clockOut ? 'set' : 'null'}
+          Debug: isClockedIn={isClockedIn.toString()}, currentWorkLog={wl ? 'exists' : 'null'}, clockOut={wl?.clockOut ? 'set' : 'null'}
         </div>
         
         {!isClockedIn ? (
@@ -337,7 +337,7 @@ function ClockInCardComponent() {
                 <div>
                   <h3 className="text-lg font-bold text-white">¡Su jornada ha iniciado!</h3>
                   <p className="text-green-100 text-sm">
-                    Entrada registrada a las {currentWorkLog?.clockIn.toLocaleTimeString('es-ES', {
+                    Entrada registrada a las {wl?.clockIn && new Date(wl.clockIn).toLocaleTimeString('es-ES', {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
@@ -353,7 +353,7 @@ function ClockInCardComponent() {
                 <span className="font-semibold text-green-800">{es.dashboard.currentlyWorking}</span>
               </div>
               <p className="text-sm text-green-700 mt-1">
-                {es.dashboard.clockedInAt} {currentWorkLog?.clockIn.toLocaleTimeString()}
+                {es.dashboard.clockedInAt} {wl?.clockIn && new Date(wl.clockIn).toLocaleTimeString()}
               </p>
               {currentProject && (
                 <div className="mt-2 text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
@@ -394,12 +394,12 @@ function ClockInCardComponent() {
       </div>
 
       {/* Worklog Entry Form */}
-      {showWorklogEntry && currentWorkLog && currentProject && (
+      {showWorklogEntry && wl && currentProject && (
         <WorklogEntryForm
           isOpen={showWorklogEntry}
           onClose={() => setShowWorklogEntry(false)}
           onEntrySaved={handleWorklogEntrySaved}
-          currentWorklogId={currentWorkLog.id}
+          currentWorklogId={wl.id}
           projectId={currentProject.id}
           projectName={currentProject.name}
         />
