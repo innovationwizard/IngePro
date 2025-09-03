@@ -27,6 +27,9 @@ export async function POST(
 
     const prisma = await getPrisma()
 
+    console.log('🗑️ Unassign projects - Task ID:', taskId)
+    console.log('🗑️ Unassign projects - Project IDs to keep:', projectIds)
+
     // Check if task exists
     const existingTask = await prisma.tasks.findUnique({
       where: { id: taskId },
@@ -39,12 +42,16 @@ export async function POST(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
+    console.log('🗑️ Unassign projects - Current project assignments:', existingTask.projectAssignments?.length || 0)
+
     // Remove all project assignments for this task
-    await prisma.taskProjectAssignments.deleteMany({
+    const deleteResult = await prisma.taskProjectAssignments.deleteMany({
       where: {
         taskId: taskId
       }
     })
+
+    console.log('🗑️ Unassign projects - Deleted assignments:', deleteResult.count)
 
     // If new projectIds are provided, create new assignments
     if (projectIds.length > 0) {
@@ -53,10 +60,26 @@ export async function POST(
         projectId: projectId
       }))
 
-      await prisma.taskProjectAssignments.createMany({
+      const createResult = await prisma.taskProjectAssignments.createMany({
         data: newAssignments
       })
+
+      console.log('🗑️ Unassign projects - Created new assignments:', createResult.count)
     }
+
+    // Verify the final state
+    const finalTask = await prisma.tasks.findUnique({
+      where: { id: taskId },
+      include: {
+        _count: {
+          select: {
+            projectAssignments: true
+          }
+        }
+      }
+    })
+
+    console.log('🗑️ Unassign projects - Final project assignments count:', finalTask?._count.projectAssignments)
 
     return NextResponse.json({
       success: true,
