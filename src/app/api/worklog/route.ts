@@ -456,18 +456,3 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// Catch-all handler for unexpected HTTP methods
-export async function GET(request: NextRequest) {
-  console.log('🟡 GET method called - Not supported')
-  return NextResponse.json({ error: 'Method not supported' }, { status: 405 })
-}
-
-export async function DELETE(request: NextRequest) {
-  console.log('🟡 DELETE method called - Not supported')
-  return NextResponse.json({ error: 'Method not supported' }, { status: 405 })
-}
-
-export async function PATCH(request: NextRequest) {
-  console.log('🟡 PATCH method called - Not supported')
-  return NextResponse.json({ error: 'Method not supported' }, { status: 405 })
-}
