@@ -138,6 +138,9 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const [deletingTask, setDeletingTask] = useState<Task | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
+  // Debug logging
+  console.log('TaskList render - personRole:', personRole, 'currentUserId:', currentUserId)
+
   // Fetch categories when component mounts
   useEffect(() => {
     const fetchCategories = async () => {
@@ -422,7 +425,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                   )}
                   
                   {/* Delete button - Admin only */}
-                  {personRole === 'ADMIN' && (
+                  {personRole === 'ADMIN' ? (
                     <Button
                       variant="destructive"
                       size="sm"
@@ -431,6 +434,10 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                     >
                       Eliminar
                     </Button>
+                  ) : (
+                    <div className="text-xs text-gray-400 hidden sm:block">
+                      Debug: personRole = {personRole}
+                    </div>
                   )}
                   
                   {/* Enhanced Progress Button Section */}
