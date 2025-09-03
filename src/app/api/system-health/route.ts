@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getPrisma } from '@/lib/prisma'
-import { redisUtils } from '@/lib/redis'
 
 export const runtime = 'nodejs'
 
-// Health metrics cache key
-const HEALTH_CACHE_KEY = 'system:health:metrics'
+// Health metrics cache TTL (5 minutes)
 const HEALTH_CACHE_TTL = 300 // 5 minutes (300 seconds)
 
     // Health computation interval (30 seconds) - production optimized
@@ -94,12 +92,7 @@ async function computeSystemHealth(): Promise<SystemHealthMetrics> {
     healthMetricsCache = metrics
     lastComputationTime = Date.now()
     
-    // Also store in Redis if available
-    try {
-      await redisUtils.setex(HEALTH_CACHE_KEY, HEALTH_CACHE_TTL, JSON.stringify(metrics))
-    } catch (error) {
-      console.warn('Failed to cache health metrics in Redis:', error)
-    }
+    // Redis caching removed - using in-memory cache only
     
     return metrics
     
@@ -151,18 +144,7 @@ export async function GET(request: NextRequest) {
     // Check if we have cached metrics
     let metrics = healthMetricsCache
     
-    // If no cache, try Redis
-    if (!metrics) {
-      try {
-        const cached = await redisUtils.get(HEALTH_CACHE_KEY)
-        if (cached) {
-          metrics = JSON.parse(cached)
-          healthMetricsCache = metrics
-        }
-      } catch (error) {
-        console.warn('Failed to get health metrics from Redis:', error)
-      }
-    }
+    // Redis caching removed - using in-memory cache only
     
     // If still no metrics, compute them
     if (!metrics) {
