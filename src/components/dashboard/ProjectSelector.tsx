@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useProjectStore } from '@/store'
+import { useProjectStore } from '@/stores/projectStore'
 import { Building2, ChevronDown } from 'lucide-react'
 import { es } from '@/lib/translations/es'
 import { useSession } from 'next-auth/react'

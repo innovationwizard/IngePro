@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useWorkStore } from '@/stores/workStore'
-import { useProjectStore } from '@/store'
+import { useProjectStore } from '@/stores/projectStore'
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Clock, MapPin, AlertCircle, FileText, Plus } from 'lucide-react'
@@ -24,7 +24,7 @@ function ClockInCardComponent() {
   const setCurrentWorkLog = useWorkStore((s: any) => s.setCurrentWorkLog)
   const clockOut = useWorkStore((s: any) => s.clockOut)
   const isClockedIn = useWorkStore((s: any) => s.isClockedIn())
-  const { currentProject } = useProjectStore()
+  const currentProject = useProjectStore((s: any) => s.currentProject)
   const [isLoading, setIsLoading] = useState(false)
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)
   const [hasCheckedWorklog, setHasCheckedWorklog] = useState(false)
