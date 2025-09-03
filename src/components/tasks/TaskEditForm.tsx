@@ -45,12 +45,14 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
   // Initialize form with task data when task changes
   useEffect(() => {
     if (task) {
-      setFormData({
+      const initialData = {
         name: task.name || '',
         description: task.description || '',
         categoryId: task.categoryId || 'none',
         progressUnit: task.progressUnit || ''
-      })
+      }
+      console.log('Initializing form with:', initialData)
+      setFormData(initialData)
     }
   }, [task])
 
@@ -150,10 +152,17 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
                 Categoría (Opcional)
               </label>
               <Select
-                value={formData.categoryId}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, categoryId: value }))}
+                value={formData.categoryId || 'none'}
+                onValueChange={(value) => {
+                  console.log('Category changed to:', value)
+                  setFormData(prev => {
+                    const newData = { ...prev, categoryId: value }
+                    console.log('Form data updated:', newData)
+                    return newData
+                  })
+                }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona una categoría (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -165,6 +174,10 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
                   ))}
                 </SelectContent>
               </Select>
+              {/* Debug info */}
+              <div className="text-xs text-gray-500 mt-1">
+                Current categoryId: {formData.categoryId || 'none'}
+              </div>
             </div>
           </div>
 
