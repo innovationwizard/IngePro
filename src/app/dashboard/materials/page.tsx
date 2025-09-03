@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react'
 import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
 import InventoryManager from '@/components/inventory/InventoryManager'
 import ProgressHistory from '@/components/tasks/ProgressHistory'
+import MaterialAssignmentModal from '@/components/materials/MaterialAssignmentModal'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -65,6 +66,7 @@ export default function MaterialsPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('consumption')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -307,13 +309,22 @@ export default function MaterialsPage() {
               Gestiona inventario, consumo de materiales y seguimiento de progreso
             </p>
           </div>
-          <button
-            onClick={handleCreateMaterialModalOpen}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Crear Material
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => setIsAssignmentModalOpen(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+            >
+              <Package className="w-4 h-4" />
+              Asignar a Proyecto
+            </button>
+            <button
+              onClick={handleCreateMaterialModalOpen}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Crear Material
+            </button>
+          </div>
         </div>
       </div>
 
@@ -329,6 +340,7 @@ export default function MaterialsPage() {
         <TabsList className="flex w-full gap-1 sm:gap-2 p-1 sm:p-2 tabs-list-mobile overflow-x-auto min-h-[3rem] bg-gray-100 rounded-lg shadow-sm">
           <TabsTrigger value="consumption" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Consumo</TabsTrigger>
           <TabsTrigger value="inventory" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Inventario</TabsTrigger>
+          <TabsTrigger value="assignments" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Asignaciones</TabsTrigger>
           <TabsTrigger value="history" className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-3">Historial</TabsTrigger>
         </TabsList>
 
@@ -363,6 +375,33 @@ export default function MaterialsPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="assignments" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Asignación de Materiales a Proyectos</CardTitle>
+              <p className="text-sm text-gray-600">
+                Asigna materiales disponibles a proyectos específicos para control de inventario y seguimiento de consumo
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Package className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Gestionar Asignaciones</h3>
+                <p className="text-gray-600 mb-4">
+                  Usa el botón "Asignar a Proyecto" en la parte superior para asignar materiales a proyectos
+                </p>
+                <Button
+                  onClick={() => setIsAssignmentModalOpen(true)}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  Abrir Asignador de Materiales
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="history" className="space-y-6">
           <Card>
             <CardHeader>
@@ -387,6 +426,18 @@ export default function MaterialsPage() {
           onSubmit={handleCreateMaterial}
         />
       )}
+
+      {/* Material Assignment Modal */}
+      <MaterialAssignmentModal
+        open={isAssignmentModalOpen}
+        onOpenChange={setIsAssignmentModalOpen}
+        onSuccess={() => {
+          // Refresh data if needed
+          console.log('Materials assigned successfully')
+        }}
+        projects={projects}
+        materials={materials}
+      />
     </div>
   )
 }
