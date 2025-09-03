@@ -8,7 +8,7 @@ export const runtime = 'nodejs'
 
 // Validation schema for task assignment
 const assignmentSchema = z.object({
-  personIds: z.array(z.string()).min(1, 'At least one user must be assigned'),
+  personIds: z.array(z.string()), // Allow empty array to remove all workers
 })
 
 // POST - Assign task to users
@@ -79,6 +79,20 @@ export async function POST(
     
     if (!hasProjectAssignment && !hasWorkerAssignment) {
       return NextResponse.json({ error: 'Task not found in your company' }, { status: 404 })
+    }
+
+    // If personIds is empty, we're removing all workers
+    if (validatedData.personIds.length === 0) {
+      // Remove all worker assignments for this task
+      await prisma.taskWorkerAssignments.deleteMany({
+        where: { taskId: taskId }
+      })
+      
+      return NextResponse.json({
+        success: true,
+        message: 'All workers removed from task successfully',
+        assignments: []
+      })
     }
 
     // Verify all people belong to the same company and are WORKERs
