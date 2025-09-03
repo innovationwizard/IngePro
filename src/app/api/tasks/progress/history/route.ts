@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getPrisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export const runtime = 'nodejs'
 
 // GET - Get progress history with role-based filtering
