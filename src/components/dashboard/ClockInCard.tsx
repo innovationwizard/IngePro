@@ -16,6 +16,8 @@ const logToVercel = (action: string, details: any = {}) => {
 }
 
 export function ClockInCard() {
+  console.log('🚀 ClockInCard component rendering...')
+  
   const { data: session } = useSession()
   const { isClockedIn, clockIn, clockOut, currentWorkLog, setCurrentWorkLog } = useWorkLogStore()
   const { currentProject } = useProjectStore()
@@ -25,8 +27,10 @@ export function ClockInCard() {
   // Debug store state
   console.log('ClockInCard render - isClockedIn:', isClockedIn, 'currentWorkLog:', currentWorkLog)
   console.log('ClockInCard render - currentWorkLog.clockOut:', currentWorkLog?.clockOut)
+  console.log('ClockInCard render - session user ID:', session?.user?.id)
 
   // Check if user is already clocked in when component mounts
+  console.log('🔧 Setting up useEffect for current worklog check...')
   useEffect(() => {
     const checkCurrentWorklog = async () => {
       try {
