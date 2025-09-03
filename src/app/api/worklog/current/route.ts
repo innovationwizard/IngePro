@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: {
-        clockIn: 'desc'
+        createdAt: 'desc'
       }
     })
 
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
           }
         },
         orderBy: {
-          clockIn: 'desc'
+          createdAt: 'desc'
         }
       })
     }
