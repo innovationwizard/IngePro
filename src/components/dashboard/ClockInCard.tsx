@@ -19,7 +19,7 @@ export function ClockInCard() {
   console.log('🚀 ClockInCard component rendering...')
   
   const { data: session } = useSession()
-  const { currentWorkLog, setCurrentWorkLog } = useWorkLogStore()
+  const { currentWorkLog, setCurrentWorkLog, clockOut } = useWorkLogStore()
   const isClockedIn = !!currentWorkLog && currentWorkLog.clockOut === null
   const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
@@ -43,7 +43,13 @@ export function ClockInCard() {
           if (data.workLog && !data.workLog.clockOut) {
             console.log('✅ User is already clocked in, updating store with:', data.workLog)
             // User is already clocked in, update the store
-            setCurrentWorkLog(data.workLog)
+            setCurrentWorkLog({
+              ...data.workLog,
+              clockIn: new Date(data.workLog.clockIn || data.workLog.startTime),
+              clockOut: data.workLog.clockOut ? new Date(data.workLog.clockOut) : null,
+              createdAt: new Date(data.workLog.createdAt),
+              updatedAt: new Date(data.workLog.updatedAt),
+            })
             console.log('🔄 Store updated, isClockedIn should now be true')
           } else {
             console.log('❌ No active worklog found, workLog:', data.workLog)
