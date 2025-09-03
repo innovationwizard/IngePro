@@ -172,7 +172,7 @@ function ClockInCardComponent() {
           personId: data.workLog.person.id,
           projectId: data.workLog.project?.id || '',
           clockIn: new Date(data.workLog.startTime),
-          clockOut: undefined, // Ensure this is undefined for active worklog
+          clockOut: null, // Ensure this is null for active worklog
           tasksCompleted: '[]',
           materialsUsed: '[]',
           photos: [],
@@ -181,6 +181,8 @@ function ClockInCardComponent() {
           updatedAt: new Date(),
         })
         console.log('✅ Current worklog updated in store')
+        // Reset the hasCheckedWorklog flag so the component can update properly
+        setHasCheckedWorklog(false)
       }
       
       toast.success(es.dashboard.successClockIn)
