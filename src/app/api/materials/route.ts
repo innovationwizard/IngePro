@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
 
     const materials = await prisma.materials.findMany({
       where: {
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        deletedAt: null // Exclude soft-deleted materials
       },
       orderBy: { name: 'asc' }
     })
@@ -272,8 +273,9 @@ export async function DELETE(request: NextRequest) {
             consumptions: true,
             losses: true,
             inventoryMovements: true,
-            reorderRequests: true,
-            worklogUsage: true
+            reorderRequests: true
+            // Temporarily removed worklogUsage until migration is applied
+            // worklogUsage: true
           }
         }
       }
@@ -289,8 +291,9 @@ export async function DELETE(request: NextRequest) {
       consumptions: existingMaterial._count.consumptions,
       losses: existingMaterial._count.losses,
       inventoryMovements: existingMaterial._count.inventoryMovements,
-      reorderRequests: existingMaterial._count.reorderRequests,
-      worklogUsage: existingMaterial._count.worklogUsage
+      reorderRequests: existingMaterial._count.reorderRequests
+      // Temporarily removed worklogUsage until migration is applied
+      // worklogUsage: existingMaterial._count.worklogUsage
     })
     
     const hasUsage = 
@@ -298,8 +301,9 @@ export async function DELETE(request: NextRequest) {
       existingMaterial._count.consumptions > 0 ||
       existingMaterial._count.losses > 0 ||
       existingMaterial._count.inventoryMovements > 0 ||
-      existingMaterial._count.reorderRequests > 0 ||
-      existingMaterial._count.worklogUsage > 0
+      existingMaterial._count.reorderRequests > 0
+      // Temporarily removed worklogUsage check until migration is applied
+      // || existingMaterial._count.worklogUsage > 0
 
     console.log('🗑️ Has usage:', hasUsage)
 
@@ -312,18 +316,23 @@ export async function DELETE(request: NextRequest) {
           consumptions: existingMaterial._count.consumptions,
           losses: existingMaterial._count.losses,
           inventoryMovements: existingMaterial._count.inventoryMovements,
-          reorderRequests: existingMaterial._count.reorderRequests,
-          worklogUsage: existingMaterial._count.worklogUsage
+          reorderRequests: existingMaterial._count.reorderRequests
+          // Temporarily removed worklogUsage until migration is applied
+          // worklogUsage: existingMaterial._count.worklogUsage
         }
       }, { status: 400 })
     }
 
-    // Delete the material (safe to delete since no usage)
-    console.log('🗑️ Deleting material...')
-    await prisma.materials.delete({
-      where: { id: materialId }
+    // Soft delete the material - mark as deleted but keep in database
+    console.log('🗑️ Soft deleting material...')
+    await prisma.materials.update({
+      where: { id: materialId },
+      data: { 
+        deletedAt: new Date(),
+        deletedBy: session.user?.id
+      }
     })
-    console.log('🗑️ Material deleted successfully')
+    console.log('🗑️ Material soft deleted successfully')
 
     return NextResponse.json({
       success: true,

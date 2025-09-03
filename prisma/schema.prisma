@@ -467,10 +467,15 @@ model Materials {
   maxStockLevel Float?         @map("max_stock_level") // Maximum stock level for storage optimization
   currentStock  Float          @default(0) @map("current_stock") // Current available stock
   status        MaterialStatus @default(ACTIVE) @map("status")
+  
+  // Soft delete - materials are never actually deleted, just marked as deleted
+  deletedAt     DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  deletedBy     String?        @map("deleted_by") // Person ID who deleted the material
+  
   createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  // Relationships
+  // Relationships - all use Restrict to prevent CASCADE deletes
   projectMaterials   ProjectMaterials[]
   consumptions       MaterialConsumptions[]
   losses             MaterialLosses[]
@@ -533,7 +538,7 @@ model ProjectMaterials {
   projectId  String    @map("project_id")
   project    Projects  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   materialId String    @map("material_id")
-  material   Materials @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  material   Materials @relation(fields: [materialId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
