@@ -787,7 +787,7 @@ export default function DashboardPage() {
       <PWAStatus />
 
       {/* Active Shift Banner - Show when worker is clocked in */}
-      {isClockedIn && currentWorkLog && (
+      {isClockedIn && wl && (
         <div className="bg-gradient-to-r from-green-500 to-green-600 border-2 border-green-700 rounded-xl p-6 text-center shadow-xl">
           <div className="flex items-center justify-center space-x-4">
             <div className="p-3 bg-white bg-opacity-20 rounded-full">
@@ -796,14 +796,14 @@ export default function DashboardPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">¡Su jornada está activa!</h2>
               <p className="text-green-100 text-lg">
-                Entrada registrada a las {currentWorkLog.clockIn.toLocaleTimeString('es-ES', {
+                Entrada registrada a las {wl.clockIn && new Date(wl.clockIn).toLocaleTimeString('es-ES', {
                   hour: '2-digit',
                   minute: '2-digit'
                 })}
               </p>
               <div className="mt-3 inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-full">
                 <span className="text-white font-medium">
-                  ⏱️ Tiempo transcurrido: {Math.floor((currentTime.getTime() - currentWorkLog.clockIn.getTime()) / (1000 * 60))} minutos
+                  ⏱️ Tiempo transcurrido: {wl.clockIn && Math.floor((currentTime.getTime() - new Date(wl.clockIn).getTime()) / (1000 * 60))} minutos
                 </span>
               </div>
             </div>

@@ -174,14 +174,14 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
           <p className="text-xs text-gray-500">{userRole}</p>
           
           {/* Active Shift Indicator - Mobile */}
-          {isClockedIn && currentWorkLog && (
+          {isClockedIn && wl && (
             <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
               <div className="flex items-center space-x-2">
                 <Clock className="h-4 w-4 text-green-600" />
                 <div className="text-xs">
                   <div className="font-medium text-green-800">Turno Activo</div>
                   <div className="text-green-600">
-                    Desde: {currentWorkLog.clockIn.toLocaleTimeString('es-ES', {
+                    Desde: {wl.clockIn && new Date(wl.clockIn).toLocaleTimeString('es-ES', {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
@@ -237,14 +237,14 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
           <p className="text-xs text-gray-500">{userRole}</p>
           
           {/* Active Shift Indicator */}
-          {isClockedIn && currentWorkLog && (
+          {isClockedIn && wl && (
             <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded-lg">
               <div className="flex items-center space-x-2">
                 <Clock className="h-4 w-4 text-green-600" />
                 <div className="text-xs">
                   <div className="font-medium text-green-800">Turno Activo</div>
                   <div className="text-green-600">
-                    Desde: {currentWorkLog.clockIn.toLocaleTimeString('es-ES', {
+                    Desde: {wl.clockIn && new Date(wl.clockIn).toLocaleTimeString('es-ES', {
                       hour: '2-digit',
                       minute: '2-digit'
                     })}
