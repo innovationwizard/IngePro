@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const prisma = await getPrisma()
     
     // Get person's company context
-    let companyId = session.user?.companyId
+    let companyId: string | undefined = session.user?.companyId
     
     if (!companyId) {
       const personTenant = await prisma.personTenants.findFirst({
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = personTenant?.companyId
+      companyId = personTenant?.companyId || undefined
     }
 
     if (!companyId) {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     const prisma = await getPrisma()
     
     // Get person's company context
-    let companyId = session.user?.companyId
+    let companyId: string | undefined = session.user?.companyId
     
     if (!companyId) {
       const personTenant = await prisma.personTenants.findFirst({
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = personTenant?.companyId
+      companyId = personTenant?.companyId || undefined
     }
 
     if (!companyId) {
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }
@@ -166,7 +166,7 @@ export async function PUT(request: NextRequest) {
     const prisma = await getPrisma()
 
     // Get person's company context
-    let companyId = session.user?.companyId
+    let companyId: string | undefined = session.user?.companyId
     
     if (!companyId) {
       const personTenant = await prisma.personTenants.findFirst({
@@ -176,7 +176,7 @@ export async function PUT(request: NextRequest) {
         },
         orderBy: { startDate: 'desc' }
       })
-      companyId = personTenant?.companyId
+      companyId = personTenant?.companyId || undefined
     }
 
     if (!companyId) {
@@ -230,7 +230,7 @@ export async function PUT(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       )
     }
@@ -326,7 +326,7 @@ export async function DELETE(request: NextRequest) {
     console.log('🗑️ Soft deleting material...')
     await prisma.materials.update({
       where: { id: materialId },
-      data: { 
+      data: {
         deletedAt: new Date(),
         deletedBy: session.user?.id
       }

@@ -17,13 +17,20 @@ const denyHardDelete = async (params: any, next: any) => {
   return next(params);
 };
 
+let prismaClient: PrismaClient | null = null;
+
 export async function getPrisma() {
-  if (!globalThis.__prisma) {
+  if (!prismaClient) {
     const url = await getDbUrl(); // builds from Secrets Manager
-    globalThis.__prisma = new PrismaClient({ datasources: { db: { url } } });
+    prismaClient = new PrismaClient({ datasources: { db: { url } } });
     
     // Add middleware to prevent hard deletes
-    globalThis.__prisma.$use(denyHardDelete);
+    try {
+      prismaClient.$use(denyHardDelete);
+    } catch (error) {
+      console.error('Error adding Prisma middleware:', error);
+      // Continue without middleware if it fails
+    }
   }
-  return globalThis.__prisma;
+  return prismaClient;
 }
