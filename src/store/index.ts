@@ -65,8 +65,18 @@ export const useWorkLogStore = create<WorkLogState>((set, get) => ({
     console.log('🔄 Store: isClockedIn should now be:', get().isClockedIn)
   },
   get isClockedIn() {
-    const result = get().currentWorkLog !== null && (get().currentWorkLog.clockOut === null || get().currentWorkLog.clockOut === undefined)
-    console.log('Store isClockedIn getter:', result, 'currentWorkLog:', get().currentWorkLog)
+    const currentWorkLog = get().currentWorkLog
+    const clockOut = currentWorkLog?.clockOut
+    const result = currentWorkLog !== null && (clockOut === null || clockOut === undefined)
+    
+    console.log('🔍 Store isClockedIn getter debug:')
+    console.log('  - currentWorkLog:', currentWorkLog)
+    console.log('  - clockOut:', clockOut)
+    console.log('  - currentWorkLog !== null:', currentWorkLog !== null)
+    console.log('  - clockOut === null:', clockOut === null)
+    console.log('  - clockOut === undefined:', clockOut === undefined)
+    console.log('  - Final result:', result)
+    
     return result
   },
 }))
