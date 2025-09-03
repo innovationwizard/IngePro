@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Target } from 'lucide-react'
+import { toast } from 'sonner'
 import TaskAssignmentModal from './TaskAssignmentModal'
 import TaskProjectAssignmentModal from './TaskProjectAssignmentModal'
 import TaskProgressModal from './TaskProgressModal'
@@ -191,6 +192,31 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
     setIsEditModalOpen(true)
   }
 
+  const handleUnassignTask = async (task: Task) => {
+    try {
+      const response = await fetch(`/api/tasks/${task.id}/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personIds: [] // Empty array to remove all workers
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Todos los trabajadores han sido desasignados de la tarea')
+        onTaskUpdated() // Refresh the task list
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Error al desasignar trabajadores')
+      }
+    } catch (error) {
+      console.error('Error unassigning task:', error)
+      toast.error('Error al desasignar trabajadores')
+    }
+  }
+
   const getTotalProgress = (task: Task) => {
     const validUpdates = (task.progressUpdates || []).filter(update => 
       update.validationStatus === 'VALIDATED'
@@ -359,6 +385,14 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                         className="flex-1 sm:flex-none"
                       >
                         Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUnassignTask(task)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        Desasignar
                       </Button>
                       <Button
                         variant="outline"
