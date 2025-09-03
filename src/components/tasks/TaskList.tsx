@@ -14,6 +14,7 @@ import TaskProjectAssignmentModal from './TaskProjectAssignmentModal'
 import TaskProgressModal from './TaskProgressModal'
 import TaskValidationModal from './TaskValidationModal'
 import TaskEditForm from './TaskEditForm'
+import TaskUnassignModal from './TaskUnassignModal'
 
 interface Task {
   id: string
@@ -130,6 +131,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const [showProjectAssignmentModal, setShowProjectAssignmentModal] = useState(false)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [showValidationModal, setShowValidationModal] = useState(false)
+  const [showUnassignModal, setShowUnassignModal] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [categories, setCategories] = useState<TaskCategory[]>([])
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -192,29 +194,9 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
     setIsEditModalOpen(true)
   }
 
-  const handleUnassignTask = async (task: Task) => {
-    try {
-      const response = await fetch(`/api/tasks/${task.id}/assign`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          personIds: [] // Empty array to remove all workers
-        }),
-      })
-
-      if (response.ok) {
-        toast.success('Todos los trabajadores han sido desasignados de la tarea')
-        onTaskUpdated() // Refresh the task list
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Error al desasignar trabajadores')
-      }
-    } catch (error) {
-      console.error('Error unassigning task:', error)
-      toast.error('Error al desasignar trabajadores')
-    }
+  const handleUnassignTask = (task: Task) => {
+    setSelectedTask(task)
+    setShowUnassignModal(true)
   }
 
   const getTotalProgress = (task: Task) => {
@@ -580,6 +562,16 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
             onOpenChange={setShowValidationModal}
             onSuccess={() => {
               setShowValidationModal(false)
+              onTaskUpdated()
+            }}
+          />
+
+          <TaskUnassignModal
+            task={selectedTask}
+            open={showUnassignModal}
+            onOpenChange={setShowUnassignModal}
+            onSuccess={() => {
+              setShowUnassignModal(false)
               onTaskUpdated()
             }}
           />

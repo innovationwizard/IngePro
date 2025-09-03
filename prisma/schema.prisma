@@ -417,8 +417,8 @@ model TaskProgressUpdates {
   project      Projects              @relation(fields: [projectId], references: [id], onDelete: Restrict)
   workerId     String                @map("worker_id")
   worker       People                @relation(fields: [workerId], references: [id], onDelete: Restrict)
-  assignmentId String                @map("assignment_id")
-  assignment   TaskWorkerAssignments @relation(fields: [assignmentId], references: [id], onDelete: Restrict)
+  assignmentId String?               @map("assignment_id")
+  assignment   TaskWorkerAssignments? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
 
   // Progress data
   amountCompleted      Float   @map("amount_completed") // e.g., 5.5 linear meters
