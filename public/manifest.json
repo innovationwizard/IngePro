@@ -1,22 +1,85 @@
 {
   "name": "IngePro - Gestión de Productividad en Construcción",
   "short_name": "IngePro",
-  "description": "Seguimiento en tiempo real de la productividad en construcción",
+  "description": "Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
   "orientation": "portrait-primary",
+  "categories": ["productivity", "business", "construction"],
+  "lang": "es",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Acceder al dashboard principal",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Tareas",
+      "short_name": "Tareas",
+      "description": "Gestionar tareas del proyecto",
+      "url": "/dashboard/tasks",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Materiales",
+      "short_name": "Materiales",
+      "description": "Gestionar inventario de materiales",
+      "url": "/dashboard/materials",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
     }
   ]
 }

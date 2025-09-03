@@ -9,6 +9,7 @@ import { LocationTracker } from '@/components/dashboard/LocationTracker'
 import { RecentWorkLogs } from '@/components/dashboard/RecentWorkLogs'
 import { useWorkLogStore } from '@/store'
 import { es } from '@/lib/translations/es'
+import PWAStatus from '@/components/PWAStatus'
 import { 
   Users, 
   Building, 
@@ -195,6 +196,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* PWA Status */}
+        <PWAStatus />
+
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -366,6 +370,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* PWA Status */}
+        <PWAStatus />
+
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -509,6 +516,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* PWA Status */}
+      <PWAStatus />
 
       {/* Active Shift Banner - Show when worker is clocked in */}
       {isClockedIn && currentWorkLog && (
