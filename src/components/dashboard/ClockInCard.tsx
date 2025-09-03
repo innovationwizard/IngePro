@@ -30,31 +30,34 @@ export function ClockInCard() {
   useEffect(() => {
     const checkCurrentWorklog = async () => {
       try {
-        console.log('Checking current worklog for user:', session?.user?.id)
+        console.log('🔍 Checking current worklog for user:', session?.user?.id)
         const response = await fetch('/api/worklog/current')
         if (response.ok) {
           const data = await response.json()
-          console.log('Current worklog response:', data)
+          console.log('📋 Current worklog response:', data)
           if (data.workLog && !data.workLog.clockOut) {
-            console.log('User is already clocked in, updating store with:', data.workLog)
+            console.log('✅ User is already clocked in, updating store with:', data.workLog)
             // User is already clocked in, update the store
             setCurrentWorkLog(data.workLog)
-            console.log('Store updated, isClockedIn should now be true')
+            console.log('🔄 Store updated, isClockedIn should now be true')
           } else {
-            console.log('No active worklog found, workLog:', data.workLog)
+            console.log('❌ No active worklog found, workLog:', data.workLog)
           }
         } else {
-          console.log('Failed to fetch current worklog:', response.status)
+          console.log('❌ Failed to fetch current worklog:', response.status)
         }
       } catch (error) {
-        console.error('Error checking current worklog:', error)
+        console.error('❌ Error checking current worklog:', error)
       }
     }
 
     if (session?.user?.id) {
+      console.log('🚀 useEffect triggered, calling checkCurrentWorklog')
       checkCurrentWorklog()
+    } else {
+      console.log('⏳ Session not ready yet, user ID:', session?.user?.id)
     }
-  }, [session?.user?.id, setCurrentWorkLog])
+  }, [session?.user?.id]) // Removed setCurrentWorkLog from dependencies
 
   const handleClockIn = async () => {
     logToVercel('CLOCK_IN_ATTEMPTED', {
