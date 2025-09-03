@@ -39,7 +39,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 export const useWorkLogStore = create<WorkLogState>((set, get) => ({
   currentWorkLog: null,
   currentLocation: null,
-  clockIn: (projectId, location) => set({
+  clockIn: (projectId, location) => set((state) => ({
+    ...state,
     currentLocation: location,
     currentWorkLog: {
       id: '',
@@ -52,15 +53,16 @@ export const useWorkLogStore = create<WorkLogState>((set, get) => ({
       approved: false,
       createdAt: new Date(),
     } as WorkLog,
-  }),
-  clockOut: () => set({
+  })),
+  clockOut: () => set((state) => ({
+    ...state,
     currentWorkLog: null,
     currentLocation: null,
-  }),
-  updateLocation: (location) => set({ currentLocation: location }),
+  })),
+  updateLocation: (location) => set((state) => ({ ...state, currentLocation: location })),
   setCurrentWorkLog: (workLog) => {
     console.log('🔄 Store: setCurrentWorkLog called with:', workLog)
-    set({ currentWorkLog: workLog })
+    set((state) => ({ ...state, currentWorkLog: workLog }))
     console.log('🔄 Store: currentWorkLog updated, new state:', get().currentWorkLog)
     // Note: isClockedIn will be calculated when the component re-renders
   },
