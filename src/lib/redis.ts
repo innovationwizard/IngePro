@@ -22,8 +22,8 @@ export function initRedis() {
         enableOfflineQueue: false,
         maxRetriesPerRequest: 1, // Fail fast in production
         retryDelayOnFailover: 50,
-        // TLS for production security
-        tls: process.env.NODE_ENV === 'production' ? {} : undefined,
+        // TLS configuration - only if explicitly enabled
+        tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
       })
 
       redis.on('error', (error) => {

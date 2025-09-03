@@ -49,7 +49,7 @@ async function computeSystemHealth(): Promise<SystemHealthMetrics> {
       recentActivity
     ] = await Promise.all([
       prisma.people.count({ where: { status: 'ACTIVE' } }),
-      prisma.workLogs.count({ where: { status: 'ACTIVE' } }),
+      prisma.workLogs.count({ where: { clockOut: null } }), // Active worklogs are those without clockOut
       prisma.workLogs.count({
         where: {
           createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }

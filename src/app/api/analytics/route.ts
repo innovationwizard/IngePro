@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { getPrisma } from '@/lib/prisma'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 // GET - Get comprehensive analytics data
 export async function GET(request: NextRequest) {

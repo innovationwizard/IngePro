@@ -5,6 +5,7 @@ import { getPrisma } from '@/lib/prisma'
 import OpenAI from 'openai'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 // Initialize OpenAI client
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
