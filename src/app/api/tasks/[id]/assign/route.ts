@@ -197,16 +197,16 @@ export async function POST(
         })
         
         // For assignments with progress updates, we can now safely remove them
-        // The foreign key constraint will automatically set assignment_id to NULL
-        // This preserves the work history while allowing worker removal
+        // We explicitly set assignmentId to null to preserve work history
+        // while allowing worker removal
         for (const assignment of assignmentsWithProgress) {
           if (assignment.progressUpdates && assignment.progressUpdates.length > 0) {
-            // Update progress updates to remove the assignment reference
+            // Explicitly unassign progress updates from the worker assignment
             // This preserves the work data while allowing worker removal
             await tx.taskProgressUpdates.updateMany({
               where: { assignmentId: assignment.id },
               data: { 
-                assignmentId: null // Remove reference to the assignment being deleted
+                assignmentId: null // Explicitly unassign - worker is being removed
               }
             })
           }
