@@ -473,10 +473,44 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Delete the task (safe to delete since no active usage)
+    // Delete all related records first, then the task
+    // This handles foreign key constraints properly
+    
+    console.log('🗑️ Deleting related records before task deletion...')
+    
+    // Delete progress updates (historical data)
+    if (existingTask._count.progressUpdates > 0) {
+      console.log('🗑️ Deleting progress updates...')
+      await prisma.taskProgressUpdates.deleteMany({
+        where: { taskId: taskId }
+      })
+      console.log('🗑️ Progress updates deleted')
+    }
+    
+    // Delete project assignments (should be 0, but just in case)
+    if (existingTask._count.projectAssignments > 0) {
+      console.log('🗑️ Deleting project assignments...')
+      await prisma.taskProjectAssignments.deleteMany({
+        where: { taskId: taskId }
+      })
+      console.log('🗑️ Project assignments deleted')
+    }
+    
+    // Delete worker assignments (should be 0, but just in case)
+    if (existingTask._count.workerAssignments > 0) {
+      console.log('🗑️ Deleting worker assignments...')
+      await prisma.taskWorkerAssignments.deleteMany({
+        where: { taskId: taskId }
+      })
+      console.log('🗑️ Worker assignments deleted')
+    }
+    
+    // Now delete the task itself
+    console.log('🗑️ Deleting task...')
     await prisma.tasks.delete({
       where: { id: taskId }
     })
+    console.log('🗑️ Task deleted successfully')
 
     return NextResponse.json({
       success: true,
