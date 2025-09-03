@@ -134,16 +134,15 @@ export function ClockInCard() {
         }
       })
       
-      // Update local state with the created worklog
-      clockIn(currentProject.id, location)
-      
       // Update the currentWorkLog with the actual data from the database
       if (data.workLog) {
+        console.log('🔄 Setting current worklog after successful clock-in:', data.workLog)
         setCurrentWorkLog({
           id: data.workLog.id,
           personId: data.workLog.person.id,
           projectId: data.workLog.project?.id || '',
           clockIn: new Date(data.workLog.startTime),
+          clockOut: undefined, // Ensure this is undefined for active worklog
           tasksCompleted: '[]',
           materialsUsed: '[]',
           photos: [],
@@ -151,6 +150,7 @@ export function ClockInCard() {
           createdAt: new Date(data.workLog.createdAt),
           updatedAt: new Date(),
         })
+        console.log('✅ Current worklog updated in store')
       }
       
       toast.success(es.dashboard.successClockIn)
