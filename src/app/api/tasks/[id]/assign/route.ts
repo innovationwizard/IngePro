@@ -110,9 +110,17 @@ export async function POST(
 
       const projectId = task.projectAssignments[0].projectId
 
-      // Create new worker assignments first
-      const assignments = await Promise.all(
-        validatedData.personIds.map(async (personId) => {
+      // Get existing assignments for this task
+      const existingAssignments = await tx.taskWorkerAssignments.findMany({
+        where: { taskId: taskId }
+      })
+
+      // Create new worker assignments only for workers not already assigned
+      const existingWorkerIds = new Set(existingAssignments.map(a => a.workerId))
+      const newWorkerIds = validatedData.personIds.filter(id => !existingWorkerIds.has(id))
+      
+      const newAssignments = await Promise.all(
+        newWorkerIds.map(async (personId) => {
           return tx.taskWorkerAssignments.create({
             data: {
               taskId: taskId,
@@ -124,28 +132,35 @@ export async function POST(
         })
       )
 
-      // Get existing assignments for this task
-      const existingAssignments = await tx.taskWorkerAssignments.findMany({
-        where: { taskId: taskId }
-      })
-
-      // Only delete old assignments if they exist and are different from new ones
-      if (existingAssignments.length > 0) {
-        const newWorkerIds = new Set(validatedData.personIds)
-        const assignmentsToDelete = existingAssignments.filter(
-          existing => !newWorkerIds.has(existing.workerId)
-        )
-
-        if (assignmentsToDelete.length > 0) {
-          await tx.taskWorkerAssignments.deleteMany({
-            where: { 
-              id: { in: assignmentsToDelete.map(a => a.id) }
-            }
+      // Update existing assignments with new assignedBy and timestamp
+      const updatedAssignments = await Promise.all(
+        existingAssignments
+          .filter(existing => validatedData.personIds.includes(existing.workerId))
+          .map(async (existing) => {
+            return tx.taskWorkerAssignments.update({
+              where: { id: existing.id },
+              data: {
+                assignedBy: session.user?.id || '',
+                updatedAt: new Date(),
+              }
+            })
           })
-        }
+      )
+
+      // Delete assignments that are no longer needed
+      const assignmentsToDelete = existingAssignments.filter(
+        existing => !validatedData.personIds.includes(existing.workerId)
+      )
+
+      if (assignmentsToDelete.length > 0) {
+        await tx.taskWorkerAssignments.deleteMany({
+          where: { 
+            id: { in: assignmentsToDelete.map(a => a.id) }
+          }
+        })
       }
 
-      return assignments
+      return [...newAssignments, ...updatedAssignments]
     })
 
     return NextResponse.json({
