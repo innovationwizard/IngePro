@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useWorkStore } from '@/stores/workStore'
+import { useWorkStore, workStore } from '@/stores/workStore'
 import { useProjectStore } from '@/stores/projectStore'
 
 // @ts-expect-error debug
@@ -23,18 +23,16 @@ function ClockInCardComponent() {
   console.log('🚀 ClockInCard component rendering...')
   
   const { data: session } = useSession()
-  const currentWorkLog = useWorkStore(s => s.currentWorkLog)
+  const wl = useWorkStore((s) => s.currentWorkLog);
+  const isClockedIn = !!wl && wl.clockOut === null;
   const setCurrentWorkLog = useWorkStore(s => s.setCurrentWorkLog)
-  const clockOut = useWorkStore(s => s.clockOut)
-  const isClockedIn = !!currentWorkLog && currentWorkLog.clockOut === null
   const currentProject = useProjectStore((s: any) => s.currentProject)
   const [isLoading, setIsLoading] = useState(false)
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)
   const [hasCheckedWorklog, setHasCheckedWorklog] = useState(false)
 
   // Debug store state
-  console.log('ClockInCard render - isClockedIn:', isClockedIn, 'currentWorkLog:', currentWorkLog)
-  console.log('ClockInCard render - currentWorkLog.clockOut:', currentWorkLog?.clockOut)
+  console.log('ClockInCard render - isClockedIn:', isClockedIn, 'currentWorkLog:', wl);
   console.log('ClockInCard render - session user ID:', session?.user?.id)
 
   // Check if user is already clocked in when component mounts
@@ -90,6 +88,13 @@ function ClockInCardComponent() {
   }, [session?.user?.id, hasCheckedWorklog]) // Added hasCheckedWorklog to dependencies
 
   const handleClockIn = async () => {
+    const wl = workStore.getState().currentWorkLog;
+    if (wl && wl.clockOut === null) {
+      console.warn('Already clocked in — skipping POST');
+      toast.error('Ya estás trabajando. Debes hacer clock out primero.');
+      return;
+    }
+
     logToVercel('CLOCK_IN_ATTEMPTED', {
       userId: session?.user?.id,
       projectId: currentProject?.id,

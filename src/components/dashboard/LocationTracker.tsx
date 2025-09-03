@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useWorkStore } from '@/stores/workStore'
+import { useWorkStore, workStore } from '@/stores/workStore'
 import { getCurrentLocation } from '@/lib/utils'
 import { MapPin, Wifi, WifiOff, Activity } from 'lucide-react'
 import { es } from '@/lib/translations/es'

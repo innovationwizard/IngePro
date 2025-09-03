@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { useWorkStore } from '@/stores/workStore'
+import { useWorkStore, workStore } from '@/stores/workStore'
 import {
   Home,
   Clock,
@@ -33,8 +33,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   const { data: session, status } = useSession()
-  const currentWorkLog = useWorkStore(s => s.currentWorkLog)
-  const isClockedIn = !!currentWorkLog && currentWorkLog.clockOut === null
+  const wl = useWorkStore((s) => s.currentWorkLog);
+  const isClockedIn = !!wl && wl.clockOut === null;
   const pathname = usePathname()
   const router = useRouter()
   

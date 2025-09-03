@@ -7,7 +7,7 @@ import { ClockInCard } from '@/components/dashboard/ClockInCard'
 import { ProjectSelector } from '@/components/dashboard/ProjectSelector'
 import { LocationTracker } from '@/components/dashboard/LocationTracker'
 import { RecentWorkLogs } from '@/components/dashboard/RecentWorkLogs'
-import { useWorkStore } from '@/stores/workStore'
+import { useWorkStore, workStore } from '@/stores/workStore'
 import { es } from '@/lib/translations/es'
 import PWAStatus from '@/components/PWAStatus'
 import { 
@@ -302,8 +302,8 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
 export default function DashboardPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const currentWorkLog = useWorkStore(s => s.currentWorkLog)
-  const isClockedIn = !!currentWorkLog && currentWorkLog.clockOut === null
+  const wl = useWorkStore((s) => s.currentWorkLog);
+  const isClockedIn = !!wl && wl.clockOut === null;
   const [currentTime, setCurrentTime] = useState(new Date())
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
