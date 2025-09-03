@@ -27,11 +27,21 @@ export function ProjectSelector() {
   const { projects, currentProject, setProjects, setCurrentProject } = useProjectStore()
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [lastFetchTime, setLastFetchTime] = useState(0)
   const { data: session } = useSession()
 
   useEffect(() => {
     const fetchProjects = async () => {
-      if (!session) return
+      if (!session?.user?.id) return
+      
+      // Prevent duplicate calls if projects already exist or if we fetched recently
+      const now = Date.now()
+      if (projects.length > 0 || (now - lastFetchTime) < 5000) { // 5 second rate limit
+        setIsLoading(false)
+        return
+      }
+      
+      setLastFetchTime(now)
       
       logToVercel('PROJECTS_FETCH_ATTEMPTED', {
         userId: session.user?.id,
@@ -71,7 +81,7 @@ export function ProjectSelector() {
     }
 
     fetchProjects()
-  }, [setProjects, session])
+  }, [session?.user?.id]) // Removed setProjects from dependencies to prevent infinite loops
 
   const handleDropdownToggle = () => {
     logToVercel('PROJECT_DROPDOWN_TOGGLED', {
