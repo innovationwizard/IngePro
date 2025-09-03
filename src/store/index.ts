@@ -12,12 +12,12 @@ interface AuthState {
 
 interface WorkLogState {
   currentWorkLog: WorkLog | null
-  isClockedIn: boolean
   currentLocation: LocationData | null
   clockIn: (projectId: string, location: LocationData) => void
   clockOut: () => void
   updateLocation: (location: LocationData) => void
   setCurrentWorkLog: (workLog: WorkLog) => void
+  get isClockedIn(): boolean
 }
 
 interface ProjectState {
@@ -36,12 +36,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
 }))
 
-export const useWorkLogStore = create<WorkLogState>((set) => ({
+export const useWorkLogStore = create<WorkLogState>((set, get) => ({
   currentWorkLog: null,
-  isClockedIn: false,
   currentLocation: null,
   clockIn: (projectId, location) => set({
-    isClockedIn: true,
     currentLocation: location,
     currentWorkLog: {
       id: '',
@@ -56,12 +54,14 @@ export const useWorkLogStore = create<WorkLogState>((set) => ({
     } as WorkLog,
   }),
   clockOut: () => set({
-    isClockedIn: false,
     currentWorkLog: null,
     currentLocation: null,
   }),
   updateLocation: (location) => set({ currentLocation: location }),
   setCurrentWorkLog: (workLog) => set({ currentWorkLog: workLog }),
+  get isClockedIn() {
+    return get().currentWorkLog !== null && get().currentWorkLog.clockOut === null
+  },
 }))
 
 export const useProjectStore = create<ProjectState>((set) => ({

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useWorkLogStore, useProjectStore } from '@/store'
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
@@ -21,6 +21,38 @@ export function ClockInCard() {
   const { currentProject } = useProjectStore()
   const [isLoading, setIsLoading] = useState(false)
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)
+
+  // Debug store state
+  console.log('ClockInCard render - isClockedIn:', isClockedIn, 'currentWorkLog:', currentWorkLog)
+
+  // Check if user is already clocked in when component mounts
+  useEffect(() => {
+    const checkCurrentWorklog = async () => {
+      try {
+        console.log('Checking current worklog for user:', session?.user?.id)
+        const response = await fetch('/api/worklog/current')
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Current worklog response:', data)
+          if (data.workLog && !data.workLog.clockOut) {
+            console.log('User is already clocked in, updating store with:', data.workLog)
+            // User is already clocked in, update the store
+            setCurrentWorkLog(data.workLog)
+          } else {
+            console.log('No active worklog found')
+          }
+        } else {
+          console.log('Failed to fetch current worklog:', response.status)
+        }
+      } catch (error) {
+        console.error('Error checking current worklog:', error)
+      }
+    }
+
+    if (session?.user?.id) {
+      checkCurrentWorklog()
+    }
+  }, [session?.user?.id, setCurrentWorkLog])
 
   const handleClockIn = async () => {
     logToVercel('CLOCK_IN_ATTEMPTED', {
