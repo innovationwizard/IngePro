@@ -30,12 +30,11 @@ export async function GET(request: NextRequest) {
       companyId = personTenant?.companyId
     }
 
-    if (!companyId) {
-      return NextResponse.json({ error: 'No company context available' }, { status: 400 })
-    }
+    console.log('DEBUG: Looking for worklog with companyId:', companyId, 'for user:', session.user?.id)
 
     // Find the current active worklog (no clockOut time)
-    const currentWorkLog = await prisma.workLogs.findFirst({
+    // Try to find by companyId first, then fallback to any active worklog for the person
+    let currentWorkLog = await prisma.workLogs.findFirst({
       where: {
         personId: session.user.id,
         clockOut: null, // Active worklog (not clocked out)
@@ -61,6 +60,38 @@ export async function GET(request: NextRequest) {
         clockIn: 'desc'
       }
     })
+
+    // If no worklog found with companyId, try to find any active worklog for the person
+    if (!currentWorkLog) {
+      console.log('DEBUG: No worklog found with companyId, trying without company filter')
+      currentWorkLog = await prisma.workLogs.findFirst({
+        where: {
+          personId: session.user.id,
+          clockOut: null // Active worklog (not clocked out)
+        },
+        include: {
+          project: {
+            select: {
+              id: true,
+              name: true,
+              nameEs: true
+            }
+          },
+          person: {
+            select: {
+              id: true,
+              name: true,
+              role: true
+            }
+          }
+        },
+        orderBy: {
+          clockIn: 'desc'
+        }
+      })
+    }
+
+    console.log('DEBUG: Final worklog result:', currentWorkLog)
 
     return NextResponse.json({
       success: true,

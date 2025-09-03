@@ -263,20 +263,30 @@ export function ClockInCard() {
       </div>
 
       <div className="space-y-4">
+        {/* Debug info */}
+        <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-100 rounded">
+          Debug: isClockedIn={isClockedIn.toString()}, currentWorkLog={currentWorkLog ? 'exists' : 'null'}, clockOut={currentWorkLog?.clockOut ? 'set' : 'null'}
+        </div>
+        
         {!isClockedIn ? (
-          <button
-            onClick={handleClockIn}
-            disabled={isLoading || !currentProject}
-            className="btn-mobile bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Clock className="h-6 w-6" />
-            <span>
-              {isLoading ? es.dashboard.gettingLocation : 
-               !currentProject ? 'Selecciona un proyecto' : 
-               es.dashboard.clockIn}
-            </span>
-          </button>
+          <div>
+            <div className="text-xs text-red-500 mb-2">DEBUG: Showing CLOCK IN button (isClockedIn=false)</div>
+            <button
+              onClick={handleClockIn}
+              disabled={isLoading || !currentProject}
+              className="btn-mobile bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Clock className="h-6 w-6" />
+              <span>
+                {isLoading ? es.dashboard.gettingLocation : 
+                 !currentProject ? 'Selecciona un proyecto' : 
+                 es.dashboard.clockIn}
+              </span>
+            </button>
+          </div>
         ) : (
+          <div>
+            <div className="text-xs text-green-500 mb-2">DEBUG: Showing CLOCK OUT section (isClockedIn=true)</div>
           <div className="space-y-4">
             {/* Prominent green banner for shift confirmation */}
             <div className="bg-green-500 border-2 border-green-600 rounded-lg p-4 text-center shadow-lg">
@@ -327,6 +337,7 @@ export function ClockInCard() {
                 <span>{es.dashboard.clockOut}</span>
               </button>
             </div>
+          </div>
           </div>
         )}
 
