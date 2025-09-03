@@ -98,11 +98,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Check if material name already exists
+    // Check if material name already exists (excluding soft-deleted materials)
     const existingMaterial = await prisma.materials.findFirst({
       where: {
         name: validatedData.name,
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        deletedAt: null // Exclude soft-deleted materials
       }
     })
 
@@ -182,15 +183,16 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
-    // Verify the material exists
+    // Verify the material exists and is not soft-deleted
     const existingMaterial = await prisma.materials.findFirst({
       where: {
         id: id,
+        deletedAt: null // Only allow updates on non-deleted materials
       }
     })
 
     if (!existingMaterial) {
-      return NextResponse.json({ error: 'Material not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Material not found or has been deleted' }, { status: 404 })
     }
 
     // Check if name is being updated and if it conflicts
@@ -199,6 +201,7 @@ export async function PUT(request: NextRequest) {
         where: {
           name: validatedData.name,
           status: 'ACTIVE',
+          deletedAt: null, // Exclude soft-deleted materials
           id: { not: id }
         }
       })
