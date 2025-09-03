@@ -139,7 +139,12 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   // Debug logging
-  console.log('TaskList render - personRole:', personRole, 'currentUserId:', currentUserId)
+  console.log('TaskList render - personRole:', personRole, 'currentUserId:', currentUserId, 'tasks count:', tasks?.length)
+  
+  // Log every time personRole changes
+  useEffect(() => {
+    console.log('TaskList personRole changed to:', personRole)
+  }, [personRole])
 
   // Fetch categories when component mounts
   useEffect(() => {

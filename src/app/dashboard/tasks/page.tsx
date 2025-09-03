@@ -259,6 +259,9 @@ export default function TasksPage() {
   const isSupervisor = session.user?.role === 'SUPERVISOR'
   const isWorker = session.user?.role === 'WORKER'
   const personRole = session.user?.role || ''
+  
+  // Debug logging
+  console.log('TasksPage render - session user role:', session.user?.role, 'personRole:', personRole, 'isAdmin:', isAdmin)
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-full overflow-x-hidden">
@@ -267,6 +270,10 @@ export default function TasksPage() {
         <p className="text-gray-600 mt-2 text-sm sm:text-base">
           Gestiona tareas, categorías y materiales para tus proyectos de construcción
         </p>
+        {/* Debug info */}
+        <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
+          Debug: User Role = {session.user?.role} | personRole = {personRole} | isAdmin = {isAdmin.toString()}
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
