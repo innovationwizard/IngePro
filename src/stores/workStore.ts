@@ -37,10 +37,12 @@ const store = typeof window !== 'undefined'
   : createWorkStore();
 
 // Add runtime trip-wire to detect duplication
+// DEV: show instance once
 if (process.env.NODE_ENV === 'development') {
-  const id = Math.random().toString(36).slice(2,7);
-  // stamp the instance so you can see if multiple appear
-  store.setState(s => Object.assign(s, { __instanceId: id }) as any, true);
+  const id = Math.random().toString(36).slice(2, 8);
+  // stamp & log once
+  // @ts-expect-error debug
+  (globalThis as any).__WORK_STORE_ID = id;
   console.log('[workStore] instance id =', id);
 }
 

@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useWorkStore } from '@/stores/workStore'
 import { useProjectStore } from '@/stores/projectStore'
+
+// @ts-expect-error debug
+console.log('ClockInCard using store id =', (globalThis as any).__WORK_STORE_ID);
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Clock, MapPin, AlertCircle, FileText, Plus } from 'lucide-react'

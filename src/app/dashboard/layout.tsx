@@ -7,6 +7,9 @@ import Sidebar from '@/components/dashboard/Sidebar'
 import { Header } from '@/components/dashboard/Header'
 import { MobileNavigation } from '@/components/dashboard/MobileNavigation'
 
+// @ts-expect-error debug
+console.log('Layout using store id =', (globalThis as any).__WORK_STORE_ID);
+
 export default function DashboardLayout({ children, }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
   const router = useRouter()
