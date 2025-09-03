@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { Plus, Package } from 'lucide-react'
 import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
 import InventoryManager from '@/components/inventory/InventoryManager'
 import ProgressHistory from '@/components/tasks/ProgressHistory'
@@ -11,6 +11,7 @@ import MaterialAssignmentModal from '@/components/materials/MaterialAssignmentMo
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 
 // Vercel logging function
 const logToVercel = (action: string, details: any = {}) => {
