@@ -473,21 +473,26 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Delete all related records first, then the task
-    // This handles foreign key constraints properly
+    // IMPORTANT: We NEVER delete progress updates - they are real work records!
+    // Instead, we'll use a soft delete approach or only remove active assignments
     
-    console.log('🗑️ Deleting related records before task deletion...')
+    console.log('🗑️ Preserving progress updates (real work records)')
+    console.log('🗑️ Progress updates count:', existingTask._count.progressUpdates)
     
-    // Delete progress updates (historical data)
     if (existingTask._count.progressUpdates > 0) {
-      console.log('🗑️ Deleting progress updates...')
-      await prisma.taskProgressUpdates.deleteMany({
-        where: { taskId: taskId }
-      })
-      console.log('🗑️ Progress updates deleted')
+      console.log('🗑️ Cannot hard delete task - it has progress updates (real work records)')
+      return NextResponse.json({ 
+        error: 'Cannot delete task - it has progress updates representing real completed work. These records must be preserved for audit and historical purposes.',
+        details: {
+          progressUpdates: existingTask._count.progressUpdates,
+          projectAssignments: existingTask._count.projectAssignments,
+          workerAssignments: existingTask._count.workerAssignments
+        }
+      }, { status: 400 })
     }
     
-    // Delete project assignments (should be 0, but just in case)
+    // Only proceed if there are NO progress updates
+    // Delete active assignments (project/worker assignments)
     if (existingTask._count.projectAssignments > 0) {
       console.log('🗑️ Deleting project assignments...')
       await prisma.taskProjectAssignments.deleteMany({
@@ -496,7 +501,6 @@ export async function DELETE(request: NextRequest) {
       console.log('🗑️ Project assignments deleted')
     }
     
-    // Delete worker assignments (should be 0, but just in case)
     if (existingTask._count.workerAssignments > 0) {
       console.log('🗑️ Deleting worker assignments...')
       await prisma.taskWorkerAssignments.deleteMany({
@@ -505,8 +509,8 @@ export async function DELETE(request: NextRequest) {
       console.log('🗑️ Worker assignments deleted')
     }
     
-    // Now delete the task itself
-    console.log('🗑️ Deleting task...')
+    // Now delete the task itself (only if no progress updates exist)
+    console.log('🗑️ Deleting task (no progress updates to preserve)...')
     await prisma.tasks.delete({
       where: { id: taskId }
     })
