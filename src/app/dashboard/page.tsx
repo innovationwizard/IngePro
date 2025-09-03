@@ -57,6 +57,201 @@ interface DashboardStats {
   }>
 }
 
+interface Worker {
+  id: string
+  name: string
+  email: string
+  role: string
+  isClockedIn: boolean
+  currentWorkLogId?: string
+  clockInTime?: string
+}
+
+// Worker Management Section Component
+function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
+  const [workers, setWorkers] = useState<Worker[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null)
+  const [newStatus, setNewStatus] = useState<boolean>(false)
+
+  useEffect(() => {
+    fetchWorkers()
+  }, [])
+
+  const fetchWorkers = async () => {
+    try {
+      const response = await fetch('/api/worklog', { credentials: 'include' })
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Extract unique workers and their current status
+        const workerMap = new Map<string, Worker>()
+        
+        data.workLogs.forEach((log: any) => {
+          if (log.person.role === 'WORKER') {
+            const isClockedIn = log.status === 'ACTIVE'
+            workerMap.set(log.person.id, {
+              id: log.person.id,
+              name: log.person.name,
+              email: log.person.email,
+              role: log.person.role,
+              isClockedIn,
+              currentWorkLogId: isClockedIn ? log.id : undefined,
+              clockInTime: isClockedIn ? log.clockIn : undefined
+            })
+          }
+        })
+        
+        setWorkers(Array.from(workerMap.values()))
+      }
+    } catch (error) {
+      console.error('Error fetching workers:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleStatusChange = (worker: Worker, newStatus: boolean) => {
+    setSelectedWorker(worker)
+    setNewStatus(newStatus)
+    setShowConfirmModal(true)
+  }
+
+  const confirmStatusChange = async () => {
+    if (!selectedWorker) return
+
+    try {
+      if (newStatus) {
+        // Clock in worker
+        const response = await fetch('/api/worklog/clock-in', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            personId: selectedWorker.id,
+            projectId: stats?.projects?.[0]?.id || '', // Use first available project
+            location: 'Manual entry by supervisor'
+          })
+        })
+        
+        if (response.ok) {
+          // Refresh workers list
+          fetchWorkers()
+        }
+      } else {
+        // Clock out worker
+        if (selectedWorker.currentWorkLogId) {
+          const response = await fetch(`/api/worklog/${selectedWorker.currentWorkLogId}/clock-out`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              location: 'Manual entry by supervisor'
+            })
+          })
+          
+          if (response.ok) {
+            // Refresh workers list
+            fetchWorkers()
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error changing worker status:', error)
+    } finally {
+      setShowConfirmModal(false)
+      setSelectedWorker(null)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="space-y-3">
+        {workers.length > 0 ? (
+          workers.map((worker) => (
+            <div key={worker.id} className="flex items-center justify-between p-4 border rounded-lg bg-white">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">{worker.name}</div>
+                  <div className="text-sm text-gray-500">{worker.email}</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  worker.isClockedIn 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {worker.isClockedIn ? 'En turno' : 'Fuera de turno'}
+                </span>
+                
+                <button
+                  onClick={() => handleStatusChange(worker, !worker.isClockedIn)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    worker.isClockedIn
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  }`}
+                >
+                  {worker.isClockedIn ? 'Sacar del turno' : 'Poner en turno'}
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            No hay trabajadores disponibles
+          </div>
+        )}
+      </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && selectedWorker && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Confirmar cambio de estado
+            </h3>
+            <p className="text-gray-600 mb-6">
+              ¿Está seguro de que desea cambiar el estado de <strong>{selectedWorker.name}</strong> a{' '}
+              <strong>{newStatus ? 'En turno' : 'Fuera de turno'}</strong>?
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmStatusChange}
+                className={`flex-1 px-4 py-2 rounded-lg text-white font-medium ${
+                  newStatus ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession()
   const router = useRouter()
@@ -492,6 +687,17 @@ export default function DashboardPage() {
                     No hay actividad reciente
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Worker Management for Supervisor */}
+            <div className="mobile-card">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Users className="h-5 w-5 mr-2" />
+                Gestión de Trabajadores
+              </h2>
+              <div className="space-y-3">
+                <WorkerManagementSection stats={stats} />
               </div>
             </div>
           </>
