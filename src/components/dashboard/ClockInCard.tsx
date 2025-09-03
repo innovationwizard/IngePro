@@ -24,6 +24,7 @@ export function ClockInCard() {
 
   // Debug store state
   console.log('ClockInCard render - isClockedIn:', isClockedIn, 'currentWorkLog:', currentWorkLog)
+  console.log('ClockInCard render - currentWorkLog.clockOut:', currentWorkLog?.clockOut)
 
   // Check if user is already clocked in when component mounts
   useEffect(() => {
@@ -38,8 +39,9 @@ export function ClockInCard() {
             console.log('User is already clocked in, updating store with:', data.workLog)
             // User is already clocked in, update the store
             setCurrentWorkLog(data.workLog)
+            console.log('Store updated, isClockedIn should now be true')
           } else {
-            console.log('No active worklog found')
+            console.log('No active worklog found, workLog:', data.workLog)
           }
         } else {
           console.log('Failed to fetch current worklog:', response.status)
