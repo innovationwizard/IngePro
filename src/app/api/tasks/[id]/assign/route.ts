@@ -103,19 +103,20 @@ export async function POST(
 
     // Assign task to users in transaction
     const result = await prisma.$transaction(async (tx) => {
+      // Verify task has project assignments
+      if (!task.projectAssignments || task.projectAssignments.length === 0) {
+        throw new Error('Task must be assigned to a project before assigning to workers')
+      }
+
+      const projectId = task.projectAssignments[0].projectId
+
       // Create new worker assignments first
       const assignments = await Promise.all(
         validatedData.personIds.map(async (personId) => {
-          // Get the first project assignment for this task to use as projectId
-          const projectAssignment = task.projectAssignments[0]
-          if (!projectAssignment) {
-            throw new Error('Task must be assigned to a project before assigning to workers')
-          }
-
           return tx.taskWorkerAssignments.create({
             data: {
               taskId: taskId,
-              projectId: projectAssignment.projectId,
+              projectId: projectId,
               workerId: personId,
               assignedBy: session.user?.id || '',
             }
@@ -123,13 +124,26 @@ export async function POST(
         })
       )
 
-      // Now safely delete old assignments (new ones are already created)
-      await tx.taskWorkerAssignments.deleteMany({
-        where: { 
-          taskId: taskId,
-          id: { notIn: assignments.map(a => a.id) }
-        }
+      // Get existing assignments for this task
+      const existingAssignments = await tx.taskWorkerAssignments.findMany({
+        where: { taskId: taskId }
       })
+
+      // Only delete old assignments if they exist and are different from new ones
+      if (existingAssignments.length > 0) {
+        const newWorkerIds = new Set(validatedData.personIds)
+        const assignmentsToDelete = existingAssignments.filter(
+          existing => !newWorkerIds.has(existing.workerId)
+        )
+
+        if (assignmentsToDelete.length > 0) {
+          await tx.taskWorkerAssignments.deleteMany({
+            where: { 
+              id: { in: assignmentsToDelete.map(a => a.id) }
+            }
+          })
+        }
+      }
 
       return assignments
     })
@@ -150,8 +164,32 @@ export async function POST(
       )
     }
 
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('Task must be assigned to a project')) {
+        return NextResponse.json(
+          { error: 'Task must be assigned to a project before assigning to workers' },
+          { status: 400 }
+        )
+      }
+      
+      if (error.message.includes('Foreign key constraint')) {
+        return NextResponse.json(
+          { error: 'Database constraint violation. Please contact support.' },
+          { status: 500 }
+        )
+      }
+    }
+
+    // Log the full error for debugging
+    console.error('Full error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error: error
+    })
+
     return NextResponse.json(
-      { error: 'Failed to assign task' },
+      { error: 'Failed to assign task. Please try again or contact support.' },
       { status: 500 }
     )
   }
