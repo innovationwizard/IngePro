@@ -1,49 +1,59 @@
 'use client';
-import { create } from 'zustand';
-import { WorkLog, LocationData } from '@/types';
 
-type Store = {
-  currentWorkLog: WorkLog | null;
-  currentLocation: LocationData | null;
-  setCurrentWorkLog: (wl: WorkLog | null) => void;
-  setCurrentLocation: (location: LocationData | null) => void;
+import { createStore } from 'zustand/vanilla';
+import { useStore } from 'zustand';
+
+type WorkLog = { 
+  id: string;
+  personId: string;
+  projectId: string;
+  clockIn: Date;
+  clockOut: Date | null;
+  location: any;
+  tasksCompleted: string;
+  materialsUsed: string;
+  photos: string[];
+  approved: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+} | null;
+
+type LocationData = {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  timestamp: string;
+} | null;
+
+type WorkState = {
+  currentWorkLog: WorkLog;
+  currentLocation: LocationData;
+  setCurrentWorkLog: (wl: WorkLog) => void;
+  setCurrentLocation: (loc: LocationData) => void;
   clockOut: () => void;
-  clockIn: (projectId: string, location: LocationData) => void;
-  // Derived getter - call this function, don't select it
-  isClockedIn: () => boolean;
 };
 
-// ---- Singleton guard ----
-const createWorkStore = () =>
-  create<Store>()((set, get) => ({
+// build the store
+const makeStore = () =>
+  createStore<WorkState>()((set) => ({
     currentWorkLog: null,
     currentLocation: null,
     setCurrentWorkLog: (wl) => set({ currentWorkLog: wl }),
-    setCurrentLocation: (location) => set({ currentLocation: location }),
+    setCurrentLocation: (loc) => set({ currentLocation: loc }),
     clockOut: () => set({ currentWorkLog: null, currentLocation: null }),
-    clockIn: (projectId: string, location: LocationData) => {
-      set({ currentLocation: location });
-      // The actual worklog creation happens in the API
-    },
-    isClockedIn: () => {
-      const currentWorkLog = get().currentWorkLog;
-      return !!currentWorkLog && (currentWorkLog.clockOut === null || currentWorkLog.clockOut === undefined);
-    },
   }));
 
-// Reuse on the client, fresh per SSR request
-const store = typeof window !== 'undefined'
-  ? ((globalThis as any).__workStore ?? ((globalThis as any).__workStore = createWorkStore()))
-  : createWorkStore();
+// global singleton (client HMR-safe)
+const KEY = Symbol.for('app.workStore');
+const g = globalThis as any;
+if (!g[KEY]) g[KEY] = makeStore();
+export const workStore = g[KEY];
 
-// Add runtime trip-wire to detect duplication
+// hook bound to the singleton
+export const useWorkStore = <T>(selector: (s: WorkState) => T) =>
+  useStore(workStore, selector);
+
 // DEV: show instance once
 if (process.env.NODE_ENV === 'development') {
-  const id = Math.random().toString(36).slice(2, 8);
-  // stamp & log once
-  // @ts-expect-error debug
-  (globalThis as any).__WORK_STORE_ID = id;
-  console.log('[workStore] instance id =', id);
+  console.log('[workStore] instance id =', g[KEY] === workStore && KEY.toString());
 }
-
-export const useWorkStore = store;

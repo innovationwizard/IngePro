@@ -33,8 +33,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   const { data: session, status } = useSession()
-  const isClockedIn = useWorkStore((s: any) => s.isClockedIn())
-  const currentWorkLog = useWorkStore((s: any) => s.currentWorkLog)
+  const currentWorkLog = useWorkStore(s => s.currentWorkLog)
+  const isClockedIn = !!currentWorkLog && currentWorkLog.clockOut === null
   const pathname = usePathname()
   const router = useRouter()
   

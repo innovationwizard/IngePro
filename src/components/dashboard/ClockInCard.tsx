@@ -23,13 +23,10 @@ function ClockInCardComponent() {
   console.log('🚀 ClockInCard component rendering...')
   
   const { data: session } = useSession()
-  const currentWorkLog = useWorkStore((s: any) => s.currentWorkLog)
-  const setCurrentWorkLog = useWorkStore((s: any) => s.setCurrentWorkLog)
-  const clockOut = useWorkStore((s: any) => s.clockOut)
-  const isClockedIn = useWorkStore((s: any) => {
-    const workLog = s.currentWorkLog;
-    return !!workLog && (workLog.clockOut === null || workLog.clockOut === undefined);
-  })
+  const currentWorkLog = useWorkStore(s => s.currentWorkLog)
+  const setCurrentWorkLog = useWorkStore(s => s.setCurrentWorkLog)
+  const clockOut = useWorkStore(s => s.clockOut)
+  const isClockedIn = !!currentWorkLog && currentWorkLog.clockOut === null
   const currentProject = useProjectStore((s: any) => s.currentProject)
   const [isLoading, setIsLoading] = useState(false)
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)

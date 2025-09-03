@@ -20,8 +20,8 @@ const POLLING_INTERVALS = [60000, 120000, 240000, 480000, 960000] // 60s, 120s, 
 
 export function LocationTracker() {
   const { data: session } = useSession()
-  const currentLocation = useWorkStore((s: any) => s.currentLocation)
-  const setCurrentLocation = useWorkStore((s: any) => s.setCurrentLocation)
+  const currentLocation = useWorkStore(s => s.currentLocation)
+  const setCurrentLocation = useWorkStore(s => s.setCurrentLocation)
   const [isTracking, setIsTracking] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pollingInterval, setPollingInterval] = useState(60000) // Start with 60s

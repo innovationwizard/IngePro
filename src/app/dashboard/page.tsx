@@ -302,8 +302,8 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
 export default function DashboardPage() {
   const { data: session } = useSession()
   const router = useRouter()
-  const isClockedIn = useWorkStore((s: any) => s.isClockedIn())
-  const currentWorkLog = useWorkStore((s: any) => s.currentWorkLog)
+  const currentWorkLog = useWorkStore(s => s.currentWorkLog)
+  const isClockedIn = !!currentWorkLog && currentWorkLog.clockOut === null
   const [currentTime, setCurrentTime] = useState(new Date())
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
