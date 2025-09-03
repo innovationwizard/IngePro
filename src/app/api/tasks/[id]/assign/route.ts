@@ -196,17 +196,23 @@ export async function POST(
           }
         })
         
-        // For assignments with progress updates, we cannot delete them due to foreign key constraints
-        // Instead, we'll prevent deletion and return an error message
-        const hasProgressUpdates = assignmentsWithProgress.some(assignment => 
-          assignment.progressUpdates && assignment.progressUpdates.length > 0
-        )
-        
-        if (hasProgressUpdates) {
-          throw new Error('Cannot remove workers who have progress updates. Progress updates represent actual work done and must be preserved. Please reassign the task to another worker instead of removing the current worker.')
+        // For assignments with progress updates, we can now safely remove them
+        // The foreign key constraint will automatically set assignment_id to NULL
+        // This preserves the work history while allowing worker removal
+        for (const assignment of assignmentsWithProgress) {
+          if (assignment.progressUpdates && assignment.progressUpdates.length > 0) {
+            // Update progress updates to remove the assignment reference
+            // This preserves the work data while allowing worker removal
+            await tx.taskProgressUpdates.updateMany({
+              where: { assignmentId: assignment.id },
+              data: { 
+                assignmentId: null // Remove reference to the assignment being deleted
+              }
+            })
+          }
         }
         
-        // Safe to delete worker assignments (no progress updates exist)
+        // Now safe to delete worker assignments
         await tx.taskWorkerAssignments.deleteMany({
           where: { 
             id: { in: assignmentsToDelete.map(a => a.id) }
