@@ -13,21 +13,6 @@ export const useWorkLogStore = () => {
 
   const getCurrentWorkLog = () => currentWorkLog
 
-  const getIsClockedIn = () => {
-    const clockOut = currentWorkLog?.clockOut
-    const result = currentWorkLog !== null && (clockOut === null || clockOut === undefined)
-    
-    console.log('🔍 Store isClockedIn getter debug:')
-    console.log('  - currentWorkLog:', currentWorkLog)
-    console.log('  - clockOut:', clockOut)
-    console.log('  - currentWorkLog !== null:', currentWorkLog !== null)
-    console.log('  - clockOut === null:', clockOut === null)
-    console.log('  - clockOut === undefined:', clockOut === undefined)
-    console.log('  - Final result:', result)
-    
-    return result
-  }
-
   const clockOut = () => {
     console.log('🔄 Store: clockOut called')
     currentWorkLog = null
@@ -45,17 +30,31 @@ export const useWorkLogStore = () => {
     currentLocation,
     setCurrentWorkLog,
     getCurrentWorkLog,
-    getIsClockedIn,
     clockOut,
     clockIn,
   }
 }
 
+// Simple in-memory project store
+let currentProject: Project | null = null
+let projects: Project[] = []
+
+export const useProjectStore = () => {
+  const setCurrentProject = (project: Project | null) => {
+    currentProject = project
+  }
+
+  const setProjects = (projectList: Project[]) => {
+    projects = projectList
+  }
+
+  return {
+    currentProject,
+    projects,
+    setProjects,
+    setCurrentProject,
+  }
+}
+
 // Placeholder exports for compatibility
 export const useAuthStore = () => ({})
-export const useProjectStore = () => ({
-  currentProject: null,
-  projects: [],
-  setProjects: () => {},
-  setCurrentProject: () => {},
-})
