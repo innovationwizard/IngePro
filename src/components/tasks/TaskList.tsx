@@ -497,7 +497,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
 
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="flex-1 sm:flex-none">
+                      <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                         <span className="hidden sm:inline">Ver Detalles</span>
                         <span className="sm:hidden">Detalles</span>
                       </Button>
