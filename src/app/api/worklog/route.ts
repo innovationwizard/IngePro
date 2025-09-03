@@ -193,6 +193,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Create a new work log (simplified for time tracking)
 export async function POST(request: NextRequest) {
+  console.log('🔵 POST method called - Creating new worklog')
   try {
     const session = await getServerSession(authOptions)
     
@@ -201,6 +202,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('🔵 POST request body:', body)
     let { projectId, description } = body
     
     const prisma = await getPrisma()
@@ -345,6 +347,7 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update work log (end time tracking)
 export async function PUT(request: NextRequest) {
+  console.log('🔴 PUT method called - Updating worklog')
   try {
     const session = await getServerSession(authOptions)
     
@@ -353,6 +356,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('🔴 PUT request body:', body)
     const { id, endTime, description } = body
     
     const prisma = await getPrisma()
