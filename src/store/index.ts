@@ -58,7 +58,12 @@ export const useWorkLogStore = create<WorkLogState>((set, get) => ({
     currentLocation: null,
   }),
   updateLocation: (location) => set({ currentLocation: location }),
-  setCurrentWorkLog: (workLog) => set({ currentWorkLog: workLog }),
+  setCurrentWorkLog: (workLog) => {
+    console.log('🔄 Store: setCurrentWorkLog called with:', workLog)
+    set({ currentWorkLog: workLog })
+    console.log('🔄 Store: currentWorkLog updated, new state:', get().currentWorkLog)
+    console.log('🔄 Store: isClockedIn should now be:', get().isClockedIn)
+  },
   get isClockedIn() {
     const result = get().currentWorkLog !== null && (get().currentWorkLog.clockOut === null || get().currentWorkLog.clockOut === undefined)
     console.log('Store isClockedIn getter:', result, 'currentWorkLog:', get().currentWorkLog)
