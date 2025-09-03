@@ -62,7 +62,7 @@ export const useWorkLogStore = create<WorkLogState>((set, get) => ({
     console.log('🔄 Store: setCurrentWorkLog called with:', workLog)
     set({ currentWorkLog: workLog })
     console.log('🔄 Store: currentWorkLog updated, new state:', get().currentWorkLog)
-    console.log('🔄 Store: isClockedIn should now be:', get().isClockedIn)
+    // Note: isClockedIn will be calculated when the component re-renders
   },
   get isClockedIn() {
     const currentWorkLog = get().currentWorkLog
