@@ -268,59 +268,15 @@ export async function DELETE(request: NextRequest) {
 
     // Check if material exists
     const existingMaterial = await prisma.materials.findUnique({
-      where: { id: materialId },
-      include: {
-        _count: {
-          select: {
-            projectMaterials: true,
-            consumptions: true,
-            losses: true,
-            inventoryMovements: true,
-            reorderRequests: true,
-            worklogUsage: true
-          }
-        }
-      }
+      where: { id: materialId }
     })
 
     if (!existingMaterial) {
       return NextResponse.json({ error: 'Material not found' }, { status: 404 })
     }
 
-    // Check if material has any usage (consumptions, losses, etc.)
-    console.log('🗑️ Material usage counts:', {
-      projectMaterials: existingMaterial._count.projectMaterials,
-      consumptions: existingMaterial._count.consumptions,
-      losses: existingMaterial._count.losses,
-      inventoryMovements: existingMaterial._count.inventoryMovements,
-      reorderRequests: existingMaterial._count.reorderRequests,
-      worklogUsage: existingMaterial._count.worklogUsage
-    })
-    
-    const hasUsage = 
-      existingMaterial._count.projectMaterials > 0 ||
-      existingMaterial._count.consumptions > 0 ||
-      existingMaterial._count.losses > 0 ||
-      existingMaterial._count.inventoryMovements > 0 ||
-      existingMaterial._count.reorderRequests > 0 ||
-      existingMaterial._count.worklogUsage > 0
-
-    console.log('🗑️ Has usage:', hasUsage)
-
-    if (hasUsage) {
-      console.log('🗑️ Cannot delete - material has usage records')
-      return NextResponse.json({ 
-        error: 'Cannot delete material - it has usage records (consumptions, losses, inventory movements, etc.). These records must be preserved for audit and historical purposes.',
-        details: {
-          projectMaterials: existingMaterial._count.projectMaterials,
-          consumptions: existingMaterial._count.consumptions,
-          losses: existingMaterial._count.losses,
-          inventoryMovements: existingMaterial._count.inventoryMovements,
-          reorderRequests: existingMaterial._count.reorderRequests,
-          worklogUsage: existingMaterial._count.worklogUsage
-        }
-      }, { status: 400 })
-    }
+    // TODO: Add usage checking once production database is fully synced
+    console.log('🗑️ Material found:', existingMaterial.name)
 
     // Soft delete the material - mark as deleted but keep in database
     console.log('🗑️ Soft deleting material...')
