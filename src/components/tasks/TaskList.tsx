@@ -123,6 +123,8 @@ const taskStatusLabels = {
 }
 
 export default function TaskList({ tasks, onTaskUpdated, personRole, currentUserId }: TaskListProps) {
+  console.log('🚀 TaskList component starting...')
+  console.log('🔍 Basic TaskList test log - should show up')
   const [filteredTasks, setFilteredTasks] = useState<Task[]>(tasks)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')

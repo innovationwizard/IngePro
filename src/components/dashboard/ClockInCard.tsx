@@ -5,8 +5,9 @@ import { useSession } from 'next-auth/react'
 import { useWorkStore, workStore } from '@/stores/workStore'
 import { useProjectStore } from '@/stores/projectStore'
 
-// @ts-expect-error debug
+// Debug logs
 console.log('ClockInCard using store id =', (globalThis as any).__WORK_STORE_ID);
+console.log('ClockInCard using project store id =', (globalThis as any).__PROJECT_STORE_ID);
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Clock, MapPin, AlertCircle, FileText, Plus } from 'lucide-react'
@@ -179,14 +180,14 @@ function ClockInCardComponent() {
           id: data.workLog.id,
           personId: data.workLog.person.id,
           projectId: data.workLog.project?.id || '',
-          clockIn: new Date(data.workLog.startTime),
+          clockIn: new Date(data.workLog.startTime).toISOString(),
           clockOut: null, // Ensure this is null for active worklog
           tasksCompleted: '[]',
           materialsUsed: '[]',
           photos: [],
           approved: false,
-          createdAt: new Date(data.workLog.createdAt),
-          updatedAt: new Date(),
+          createdAt: new Date(data.workLog.createdAt).toISOString(),
+          updatedAt: new Date().toISOString(),
         })
         console.log('✅ Current worklog updated in store')
         // Reset the hasCheckedWorklog flag so the component can update properly

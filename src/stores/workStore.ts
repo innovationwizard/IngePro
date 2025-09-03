@@ -9,6 +9,12 @@ type WorkLog = {
   projectId: string;
   clockIn: string;   // ISO string
   clockOut: string | null; // ISO or null
+  tasksCompleted?: string;
+  materialsUsed?: string;
+  photos?: string[];
+  approved?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 } | null;
 
 type WorkState = {
@@ -28,6 +34,9 @@ const KEY = Symbol.for('app.workStore');
 const g = globalThis as any;
 if (!g[KEY]) g[KEY] = makeStore();
 export const workStore = g[KEY];
+
+// Set the store ID for debugging
+(globalThis as any).__WORK_STORE_ID = KEY.description || 'app.workStore';
 
 // hook
 export const useWorkStore = <T,>(selector: (s: WorkState) => T) =>

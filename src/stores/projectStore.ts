@@ -1,6 +1,7 @@
-// app/stores/projectStore.ts
 'use client';
-import { create } from 'zustand';
+
+import { createStore } from 'zustand/vanilla';
+import { useStore } from 'zustand';
 
 type Project = {
   id: string;
@@ -13,17 +14,16 @@ type Project = {
   createdAt: string;
 } | null;
 
-type Store = {
+type ProjectState = {
   currentProject: Project;
   projects: Project[];
   setCurrentProject: (project: Project) => void;
   setProjects: (projects: Project[]) => void;
-  __instanceId?: string; // For debugging singleton
 };
 
-// ---- Singleton guard ----
-const createProjectStore = () =>
-  create<Store>()((set, get) => ({
+// build store
+const makeProjectStore = () =>
+  createStore<ProjectState>()((set) => ({
     currentProject: null,
     projects: [],
     setCurrentProject: (project) => {
@@ -36,17 +36,15 @@ const createProjectStore = () =>
     },
   }));
 
-// Reuse on the client, fresh per SSR request
-const store = typeof window !== 'undefined'
-  ? ((globalThis as any).__projectStore ?? ((globalThis as any).__projectStore = createProjectStore()))
-  : createProjectStore();
+// singleton across HMR
+const KEY = Symbol.for('app.projectStore');
+const g = globalThis as any;
+if (!g[KEY]) g[KEY] = makeProjectStore();
+export const projectStore = g[KEY];
 
-// Add a runtime trip-wire (proves duplication)
-if (process.env.NODE_ENV === 'development') {
-  const id = Math.random().toString(36).slice(2,7);
-  // stamp the instance so you can see if multiple appear
-  store.setState(s => Object.assign(s, { __instanceId: id }) as any, true);
-  console.log('[projectStore] instance id =', id);
-}
+// Set the store ID for debugging
+(globalThis as any).__PROJECT_STORE_ID = KEY.description || 'app.projectStore';
 
-export const useProjectStore = store;
+// hook
+export const useProjectStore = <T,>(selector: (s: ProjectState) => T) =>
+  useStore(projectStore, selector);

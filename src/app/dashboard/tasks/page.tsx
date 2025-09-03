@@ -67,6 +67,8 @@ interface Project {
 
 
 export default function TasksPage() {
+  console.log('🚀 TasksPage component starting...')
+  console.log('🔍 Basic test log - should show up')
   const { data: session, status } = useSession()
   const router = useRouter()
   const [tasks, setTasks] = useState<Task[]>([])
@@ -77,13 +79,16 @@ export default function TasksPage() {
   const [showProjectAssignmentModal, setShowProjectAssignmentModal] = useState(false)
 
   useEffect(() => {
+    console.log('🔄 TasksPage useEffect triggered - status:', status, 'session:', !!session)
     if (status === 'loading') return
 
     if (!session) {
+      console.log('❌ No session, redirecting to login')
       router.push('/auth/login')
       return
     }
 
+    console.log('✅ Session found, fetching data...')
     fetchTasks()
     fetchCategories()
     fetchProjects()
@@ -262,6 +267,7 @@ export default function TasksPage() {
   
   // Debug logging
   console.log('TasksPage render - session user role:', session.user?.role, 'personRole:', personRole, 'isAdmin:', isAdmin)
+  console.log('🔍 TasksPage render test log - should show up')
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-full overflow-x-hidden">
