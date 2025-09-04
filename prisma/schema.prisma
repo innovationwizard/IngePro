@@ -392,7 +392,6 @@ model Tasks {
   progressUnit String @map("progress_unit") // e.g., "linear meters", "square meters", "units"
 
   // Soft delete - tasks are never actually deleted, just marked as deleted
-  deleted   Boolean  @default(false) @map("deleted")
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
   deletedBy String?  @map("deleted_by") // Person ID who deleted the task
 
@@ -412,6 +411,7 @@ model Tasks {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@map("tasks")
+  @@index([deletedAt], map: "tasks_deleted_at_idx")
 }
 
 model TaskProgressUpdates {
@@ -484,6 +484,7 @@ model Materials {
   worklogUsage       WorklogMaterialUsage[]
 
   @@map("materials")
+  @@index([deletedAt], map: "materials_deleted_at_idx")
 }
 
 // Assignment Tables
@@ -576,7 +577,7 @@ model MaterialLosses {
   taskProgressUpdateId String              @map("task_progress_update_id")
   taskProgressUpdate   TaskProgressUpdates @relation(fields: [taskProgressUpdateId], references: [id], onDelete: Cascade)
   materialId           String              @map("material_id")
-  material             Materials           @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  material             Materials           @relation(fields: [materialId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   quantity Float @map("quantity") // Amount lost/wasted
 

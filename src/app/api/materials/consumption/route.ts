@@ -193,9 +193,22 @@ export async function GET(request: NextRequest) {
       orderBy: { recordedAt: 'desc' }
     })
 
-    // Get loss records
+    // Get loss records - MaterialLosses connects to project through taskProgressUpdate
     const lossRecords = await prisma.materialLosses.findMany({
-      where: whereClause,
+      where: {
+        taskProgressUpdate: {
+          project: {
+            companyId: companyId
+          }
+        },
+        ...(materialId && { materialId }),
+        ...(startDate || endDate ? {
+          createdAt: {
+            ...(startDate && { gte: new Date(startDate) }),
+            ...(endDate && { lte: new Date(endDate) })
+          }
+        } : {})
+      },
       include: {
         material: {
           select: {
@@ -205,11 +218,15 @@ export async function GET(request: NextRequest) {
             unit: true
           }
         },
-        project: {
+        taskProgressUpdate: {
           select: {
-            id: true,
-            name: true,
-            nameEs: true
+            project: {
+              select: {
+                id: true,
+                name: true,
+                nameEs: true
+              }
+            }
           }
         }
       },

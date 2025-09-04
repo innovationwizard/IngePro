@@ -278,12 +278,16 @@ export async function DELETE(request: NextRequest) {
     // TODO: Add usage checking once production database is fully synced
     console.log('🗑️ Material found:', existingMaterial.name)
 
-    // Hard delete the material (temporary until production database is updated)
-    console.log('🗑️ Deleting material...')
-    await prisma.materials.delete({
-      where: { id: materialId }
+    // Soft delete the material - mark as deleted but keep in database
+    console.log('🗑️ Soft deleting material...')
+    await prisma.materials.update({
+      where: { id: materialId },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: session.user?.id
+      }
     })
-    console.log('🗑️ Material deleted successfully')
+    console.log('🗑️ Material soft deleted successfully')
 
     return NextResponse.json({
       success: true,
