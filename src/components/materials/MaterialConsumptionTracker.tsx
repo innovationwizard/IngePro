@@ -345,10 +345,12 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un proyecto" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60">
                   {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.nameEs || project.name}
+                    <SelectItem key={project.id} value={project.id} className="py-2">
+                      <span className="font-medium text-sm">
+                        {project.nameEs || project.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -368,10 +370,17 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un material" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60">
                   {materials.map((material) => (
-                    <SelectItem key={material.id} value={material.id}>
-                      {material.nameEs || material.name} ({material.unit})
+                    <SelectItem key={material.id} value={material.id} className="py-2">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium text-sm">
+                          {material.nameEs || material.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Unidad: {material.unit}
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -392,8 +401,12 @@ export default function MaterialConsumptionTracker({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CONSUMPTION">Consumo</SelectItem>
-                  <SelectItem value="LOSS">Pérdida</SelectItem>
+                  <SelectItem value="CONSUMPTION" className="py-2">
+                    <span className="font-medium">Consumo</span>
+                  </SelectItem>
+                  <SelectItem value="LOSS" className="py-2">
+                    <span className="font-medium">Pérdida</span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

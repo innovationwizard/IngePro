@@ -5,7 +5,7 @@ exports.handler = async (event) => {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: 'postgres', // We're using the default db
+    database: 'ingepro', // Using the IngePro database
     port: 5432,
     ssl: {
       rejectUnauthorized: false // Allows self-signed certificates; use true in production with proper certificates

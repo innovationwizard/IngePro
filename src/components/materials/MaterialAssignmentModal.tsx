@@ -152,11 +152,11 @@ export default function MaterialAssignmentModal({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona un proyecto" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60">
                   {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{project.nameEs || project.name}</span>
+                    <SelectItem key={project.id} value={project.id} className="py-2">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium text-sm">{project.nameEs || project.name}</span>
                         {project.nameEs && project.name !== project.nameEs && (
                           <span className="text-xs text-gray-500">{project.name}</span>
                         )}

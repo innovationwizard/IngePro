@@ -11,7 +11,7 @@
     "generate-architecture": "node scripts/generate-architecture.js",
     "generate-enhanced-architecture": "node scripts/enhanced-architecture.js",
     "update-architecture": "npm run generate-architecture && git add docs/architecture && git commit -m 'Update architecture diagrams'",
-    "architecture:watch": "nodemon --watch src --watch prisma --ext js,ts,tsx,prisma --exec 'npm run generate-architecture'"
+    "architecture:watch": "npx nodemon --watch src --watch prisma --ext js,ts,tsx,prisma --exec \"npm run generate-architecture\""
   },
   "dependencies": {
     "@aws-sdk/client-rds": "^3.864.0",
@@ -56,6 +56,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.31",
+    "nodemon": "^3.1.10",
     "postcss": "^8.4.47",
     "prisma": "^6.15.0",
     "tailwindcss": "^3.4.13",
