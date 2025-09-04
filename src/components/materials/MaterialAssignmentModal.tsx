@@ -152,13 +152,21 @@ export default function MaterialAssignmentModal({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona un proyecto" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60">
+                <SelectContent className="max-h-60 w-full">
                   {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id} className="py-2">
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium text-sm">{project.nameEs || project.name}</span>
+                    <SelectItem 
+                      key={project.id} 
+                      value={project.id} 
+                      className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                    >
+                      <div className="flex flex-col items-start w-full">
+                        <span className="font-medium text-sm text-gray-900 leading-tight">
+                          {project.nameEs || project.name}
+                        </span>
                         {project.nameEs && project.name !== project.nameEs && (
-                          <span className="text-xs text-gray-500">{project.name}</span>
+                          <span className="text-xs text-gray-500 mt-1 leading-tight">
+                            {project.name}
+                          </span>
                         )}
                       </div>
                     </SelectItem>
@@ -225,10 +233,25 @@ export default function MaterialAssignmentModal({
                   <SelectTrigger className="w-auto min-w-[140px]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los Materiales</SelectItem>
-                    <SelectItem value="active">Solo Activos</SelectItem>
-                    <SelectItem value="low-stock">Stock Bajo</SelectItem>
+                  <SelectContent className="w-full">
+                    <SelectItem 
+                      value="all" 
+                      className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                    >
+                      <span className="font-medium text-sm text-gray-900">Todos los Materiales</span>
+                    </SelectItem>
+                    <SelectItem 
+                      value="active" 
+                      className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                    >
+                      <span className="font-medium text-sm text-gray-900">Solo Activos</span>
+                    </SelectItem>
+                    <SelectItem 
+                      value="low-stock" 
+                      className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                    >
+                      <span className="font-medium text-sm text-gray-900">Stock Bajo</span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 

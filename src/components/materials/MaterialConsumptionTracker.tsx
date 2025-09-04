@@ -345,10 +345,14 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un proyecto" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60">
+                <SelectContent className="max-h-60 w-full">
                   {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id} className="py-2">
-                      <span className="font-medium text-sm">
+                    <SelectItem 
+                      key={project.id} 
+                      value={project.id} 
+                      className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                    >
+                      <span className="font-medium text-sm text-gray-900 leading-tight">
                         {project.nameEs || project.name}
                       </span>
                     </SelectItem>
@@ -370,14 +374,18 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un material" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60">
+                <SelectContent className="max-h-60 w-full">
                   {materials.map((material) => (
-                    <SelectItem key={material.id} value={material.id} className="py-2">
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium text-sm">
+                    <SelectItem 
+                      key={material.id} 
+                      value={material.id} 
+                      className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                    >
+                      <div className="flex flex-col items-start w-full">
+                        <span className="font-medium text-sm text-gray-900 leading-tight">
                           {material.nameEs || material.name}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 mt-1 leading-tight">
                           Unidad: {material.unit}
                         </span>
                       </div>
@@ -400,12 +408,18 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CONSUMPTION" className="py-2">
-                    <span className="font-medium">Consumo</span>
+                <SelectContent className="w-full">
+                  <SelectItem 
+                    value="CONSUMPTION" 
+                    className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                  >
+                    <span className="font-medium text-sm text-gray-900">Consumo</span>
                   </SelectItem>
-                  <SelectItem value="LOSS" className="py-2">
-                    <span className="font-medium">Pérdida</span>
+                  <SelectItem 
+                    value="LOSS" 
+                    className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                  >
+                    <span className="font-medium text-sm text-gray-900">Pérdida</span>
                   </SelectItem>
                 </SelectContent>
               </Select>
