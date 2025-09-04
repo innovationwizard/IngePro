@@ -77,13 +77,6 @@ export default function MaterialAssignmentModal({
     )
   }
 
-  const handleSelectAll = () => {
-    if (selectedMaterials.length === filteredMaterials.length) {
-      setSelectedMaterials([])
-    } else {
-      setSelectedMaterials(filteredMaterials.map(m => m.id))
-    }
-  }
 
   const handleAssign = async () => {
     if (!selectedProject) {
@@ -215,9 +208,9 @@ export default function MaterialAssignmentModal({
           </div>
 
           {/* Right Panel - Material Selection */}
-          <div className="flex-1 min-h-0 flex flex-col space-y-4">
-            {/* Search and Filters */}
-            <div className="space-y-3">
+          <div className="flex-1 min-h-0 flex flex-col">
+            {/* Search and Filters - Fixed Height */}
+            <div className="flex-shrink-0 space-y-3 mb-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -254,19 +247,10 @@ export default function MaterialAssignmentModal({
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSelectAll}
-                  className="text-xs"
-                >
-                  {selectedMaterials.length === filteredMaterials.length ? 'Deseleccionar Todo' : 'Seleccionar Todo'}
-                </Button>
               </div>
             </div>
 
-            {/* Materials List */}
+            {/* Materials List - Takes remaining space */}
             <div className="flex-1 min-h-0 overflow-y-auto border rounded-lg">
               {filteredMaterials.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
