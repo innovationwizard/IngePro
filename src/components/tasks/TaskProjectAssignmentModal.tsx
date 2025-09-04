@@ -186,12 +186,18 @@ export default function TaskProjectAssignmentModal({
                   <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Selecciona una tarea..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg">
                     {tasks.map((task) => (
-                      <SelectItem key={task.id} value={task.id} className="bg-white hover:bg-gray-50">
-                        <div className="flex flex-col">
-                          <span className="font-medium">{task.name}</span>
-                          <span className="text-sm text-gray-500">
+                      <SelectItem 
+                        key={task.id} 
+                        value={task.id} 
+                        className="py-3 px-3 hover:bg-gray-50"
+                      >
+                        <div className="flex flex-col items-start w-full">
+                          <span className="font-medium text-sm text-gray-900 leading-tight">
+                            {task.name}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1 leading-tight">
                             {task.category?.name || 'Sin categoría'} • {task.progressUnit}
                           </span>
                         </div>
@@ -237,12 +243,18 @@ export default function TaskProjectAssignmentModal({
                   <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Selecciona un proyecto..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg">
                     {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id} className="bg-white hover:bg-gray-50">
-                        <div className="flex flex-col">
-                          <span className="font-medium">{project.name}</span>
-                          <span className="text-sm text-gray-500">
+                      <SelectItem 
+                        key={project.id} 
+                        value={project.id} 
+                        className="py-3 px-3 hover:bg-gray-50"
+                      >
+                        <div className="flex flex-col items-start w-full">
+                          <span className="font-medium text-sm text-gray-900 leading-tight">
+                            {project.name}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1 leading-tight">
                             {project.company.name}
                           </span>
                         </div>

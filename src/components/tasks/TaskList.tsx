@@ -337,10 +337,19 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los Estados</SelectItem>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg">
+            <SelectItem 
+              value="all" 
+              className="py-2 px-3 hover:bg-gray-50"
+            >
+              Todos los Estados
+            </SelectItem>
             {Object.entries(taskStatusLabels).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
+              <SelectItem 
+                key={value} 
+                value={value}
+                className="py-2 px-3 hover:bg-gray-50"
+              >
                 {label}
               </SelectItem>
             ))}

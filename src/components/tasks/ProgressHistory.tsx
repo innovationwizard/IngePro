@@ -341,10 +341,19 @@ export default function ProgressHistory({ projects, tasks, personRole }: Progres
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los proyectos" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los proyectos</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                  <SelectItem 
+                    value="all" 
+                    className="py-2 px-3 hover:bg-gray-50"
+                  >
+                    Todos los proyectos
+                  </SelectItem>
                   {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
+                    <SelectItem 
+                      key={project.id} 
+                      value={project.id}
+                      className="py-2 px-3 hover:bg-gray-50"
+                    >
                       {project.nameEs || project.name}
                     </SelectItem>
                   ))}
@@ -363,10 +372,19 @@ export default function ProgressHistory({ projects, tasks, personRole }: Progres
                 <SelectTrigger>
                   <SelectValue placeholder="Todas las tareas" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las tareas</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                  <SelectItem 
+                    value="all" 
+                    className="py-2 px-3 hover:bg-gray-50"
+                  >
+                    Todas las tareas
+                  </SelectItem>
                   {tasks.map((task) => (
-                    <SelectItem key={task.id} value={task.id}>
+                    <SelectItem 
+                      key={task.id} 
+                      value={task.id}
+                      className="py-2 px-3 hover:bg-gray-50"
+                    >
                       {task.nameEs || task.name}
                     </SelectItem>
                   ))}
@@ -385,11 +403,31 @@ export default function ProgressHistory({ projects, tasks, personRole }: Progres
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los estados" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="PENDING">Pendiente</SelectItem>
-                  <SelectItem value="VALIDATED">Validado</SelectItem>
-                  <SelectItem value="REJECTED">Rechazado</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                  <SelectItem 
+                    value="all" 
+                    className="py-2 px-3 hover:bg-gray-50"
+                  >
+                    Todos los estados
+                  </SelectItem>
+                  <SelectItem 
+                    value="PENDING" 
+                    className="py-2 px-3 hover:bg-gray-50"
+                  >
+                    Pendiente
+                  </SelectItem>
+                  <SelectItem 
+                    value="VALIDATED" 
+                    className="py-2 px-3 hover:bg-gray-50"
+                  >
+                    Validado
+                  </SelectItem>
+                  <SelectItem 
+                    value="REJECTED" 
+                    className="py-2 px-3 hover:bg-gray-50"
+                  >
+                    Rechazado
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

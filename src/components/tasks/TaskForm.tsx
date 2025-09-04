@@ -120,10 +120,19 @@ export default function TaskForm({ categories, onTaskCreated }: TaskFormProps) {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecciona una categoría (opcional)" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Sin categoría</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg">
+              <SelectItem 
+                value="none" 
+                className="py-2 px-3 hover:bg-gray-50"
+              >
+                Sin categoría
+              </SelectItem>
               {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
+                <SelectItem 
+                  key={category.id} 
+                  value={category.id}
+                  className="py-2 px-3 hover:bg-gray-50"
+                >
                   {category.name}
                 </SelectItem>
               ))}
