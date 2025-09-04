@@ -54,6 +54,16 @@ body {
   }
 }
 
+/* Modal dropdown z-index fix */
+.modal-dropdown {
+  z-index: 60 !important;
+}
+
+/* Ensure dropdowns in modals appear above modal content */
+[data-radix-portal] [data-radix-select-content] {
+  z-index: 60 !important;
+}
+
 /* Mobile form optimizations */
 .form-container {
   padding: 1rem;
