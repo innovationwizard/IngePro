@@ -54,9 +54,12 @@ body {
   }
 }
 
-/* Modal dropdown z-index fix */
+/* Modal dropdown z-index fix and overflow handling */
 .modal-dropdown {
   z-index: 60 !important;
+  position: fixed !important;
+  max-height: 12rem !important;
+  overflow-y: auto !important;
 }
 
 /* Ensure dropdowns in modals appear above modal content */

@@ -131,7 +131,7 @@ export default function MaterialAssignmentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-visible flex flex-col">
         <DialogHeader className="pb-4 border-b">
           <DialogTitle className="text-xl font-semibold flex items-center gap-2">
             <Package className="h-5 w-5 text-blue-600" />
@@ -139,7 +139,7 @@ export default function MaterialAssignmentModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 overflow-visible flex flex-col lg:flex-row gap-4">
           {/* Left Panel - Project Selection & Summary */}
           <div className="w-full lg:w-1/3 space-y-4">
             {/* Project Selection */}
@@ -152,7 +152,7 @@ export default function MaterialAssignmentModal({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona un proyecto" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 w-full bg-white border border-gray-200 shadow-lg modal-dropdown">
+                <SelectContent className="max-h-48 w-full bg-white border border-gray-200 shadow-lg modal-dropdown">
                   {projects.map((project) => (
                     <SelectItem 
                       key={project.id} 
