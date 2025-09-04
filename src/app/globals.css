@@ -29,9 +29,21 @@ body {
 
 /* Touch-friendly interactions */
 @media (hover: none) and (pointer: coarse) {
-  button, a, [role="button"] {
+  button, a, [role="button"], input[type="checkbox"], input[type="radio"] {
     min-height: 44px;
     min-width: 44px;
+  }
+  
+  /* Ensure touch targets are large enough */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Make material selection items more touch-friendly */
+  .material-selection-item {
+    min-height: 60px;
+    padding: 16px;
   }
 }
 
