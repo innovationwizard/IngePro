@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     // Build where clause - tasks are universal, but exclude soft-deleted tasks
     const whereClause: any = {
-      deleted: false  // Only show non-deleted tasks
+      deletedAt: null // Only show non-deleted tasks
     }
 
     if (categoryId) {
