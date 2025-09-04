@@ -279,13 +279,9 @@ export default function MaterialAssignmentModal({
                   {filteredMaterials.map((material) => (
                     <div
                       key={material.id}
-                      className={`material-selection-item hover:bg-gray-50 transition-colors cursor-pointer touch-manipulation ${
+                      className={`material-selection-item hover:bg-gray-50 transition-colors ${
                         selectedMaterials.includes(material.id) ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                       }`}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleMaterialToggle(material.id)
-                      }}
                     >
                       <div className="flex items-start gap-3">
                         <Checkbox
@@ -293,7 +289,6 @@ export default function MaterialAssignmentModal({
                           checked={selectedMaterials.includes(material.id)}
                           onCheckedChange={() => handleMaterialToggle(material.id)}
                           className="mt-1"
-                          readOnly
                         />
                         
                         <div className="flex-1 min-w-0">
@@ -301,7 +296,7 @@ export default function MaterialAssignmentModal({
                             <div className="flex-1 min-w-0">
                               <label
                                 htmlFor={material.id}
-                                className="block font-medium text-gray-900 cursor-pointer"
+                                className="block font-medium text-gray-900 cursor-pointer touch-manipulation"
                               >
                                 {material.nameEs || material.name}
                                 {material.nameEs && material.name !== material.nameEs && (
