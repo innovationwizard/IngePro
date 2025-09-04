@@ -374,7 +374,7 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un material" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 w-full bg-white border border-gray-200 shadow-lg">
+                <SelectContent className="max-h-60 w-full bg-white border border-gray-200 shadow-lg modal-dropdown">
                   {materials.map((material) => (
                     <SelectItem 
                       key={material.id} 

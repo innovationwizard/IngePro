@@ -139,7 +139,7 @@ export default function MaterialAssignmentModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-visible flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row gap-4">
           {/* Left Panel - Project Selection & Summary */}
           <div className="w-full lg:w-1/3 space-y-4">
             {/* Project Selection */}
@@ -215,7 +215,7 @@ export default function MaterialAssignmentModal({
           </div>
 
           {/* Right Panel - Material Selection */}
-          <div className="flex-1 flex flex-col space-y-4">
+          <div className="flex-1 min-h-0 flex flex-col space-y-4">
             {/* Search and Filters */}
             <div className="space-y-3">
               <div className="relative">
@@ -267,7 +267,7 @@ export default function MaterialAssignmentModal({
             </div>
 
             {/* Materials List */}
-            <div className="flex-1 overflow-y-auto border rounded-lg">
+            <div className="flex-1 min-h-0 overflow-y-auto border rounded-lg">
               {filteredMaterials.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   <Package className="h-12 w-12 mx-auto mb-3 text-gray-300" />
