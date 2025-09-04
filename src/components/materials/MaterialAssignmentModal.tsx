@@ -152,7 +152,7 @@ export default function MaterialAssignmentModal({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona un proyecto" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 w-full">
+                <SelectContent className="max-h-60 w-full bg-white border border-gray-200 shadow-lg">
                   {projects.map((project) => (
                     <SelectItem 
                       key={project.id} 
@@ -233,7 +233,7 @@ export default function MaterialAssignmentModal({
                   <SelectTrigger className="w-auto min-w-[140px]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="w-full">
+                  <SelectContent className="w-full bg-white border border-gray-200 shadow-lg">
                     <SelectItem 
                       value="all" 
                       className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"

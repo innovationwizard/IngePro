@@ -230,10 +230,10 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los proyectos" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los proyectos</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                  <SelectItem value="all" className="py-2 px-3 hover:bg-gray-50">Todos los proyectos</SelectItem>
                   {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
+                    <SelectItem key={project.id} value={project.id} className="py-2 px-3 hover:bg-gray-50">
                       {project.nameEs || project.name}
                     </SelectItem>
                   ))}
@@ -249,10 +249,10 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los materiales" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los materiales</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                  <SelectItem value="all" className="py-2 px-3 hover:bg-gray-50">Todos los materiales</SelectItem>
                   {materials.map((material) => (
-                    <SelectItem key={material.id} value={material.id}>
+                    <SelectItem key={material.id} value={material.id} className="py-2 px-3 hover:bg-gray-50">
                       {material.nameEs || material.name}
                     </SelectItem>
                   ))}
@@ -268,10 +268,10 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Ambos tipos" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BOTH">Ambos tipos</SelectItem>
-                  <SelectItem value="CONSUMPTION">Consumo</SelectItem>
-                  <SelectItem value="LOSS">Pérdida</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                  <SelectItem value="BOTH" className="py-2 px-3 hover:bg-gray-50">Ambos tipos</SelectItem>
+                  <SelectItem value="CONSUMPTION" className="py-2 px-3 hover:bg-gray-50">Consumo</SelectItem>
+                  <SelectItem value="LOSS" className="py-2 px-3 hover:bg-gray-50">Pérdida</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -345,7 +345,7 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un proyecto" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 w-full">
+                <SelectContent className="max-h-60 w-full bg-white border border-gray-200 shadow-lg">
                   {projects.map((project) => (
                     <SelectItem 
                       key={project.id} 
@@ -374,7 +374,7 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un material" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 w-full">
+                <SelectContent className="max-h-60 w-full bg-white border border-gray-200 shadow-lg">
                   {materials.map((material) => (
                     <SelectItem 
                       key={material.id} 
@@ -408,7 +408,7 @@ export default function MaterialConsumptionTracker({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="w-full">
+                <SelectContent className="w-full bg-white border border-gray-200 shadow-lg">
                   <SelectItem 
                     value="CONSUMPTION" 
                     className="py-3 px-3 cursor-pointer hover:bg-gray-50 focus:bg-gray-50"

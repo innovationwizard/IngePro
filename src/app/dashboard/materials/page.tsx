@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Plus, Package, Edit, Trash2 } from 'lucide-react'
+import { Plus, Package, Edit, Trash2, RefreshCw } from 'lucide-react'
 import MaterialConsumptionTracker from '@/components/materials/MaterialConsumptionTracker'
 import InventoryManager from '@/components/inventory/InventoryManager'
 import ProgressHistory from '@/components/tasks/ProgressHistory'
@@ -69,6 +69,7 @@ export default function MaterialsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false)
   const [message, setMessage] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -78,12 +79,25 @@ export default function MaterialsPage() {
       return
     }
 
-    fetchProjects()
-    fetchMaterials()
-    fetchTasks()
+    // Only fetch data if session is available
+    if (session?.user?.id) {
+      try {
+        fetchProjects()
+        fetchMaterials()
+        fetchTasks()
+      } catch (error) {
+        console.error('Error in useEffect data fetching:', error)
+        setLoading(false)
+      }
+    }
   }, [session, status, router])
 
   const fetchProjects = async () => {
+    if (!session?.user?.id) {
+      console.log('No session available for fetchProjects')
+      return
+    }
+
     logToVercel('MATERIALS_PROJECTS_FETCH_ATTEMPTED', {
       userId: session?.user?.id,
       userRole: session?.user?.role,
@@ -118,10 +132,16 @@ export default function MaterialsPage() {
         timestamp: new Date().toISOString()
       })
       console.error('Error fetching projects:', error)
+      setError('Error al cargar proyectos')
     }
   }
 
   const fetchMaterials = async () => {
+    if (!session?.user?.id) {
+      console.log('No session available for fetchMaterials')
+      return
+    }
+
     logToVercel('MATERIALS_FETCH_ATTEMPTED', {
       userId: session?.user?.id,
       userRole: session?.user?.role,
@@ -156,10 +176,16 @@ export default function MaterialsPage() {
         timestamp: new Date().toISOString()
       })
       console.error('Error fetching materials:', error)
+      setError('Error al cargar materiales')
     }
   }
 
   const fetchTasks = async () => {
+    if (!session?.user?.id) {
+      console.log('No session available for fetchTasks')
+      return
+    }
+
     logToVercel('MATERIALS_TASKS_FETCH_ATTEMPTED', {
       userId: session?.user?.id,
       userRole: session?.user?.role,
@@ -194,6 +220,7 @@ export default function MaterialsPage() {
         timestamp: new Date().toISOString()
       })
       console.error('Error fetching tasks:', error)
+      setError('Error al cargar tareas')
     } finally {
       setLoading(false)
     }
@@ -269,6 +296,26 @@ export default function MaterialsPage() {
     setActiveTab(value)
   }
 
+  const handleRefresh = async () => {
+    if (!session?.user?.id) {
+      console.log('No session available for refresh')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await Promise.all([
+        fetchProjects(),
+        fetchMaterials(),
+        fetchTasks()
+      ])
+    } catch (error) {
+      console.error('Error during refresh:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleCreateMaterialModalOpen = () => {
     logToVercel('MATERIALS_CREATE_MODAL_OPENED', {
       userId: session?.user?.id,
@@ -312,6 +359,14 @@ export default function MaterialsPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Actualizar
+            </button>
+            <button
               onClick={() => setIsAssignmentModalOpen(true)}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
             >
@@ -334,6 +389,18 @@ export default function MaterialsPage() {
           message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
         }`}>
           {message}
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-red-100 text-red-700">
+          {error}
+          <button 
+            onClick={() => setError(null)}
+            className="ml-2 text-red-500 hover:text-red-700"
+          >
+            ✕
+          </button>
         </div>
       )}
 
