@@ -1,6 +1,6 @@
 // lib/prisma.ts
 import { PrismaClient } from "@prisma/client";
-import { getDbUrl } from "./getDbUrl";
+import { getDbUrl } from "./getDbConfig";
 
 declare global {
   // eslint-disable-next-line no-var

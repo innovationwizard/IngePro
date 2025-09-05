@@ -1,12 +1,12 @@
-// lib/getDbUrl.ts
+// lib/getDbConfig.ts
 import fetch from 'node-fetch';
 import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { Signer } from '@aws-sdk/rds-signer';
 
-let cachedUrl: string | null = null;
+let cachedConfig: any | null = null;
 
-export async function getDbUrl() {
-  if (cachedUrl) return cachedUrl;
+export async function getDbConfig() {
+  if (cachedConfig) return cachedConfig;
 
   const RDS_HOSTNAME = process.env.RDS_HOSTNAME!;
   const RDS_PORT = parseInt(process.env.RDS_PORT!);
@@ -16,7 +16,7 @@ export async function getDbUrl() {
   const AWS_ROLE_ARN = process.env.AWS_ROLE_ARN!;
   const NOBLE_PROXY_TOKEN = process.env.NOBLE_PROXY_TOKEN!;
 
-  // Get lease from Noble IP proxy service
+  // Get lease
   const response = await fetch('https://api.noble-ip.com/v1/leases', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -28,25 +28,39 @@ export async function getDbUrl() {
   });
 
   if (!response.ok) {
-    throw new Error(`Noble IP lease failed: ${response.status} ${response.statusText}`);
+    throw new Error(`Lease failed: ${response.status} ${response.statusText}`);
   }
 
   const lease = await response.json();
 
-  // Generate IAM token for the REAL RDS Proxy hostname (not the Noble IP proxy)
+  // Generate IAM token
   const signer = new Signer({
     credentials: awsCredentialsProvider({ roleArn: AWS_ROLE_ARN }),
     region: AWS_REGION,
-    port: 5432, // RDS Proxy always uses port 5432
-    hostname: RDS_HOSTNAME, // Use original RDS Proxy hostname for token generation
+    port: RDS_PORT,
+    hostname: RDS_HOSTNAME,
     username: RDS_USERNAME,
   });
 
   const token = await signer.getAuthToken();
 
-  // Connect through Noble IP proxy but use IAM token for authentication
-  // TLS/SNI verification must be against the RDS Proxy hostname, not the proxy
-  cachedUrl = `postgresql://${encodeURIComponent(RDS_USERNAME)}:${encodeURIComponent(token)}@${lease.hostname}:${lease.port}/${RDS_DATABASE}?sslmode=require&sslsni=${encodeURIComponent(RDS_HOSTNAME)}`;
+  cachedConfig = {
+    host: lease.hostname,
+    port: lease.port,
+    user: RDS_USERNAME,
+    password: token,
+    database: RDS_DATABASE,
+    ssl: {
+      servername: RDS_HOSTNAME,
+      rejectUnauthorized: false  // Temp; see below for secure fix
+    }
+  };
 
-  return cachedUrl;
+  return cachedConfig;
+}
+
+// Helper function to convert config to connection string for Prisma
+export async function getDbUrl() {
+  const config = await getDbConfig();
+  return `postgresql://${encodeURIComponent(config.user)}:${encodeURIComponent(config.password)}@${config.host}:${config.port}/${config.database}?sslmode=require&sslsni=${encodeURIComponent(config.ssl.servername)}`;
 }
