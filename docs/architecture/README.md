@@ -8,6 +8,7 @@ This directory contains automatically generated architecture documentation for t
 - **component-dependencies.md** - Component hierarchy and dependency relationships
 - **api-documentation.md** - API endpoints and data models
 - **infrastructure.md** - Deployment and infrastructure configuration
+- **noble-ip-integration.md** - Noble IP proxy integration with AWS RDS IAM authentication
 
 ## Regeneration
 
