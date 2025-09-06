@@ -4,6 +4,23 @@ import { awsCredentialsProvider } from '@vercel/functions/oidc';
 import { Signer } from '@aws-sdk/rds-signer';
 
 let cachedConfig: any | null = null;
+let cachedCertificate: string | null = null;
+
+// Download AWS RDS global certificate bundle dynamically
+async function getRdsCertificate(): Promise<string> {
+  if (cachedCertificate) return cachedCertificate;
+  
+  try {
+    const response = await fetch('https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem');
+    if (!response.ok) {
+      throw new Error(`Failed to download RDS certificate: ${response.status} ${response.statusText}`);
+    }
+    cachedCertificate = await response.text();
+    return cachedCertificate;
+  } catch (error) {
+    throw new Error(`Error downloading RDS certificate: ${error}`);
+  }
+}
 
 export async function getDbConfig() {
   if (cachedConfig) return cachedConfig;
@@ -43,6 +60,7 @@ export async function getDbConfig() {
   });
 
   const token = await signer.getAuthToken();
+  const certificate = await getRdsCertificate();
 
   cachedConfig = {
     host: lease.hostname,
@@ -51,8 +69,9 @@ export async function getDbConfig() {
     password: token,
     database: RDS_DATABASE,
     ssl: {
-      servername: RDS_HOSTNAME,
-      rejectUnauthorized: false  // Temp; see below for secure fix
+      rejectUnauthorized: true,
+      ca: certificate,
+      servername: RDS_HOSTNAME
     }
   };
 
