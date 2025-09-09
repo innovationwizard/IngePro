@@ -81,18 +81,25 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
 
   const fetchWorkers = async () => {
     try {
-      const response = await fetch('/api/worklog', { credentials: 'include' })
-      if (response.ok) {
-        const data = await response.json()
+      // First, fetch all workers from the people API
+      const peopleResponse = await fetch('/api/people', { credentials: 'include' })
+      if (!peopleResponse.ok) {
+        throw new Error('Failed to fetch people')
+      }
+      const peopleData = await peopleResponse.json()
+      
+      // Filter to only get workers
+      const allWorkers = peopleData.people.filter((person: any) => person.role === 'WORKER')
+      
+      // Now fetch worklogs to get clock-in status
+      const worklogResponse = await fetch('/api/worklog', { credentials: 'include' })
+      if (worklogResponse.ok) {
+        const worklogData = await worklogResponse.json()
         
-        // Extract unique workers and their current status
-        const workerMap = new Map<string, Worker>()
-        
-        // Group worklogs by worker and find the most recent active one for each
+        // Create a map of worker worklogs for quick lookup
         const workerWorklogs = new Map<string, any[]>()
         
-        // First, group all worklogs by worker ID
-        data.workLogs.forEach((log: any) => {
+        worklogData.workLogs.forEach((log: any) => {
           if (log.person.role === 'WORKER') {
             if (!workerWorklogs.has(log.person.id)) {
               workerWorklogs.set(log.person.id, [])
@@ -101,10 +108,12 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
           }
         })
         
-        // For each worker, find their most recent active worklog (or most recent if none active)
-        workerWorklogs.forEach((logs, workerId) => {
+        // Process each worker to determine their clock-in status
+        const workersWithStatus = allWorkers.map((worker: any) => {
+          const workerLogs = workerWorklogs.get(worker.id) || []
+          
           // Sort by creation date, newest first
-          const sortedLogs = logs.sort((a, b) => 
+          const sortedLogs = workerLogs.sort((a, b) => 
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           )
           
@@ -112,29 +121,38 @@ function WorkerManagementSection({ stats }: { stats: DashboardStats | null }) {
           const activeWorklogs = sortedLogs.filter(log => !log.clockOut)
           
           // If there are multiple active worklogs, the newest one is the current one
-          // Older ones should be considered orphaned and will be handled by the API
           const currentActiveWorklog = activeWorklogs.length > 0 ? 
             activeWorklogs.sort((a, b) => 
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             )[0] : null
           
-          // Use current active worklog if found, otherwise use most recent completed one
-          const mostRecentLog = currentActiveWorklog || sortedLogs[0]
-          
           const isClockedIn = !!currentActiveWorklog
           
-          workerMap.set(workerId, {
-            id: mostRecentLog.person.id,
-            name: mostRecentLog.person.name,
-            email: mostRecentLog.person.email,
-            role: mostRecentLog.person.role,
+          return {
+            id: worker.id,
+            name: worker.name,
+            email: worker.email,
+            role: worker.role,
             isClockedIn,
             currentWorkLogId: isClockedIn ? currentActiveWorklog!.id : undefined,
             clockInTime: isClockedIn ? currentActiveWorklog!.clockIn : undefined
-          })
+          }
         })
         
-        setWorkers(Array.from(workerMap.values()))
+        setWorkers(workersWithStatus)
+      } else {
+        // If worklog fetch fails, just show workers without clock-in status
+        const workersWithoutStatus = allWorkers.map((worker: any) => ({
+          id: worker.id,
+          name: worker.name,
+          email: worker.email,
+          role: worker.role,
+          isClockedIn: false,
+          currentWorkLogId: undefined,
+          clockInTime: undefined
+        }))
+        
+        setWorkers(workersWithoutStatus)
       }
     } catch (error) {
       console.error('Error fetching workers:', error)
