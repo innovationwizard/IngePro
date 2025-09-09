@@ -577,6 +577,17 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
+
+            {/* Worker Management for Admin */}
+            <div className="mobile-card">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Users className="h-5 w-5 mr-2" />
+                Gestión de Trabajadores
+              </h2>
+              <div className="space-y-3">
+                <WorkerManagementSection stats={stats} />
+              </div>
+            </div>
           </>
         )}
       </div>
