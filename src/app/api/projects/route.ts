@@ -49,23 +49,16 @@ export async function GET(req: NextRequest) {
       companyIds = personTenants.map(ut => ut.companyId);
       console.log('DEBUG: ADMIN - companies:', companyIds);
     } else {
-      // SUPERVISOR/WORKER sees projects from their primary company
-      const primaryCompanyId = session.user?.companyId;
-      if (primaryCompanyId) {
-        companyIds = [primaryCompanyId];
-        console.log('DEBUG: SUPERVISOR/WORKER - company:', primaryCompanyId);
-      } else {
-        // Fallback: try to get company from PersonTenants
-        const personTenants = await prisma.personTenants.findMany({
-          where: {
-            personId: session.user.id,
-            status: 'ACTIVE'
-          },
-          select: { companyId: true }
-        });
-        companyIds = personTenants.map(ut => ut.companyId);
-        console.log('DEBUG: SUPERVISOR/WORKER - fallback companies:', companyIds);
-      }
+      // SUPERVISOR/WORKER sees projects from their companies (same as ADMIN logic)
+      const personTenants = await prisma.personTenants.findMany({
+        where: {
+          personId: session.user.id,
+          status: 'ACTIVE'
+        },
+        select: { companyId: true }
+      });
+      companyIds = personTenants.map(ut => ut.companyId);
+      console.log('DEBUG: SUPERVISOR/WORKER - companies:', companyIds);
     }
     
     // Step 2: Build query based on role
