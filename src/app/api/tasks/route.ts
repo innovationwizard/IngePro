@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
             companyId: companyId
           },
           task: {
-            deleted: false  // Only show non-deleted tasks
+            deletedAt: null  // Only show non-deleted tasks
           }
         },
         include: {
@@ -489,7 +489,6 @@ export async function DELETE(request: NextRequest) {
     await prisma.tasks.update({
       where: { id: taskId },
       data: {
-        deleted: true,
         deletedAt: new Date(),
         deletedBy: session.user?.id
       }
