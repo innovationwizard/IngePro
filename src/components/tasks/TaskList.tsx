@@ -411,10 +411,11 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                     <div>
                       <span className="text-gray-500">Proyectos:</span>
                       <p className="font-medium">
-                        {task.projectAssignments && task.projectAssignments.length > 0 
-                          ? `${task.projectAssignments.length} proyecto(s)`
-                          : 'Sin proyectos asignados'
-                        }
+                        {task.projectAssignments && task.projectAssignments.length > 0
+                          ? task.projectAssignments
+                              .map((pa) => pa.project.nameEs || pa.project.name)
+                              .join(', ')
+                          : 'Sin proyectos asignados'}
                       </p>
                     </div>
                     <div>
