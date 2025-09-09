@@ -861,7 +861,7 @@ function MaterialSelectorItem({
   material: Material
   onAdd: (material: Material, quantity: number) => void 
 }) {
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState(0)
 
   return (
     <div className="p-3 border rounded-lg">
@@ -883,10 +883,20 @@ function MaterialSelectorItem({
       <div className="flex items-center gap-2">
         <Input
           type="number"
-          min="1"
+          min="0"
           max={material.currentStock}
-          value={quantity}
-          onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+          value={quantity || ''}
+          onChange={(e) => {
+            const value = e.target.value
+            if (value === '') {
+              setQuantity(0)
+            } else {
+              const num = parseInt(value)
+              if (!isNaN(num)) {
+                setQuantity(num)
+              }
+            }
+          }}
           className="w-20"
         />
         <span className="text-sm text-gray-600">{material.unit}</span>
