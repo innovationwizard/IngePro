@@ -42,6 +42,15 @@ export const authOptions: NextAuthOptions = {
           // Check real people from database
           console.log('🔍 Checking database for person:', credentials.email);
           const prisma = await getPrisma();
+          // Temporary diagnostics: confirm effective DB and user
+          try {
+            const diag = await prisma.$queryRaw<any[]>`SELECT current_user AS user, current_database() AS db`;
+            if (Array.isArray(diag) && diag[0]) {
+              console.log(`🧭 DB diagnostics → user: ${diag[0].user}, db: ${diag[0].db}`);
+            }
+          } catch (e) {
+            console.log('⚠️ DB diagnostics failed');
+          }
           const user = await retryWithBackoff(async () => {
             return await prisma.people.findUnique({
               where: { email: credentials.email },
