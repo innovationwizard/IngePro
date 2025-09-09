@@ -414,20 +414,14 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete task (Admin only)
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('🗑️ DELETE /api/tasks called')
     const session = await getServerSession(authOptions)
     
-    console.log('🗑️ Session user role:', session?.user?.role)
-    
     if (!session || session.user?.role !== 'ADMIN') {
-      console.log('🗑️ Unauthorized - user role:', session?.user?.role)
       return NextResponse.json({ error: 'Only admins can delete tasks' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const taskId = searchParams.get('id')
-    
-    console.log('🗑️ Task ID to delete:', taskId)
     
     if (!taskId) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
@@ -454,20 +448,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if task has any active assignments (progress updates are historical and should not block deletion)
-    console.log('🗑️ Task usage counts:', {
-      projectAssignments: existingTask._count.projectAssignments,
-      workerAssignments: existingTask._count.workerAssignments,
-      progressUpdates: existingTask._count.progressUpdates
-    })
-    
     const hasActiveAssignments = 
       existingTask._count.projectAssignments > 0 ||
       existingTask._count.workerAssignments > 0
 
-    console.log('🗑️ Has active assignments:', hasActiveAssignments)
-
     if (hasActiveAssignments) {
-      console.log('🗑️ Cannot delete - task has active assignments')
       return NextResponse.json({ 
         error: 'Cannot delete task - it has active project or worker assignments. Desasigna primero todas las asignaciones.',
         details: {
@@ -481,11 +466,7 @@ export async function DELETE(request: NextRequest) {
     // IMPORTANT: We use SOFT DELETE to preserve progress updates (real work records)
     // This allows admins to delete mistaken tasks while preserving all work history
     
-    console.log('🗑️ Using soft delete to preserve progress updates (real work records)')
-    console.log('🗑️ Progress updates count:', existingTask._count.progressUpdates)
-    
     // Soft delete the task - mark as deleted but keep all data
-    console.log('🗑️ Soft deleting task...')
     await prisma.tasks.update({
       where: { id: taskId },
       data: {
@@ -493,7 +474,6 @@ export async function DELETE(request: NextRequest) {
         deletedBy: session.user?.id
       }
     })
-    console.log('🗑️ Task soft deleted successfully')
     
     // Note: We do NOT delete project assignments or worker assignments
     // They remain in the database for audit purposes
@@ -506,16 +486,7 @@ export async function DELETE(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('🗑️ Error deleting task:', error)
-    console.error('🗑️ Error type:', typeof error)
-    console.error('🗑️ Error message:', error instanceof Error ? error.message : 'Unknown error')
-    console.error('🗑️ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-    
-    // Check if it's a Prisma error
-    if (error && typeof error === 'object' && 'code' in error) {
-      console.error('🗑️ Prisma error code:', (error as any).code)
-      console.error('🗑️ Prisma error meta:', (error as any).meta)
-    }
+    console.error('Error deleting task:', error)
     
     return NextResponse.json(
       { error: 'Failed to delete task' },

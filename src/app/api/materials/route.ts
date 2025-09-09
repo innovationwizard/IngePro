@@ -245,20 +245,15 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete material (Admin only)
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('🗑️ DELETE /api/materials called')
     const session = await getServerSession(authOptions)
     
-    console.log('🗑️ Session user role:', session?.user?.role)
-    
     if (!session || session.user?.role !== 'ADMIN') {
-      console.log('🗑️ Unauthorized - user role:', session?.user?.role)
       return NextResponse.json({ error: 'Only admins can delete materials' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const materialId = searchParams.get('id')
     
-    console.log('🗑️ Material ID to delete:', materialId)
     
     if (!materialId) {
       return NextResponse.json({ error: 'Material ID is required' }, { status: 400 })
@@ -276,10 +271,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // TODO: Add usage checking once production database is fully synced
-    console.log('🗑️ Material found:', existingMaterial.name)
-
     // Soft delete the material - mark as deleted but keep in database
-    console.log('🗑️ Soft deleting material...')
     await prisma.materials.update({
       where: { id: materialId },
       data: {
@@ -287,7 +279,6 @@ export async function DELETE(request: NextRequest) {
         deletedBy: session.user?.id
       }
     })
-    console.log('🗑️ Material soft deleted successfully')
 
     return NextResponse.json({
       success: true,

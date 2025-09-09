@@ -41,9 +41,6 @@ export default function TaskProjectUnassignModal({ task, open, onOpenChange, onS
       return
     }
 
-    console.log('🗑️ Frontend: Starting project unassignment for task:', task.id)
-    console.log('🗑️ Frontend: Selected projects to remove:', selectedProjects)
-    console.log('🗑️ Frontend: Current project assignments:', task.projectAssignments?.map(pa => pa.project.id) || [])
 
     setIsLoading(true)
     try {
@@ -53,7 +50,6 @@ export default function TaskProjectUnassignModal({ task, open, onOpenChange, onS
       // Remove selected projects from the current list
       const remainingProjectIds = currentProjectIds.filter(id => !selectedProjects.includes(id))
 
-      console.log('🗑️ Frontend: Project IDs to keep after unassignment:', remainingProjectIds)
 
       const response = await fetch(`/api/tasks/${task.id}/unassign-projects`, {
         method: 'POST',
@@ -65,18 +61,15 @@ export default function TaskProjectUnassignModal({ task, open, onOpenChange, onS
         }),
       })
 
-      console.log('🗑️ Frontend: Unassignment API response status:', response.status)
 
       if (response.ok) {
         const result = await response.json()
-        console.log('🗑️ Frontend: Unassignment successful, result:', result)
         toast.success(`${selectedProjects.length} proyecto(s) desasignado(s) exitosamente`)
         onSuccess()
         onOpenChange(false)
         setSelectedProjects([])
       } else {
         const error = await response.json()
-        console.log('🗑️ Frontend: Unassignment failed, error:', error)
         toast.error(error.error || 'Error al desasignar proyectos')
       }
     } catch (error) {

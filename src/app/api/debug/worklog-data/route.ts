@@ -125,11 +125,6 @@ export async function GET(request: NextRequest) {
       allProjectAssignments,
       supervisorProjects,
       supervisedWorkers: supervisedWorkers.filter(sw => sw.person.role === 'WORKER'),
-      debug: {
-        userRole: session.user?.role,
-        supervisorProjectCount: supervisorProjects.length,
-        supervisedWorkerCount: supervisedWorkers.filter(sw => sw.person.role === 'WORKER').length
-      }
     })
 
   } catch (error) {

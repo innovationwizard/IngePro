@@ -41,11 +41,7 @@ export default function SuperUserPage() {
     }
   }, [session])
 
-  // Add debugging
   useEffect(() => {
-    console.log('SuperUser Dashboard - Session:', session)
-    console.log('SuperUser Dashboard - Status:', status)
-    console.log('SuperUser Dashboard - User Role:', session?.user?.role)
   }, [session, status])
 
   // Check if user is superuser

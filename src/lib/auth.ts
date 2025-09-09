@@ -40,16 +40,13 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // Check real people from database
-          console.log('🔍 Checking database for person:', credentials.email);
           const prisma = await getPrisma();
           // Temporary diagnostics: confirm effective DB and user
           try {
             const diag = await prisma.$queryRaw<any[]>`SELECT current_user AS user, current_database() AS db`;
             if (Array.isArray(diag) && diag[0]) {
-              console.log(`🧭 DB diagnostics → user: ${diag[0].user}, db: ${diag[0].db}`);
             }
           } catch (e) {
-            console.log('⚠️ DB diagnostics failed');
           }
           const user = await retryWithBackoff(async () => {
             return await prisma.people.findUnique({
@@ -65,40 +62,26 @@ export const authOptions: NextAuthOptions = {
             });
           });
 
-          console.log('👤 Person found:', user ? 'Yes' : 'No');
-          if (user) {
-            console.log('🔑 Person has password:', !!user.password);
-            console.log('🏢 Person tenants:', user.personTenants.length);
-          }
 
           if (!user || !user.password) {
-            console.log('❌ Person not found or no password');
             return null
           }
 
           // Verify password
           const isValid = await bcrypt.compare(credentials.password, user.password)
-          console.log('🔐 Password valid:', isValid);
           if (!isValid) {
-            console.log('❌ Invalid password');
             return null
           }
 
           // Get person's current company (most recent active tenant relationship)
           const activeTenants = user.personTenants.filter(ut => ut.status === 'ACTIVE');
           const currentTenant = activeTenants[0];
-          console.log('🏢 Current tenant:', currentTenant ? 'Found' : 'Not found');
-          console.log('👤 Person role:', user.role);
-          console.log('🏢 Tenant status:', currentTenant?.status);
           
           // If no tenant relationship found, use person's single role
           if (!currentTenant) {
-            console.log('⚠️ No tenant relationship, using person role');
-            console.log('🔍 Person role from database:', user.role);
             
             // Special handling for superusers - they don't need company relationships
             if (user.role === 'SUPERUSER') {
-              console.log('🔑 Superuser detected - no company relationship needed');
               return {
                 id: user.id,
                 email: user.email,
@@ -121,7 +104,6 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Person has only one role - use it
-          console.log('✅ Auth successful with person role:', user.role);
           
           return {
             id: user.id,

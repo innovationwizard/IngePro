@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
       companyId = personTenant?.companyId
     }
 
-    console.log('DEBUG: Looking for worklog with companyId:', companyId, 'for user:', session.user?.id)
 
     // Find the current active worklog (no clockOut time)
     // Try to find by companyId first, then fallback to any active worklog for the person
@@ -65,7 +64,6 @@ export async function GET(request: NextRequest) {
 
     // If no worklog found with companyId, try to find any active worklog for the person
     if (!currentWorkLog) {
-      console.log('DEBUG: No worklog found with companyId, trying without company filter')
       currentWorkLog = await prisma.workLogs.findFirst({
         where: {
           personId: session.user.id,
@@ -93,7 +91,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    console.log('DEBUG: Final worklog result:', currentWorkLog)
 
     return NextResponse.json({
       success: true,

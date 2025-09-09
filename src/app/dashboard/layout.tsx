@@ -7,20 +7,13 @@ import Sidebar from '@/components/dashboard/Sidebar'
 import { Header } from '@/components/dashboard/Header'
 import { MobileNavigation } from '@/components/dashboard/MobileNavigation'
 
-// @ts-expect-error debug
-console.log('Layout using store id =', (globalThis as any).__WORK_STORE_ID);
-console.log('Layout using project store id =', (globalThis as any).__PROJECT_STORE_ID);
 
 export default function DashboardLayout({ children, }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  // Add debugging
   useEffect(() => {
-    console.log('Dashboard Layout - Session:', session)
-    console.log('Dashboard Layout - Status:', status)
-    console.log('Dashboard Layout - User Role:', session?.user?.role)
   }, [session, status])
 
   useEffect(() => {

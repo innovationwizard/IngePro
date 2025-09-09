@@ -124,8 +124,6 @@ const taskStatusLabels = {
 }
 
 export default function TaskList({ tasks, onTaskUpdated, personRole, currentUserId }: TaskListProps) {
-  console.log('🚀 TaskList component starting...')
-  console.log('🔍 Basic TaskList test log - should show up')
   const [filteredTasks, setFilteredTasks] = useState<Task[]>(tasks)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -142,23 +140,14 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const [deletingTask, setDeletingTask] = useState<Task | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  // Debug logging
-  console.log('TaskList render - personRole:', personRole, 'currentUserId:', currentUserId, 'tasks count:', tasks?.length)
-  
-  // Log every time personRole changes
-  useEffect(() => {
-    console.log('TaskList personRole changed to:', personRole)
-  }, [personRole])
-
   // Fetch categories when component mounts
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await fetch('/api/task-categories')
         if (response.ok) {
-                  const data = await response.json()
-        console.log('Fetched categories data:', data)
-        setCategories(data.taskCategories || [])
+          const data = await response.json()
+          setCategories(data.taskCategories || [])
         }
       } catch (error) {
         console.error('Error fetching categories:', error)
@@ -226,28 +215,21 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const confirmDeleteTask = async () => {
     if (!deletingTask) return
 
-    console.log('🗑️ Attempting to delete task:', deletingTask.id, deletingTask.name)
 
     try {
       const response = await fetch(`/api/tasks?id=${deletingTask.id}`, {
         method: 'DELETE',
       })
 
-      console.log('🗑️ Delete response status:', response.status)
-      console.log('🗑️ Delete response ok:', response.ok)
 
       if (response.ok) {
         const result = await response.json()
-        console.log('🗑️ Delete successful, result:', result)
         toast.success('Tarea eliminada exitosamente')
         setShowDeleteModal(false)
         setDeletingTask(null)
         onTaskUpdated()
       } else {
         const errorData = await response.json()
-        console.log('🗑️ Delete failed, error data:', errorData)
-        console.log('🗑️ Error message:', errorData.error)
-        console.log('🗑️ Error details:', errorData.details)
         
         if (errorData.error && errorData.error.includes('Cannot delete task - it has active')) {
           const details = errorData.details || {}
@@ -299,15 +281,6 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* PROMINENT DEBUG BANNER */}
-      <div className="bg-blue-500 text-white p-4 rounded-lg text-center">
-        <h3 className="text-lg font-bold mb-2">🔍 TASKLIST DEBUG INFO</h3>
-        <p><strong>Person Role:</strong> {personRole}</p>
-        <p><strong>Current User ID:</strong> {currentUserId}</p>
-        <p><strong>Tasks Count:</strong> {tasks?.length || 0}</p>
-        <p><strong>Is Admin:</strong> {personRole === 'ADMIN' ? 'YES' : 'NO'}</p>
-        <p><strong>Show Delete Button:</strong> {personRole === 'ADMIN' ? 'SHOULD SHOW' : 'HIDDEN'}</p>
-      </div>
 
       {/* Action Buttons */}
       {(personRole === 'ADMIN' || personRole === 'SUPERVISOR') && (
@@ -497,10 +470,6 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                     >
                       Eliminar
                     </Button>
-                  ) : (
-                    <div className="text-xs text-gray-400 hidden sm:block">
-                      Debug: personRole = {personRole}
-                    </div>
                   )}
                   
                   {/* Enhanced Progress Button Section */}

@@ -36,7 +36,6 @@ export async function GET(req: NextRequest) {
     
     if (session.user.role === 'SUPERUSER') {
       // SUPERUSER sees all projects - no company filter needed
-      console.log('DEBUG: SUPERUSER - getting all projects');
     } else if (session.user.role === 'ADMIN') {
       // ADMIN sees projects from ALL their companies
       const personTenants = await prisma.personTenants.findMany({
@@ -47,7 +46,6 @@ export async function GET(req: NextRequest) {
         select: { companyId: true }
       });
       companyIds = personTenants.map(ut => ut.companyId);
-      console.log('DEBUG: ADMIN - companies:', companyIds);
     } else {
       // SUPERVISOR/WORKER sees projects from their companies (same as ADMIN logic)
       const personTenants = await prisma.personTenants.findMany({
@@ -58,7 +56,6 @@ export async function GET(req: NextRequest) {
         select: { companyId: true }
       });
       companyIds = personTenants.map(ut => ut.companyId);
-      console.log('DEBUG: SUPERVISOR/WORKER - companies:', companyIds);
     }
     
     // Step 2: Build query based on role
@@ -76,36 +73,20 @@ export async function GET(req: NextRequest) {
       });
       
       assignedProjectIds = assignedProjects.map(ap => ap.projectId);
-      console.log('DEBUG: WORKER - assigned project IDs:', assignedProjectIds);
       
       if (assignedProjectIds.length === 0) {
-        console.log('DEBUG: WORKER - no assigned projects, returning empty');
         return NextResponse.json({
-          projects: [],
-          debug: { 
-            message: 'No assigned projects',
-            projectCount: 0,
-            userRole: session.user.role,
-            assignedProjectIds: assignedProjectIds
-          }
+          projects: []
         });
       }
       
       whereClause.id = { in: assignedProjectIds };
     } else if (companyIds.length > 0) {
       whereClause.companyId = { in: companyIds };
-      console.log('DEBUG: Filtering by companies:', companyIds);
     } else if (session.user.role !== 'SUPERUSER') {
       // No companies found for non-SUPERUSER, return empty
-      console.log('DEBUG: No companies found, returning empty');
       return NextResponse.json({
-        projects: [],
-        debug: { 
-          message: 'No companies found',
-          projectCount: 0,
-          userRole: session.user.role,
-          companyIds: companyIds
-        }
+        projects: []
       });
     }
     
@@ -170,17 +151,8 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' }
     });
     
-    console.log('DEBUG: Found projects:', projects.length);
-    
     return NextResponse.json({
-      projects: projects,
-      debug: { 
-        message: 'Role-based query working',
-        projectCount: projects.length,
-        userRole: session.user.role,
-        companyIds: companyIds,
-        assignedProjectIds: session.user.role === 'WORKER' ? assignedProjectIds : undefined
-      }
+      projects: projects
     });
 
   } catch (error) {
@@ -263,7 +235,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('POST /api/projects - Creating project for company:', targetCompanyId)
     
     const project = await prisma.projects.create({
       data: {
@@ -277,7 +248,6 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    console.log('POST /api/projects - Project created:', project.id, 'Company:', project.company.name)
 
     return NextResponse.json({
       success: true,

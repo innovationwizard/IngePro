@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getPrisma } from '@/lib/prisma'
+import { createTaskProgressUpdate } from '@/lib/progressUtils'
 
 export const runtime = 'nodejs'
 
@@ -112,43 +113,23 @@ export async function POST(
       })
     }
 
-    // If a task is associated, update task progress
+    // If a task is associated, update task progress using consolidated method
     if (body.taskId) {
-      // Check if there's an existing task progress update
-      const existingProgress = await prisma.taskProgressUpdates.findFirst({
-        where: {
+      try {
+        await createTaskProgressUpdate({
           taskId: body.taskId,
           projectId: worklog.projectId,
           workerId: session.user.id,
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)) // Today
-          }
-        }
-      })
-
-      if (existingProgress) {
-        // Update existing progress
-        await prisma.taskProgressUpdates.update({
-          where: { id: existingProgress.id },
-          data: {
-            amountCompleted: existingProgress.amountCompleted + (body.timeSpent || 0),
-            updatedAt: new Date()
-          }
+          amountCompleted: body.timeSpent || 0,
+          status: 'IN_PROGRESS',
+          additionalAttributes: body.description,
+          isWorklogEntry: true,
+          worklogId: worklogId
         })
-      } else {
-        // Create new progress update
-        await prisma.taskProgressUpdates.create({
-          data: {
-            taskId: body.taskId,
-            projectId: worklog.projectId,
-            workerId: session.user.id,
-            amountCompleted: body.timeSpent || 0,
-            status: 'IN_PROGRESS',
-            validationStatus: 'PENDING',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
-        })
+      } catch (error) {
+        console.error('Error creating task progress from worklog entry:', error)
+        // Don't fail the worklog entry if progress creation fails
+        // Just log the error and continue
       }
     }
 

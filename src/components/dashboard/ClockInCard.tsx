@@ -5,9 +5,6 @@ import { useSession } from 'next-auth/react'
 import { useWorkStore, workStore } from '@/stores/workStore'
 import { useProjectStore } from '@/stores/projectStore'
 
-// Debug logs
-console.log('ClockInCard using store id =', (globalThis as any).__WORK_STORE_ID);
-console.log('ClockInCard using project store id =', (globalThis as any).__PROJECT_STORE_ID);
 import { getCurrentLocation, isWithinBusinessHours } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Clock, MapPin, AlertCircle, FileText, Plus } from 'lucide-react'
@@ -21,7 +18,6 @@ const logToVercel = (action: string, details: any = {}) => {
 }
 
 function ClockInCardComponent() {
-  console.log('🚀 ClockInCard component rendering...')
   
   const { data: session } = useSession()
   const wl = useWorkStore((s) => s.currentWorkLog);
@@ -32,28 +28,20 @@ function ClockInCardComponent() {
   const [showWorklogEntry, setShowWorklogEntry] = useState(false)
   const [hasCheckedWorklog, setHasCheckedWorklog] = useState(false)
 
-  // Debug store state
-  console.log('ClockInCard render - isClockedIn:', isClockedIn, 'currentWorkLog:', wl);
-  console.log('ClockInCard render - session user ID:', session?.user?.id)
 
   // Check if user is already clocked in when component mounts
-  console.log('🔧 Setting up useEffect for current worklog check...')
   useEffect(() => {
     const checkCurrentWorklog = async () => {
       // Prevent repeated API calls if we already checked
       if (hasCheckedWorklog) {
-        console.log('⏭️ Skipping worklog check - already checked')
         return
       }
       
       try {
-        console.log('🔍 Checking current worklog for user:', session?.user?.id)
         const response = await fetch('/api/worklog/current')
         if (response.ok) {
           const data = await response.json()
-          console.log('📋 Current worklog response:', data)
           if (data.workLog && !data.workLog.clockOut) {
-            console.log('✅ User is already clocked in, updating store with:', data.workLog)
             // User is already clocked in, update the store
             setCurrentWorkLog({
               ...data.workLog,
@@ -62,29 +50,19 @@ function ClockInCardComponent() {
               createdAt: new Date(data.workLog.createdAt),
               updatedAt: new Date(data.workLog.updatedAt),
             })
-            console.log('🔄 Store updated, isClockedIn should now be true')
-          } else {
-            console.log('❌ No active worklog found, workLog:', data.workLog)
           }
-        } else {
-          console.log('❌ Failed to fetch current worklog:', response.status)
         }
         
         // Mark as checked to prevent repeated calls
         setHasCheckedWorklog(true)
       } catch (error) {
-        console.error('❌ Error checking current worklog:', error)
+        console.error('Error checking current worklog:', error)
         setHasCheckedWorklog(true) // Mark as checked even on error
       }
     }
 
     if (session?.user?.id && !hasCheckedWorklog) {
-      console.log('🚀 useEffect triggered, calling checkCurrentWorklog')
       checkCurrentWorklog()
-    } else if (hasCheckedWorklog) {
-      console.log('⏭️ useEffect skipped - worklog already checked')
-    } else {
-      console.log('⏳ Session not ready yet, user ID:', session?.user?.id)
     }
   }, [session?.user?.id, hasCheckedWorklog]) // Added hasCheckedWorklog to dependencies
 
@@ -175,7 +153,6 @@ function ClockInCardComponent() {
       
       // Update the currentWorkLog with the actual data from the database
       if (data.workLog) {
-        console.log('🔄 Setting current worklog after successful clock-in:', data.workLog)
         setCurrentWorkLog({
           id: data.workLog.id,
           personId: data.workLog.person.id,
@@ -189,7 +166,6 @@ function ClockInCardComponent() {
           createdAt: new Date(data.workLog.createdAt).toISOString(),
           updatedAt: new Date().toISOString(),
         })
-        console.log('✅ Current worklog updated in store')
         // Reset the hasCheckedWorklog flag so the component can update properly
         setHasCheckedWorklog(false)
       }
@@ -306,14 +282,8 @@ function ClockInCardComponent() {
       </div>
 
       <div className="space-y-4">
-        {/* Debug info */}
-        <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-100 rounded">
-          Debug: isClockedIn={isClockedIn.toString()}, currentWorkLog={wl ? 'exists' : 'null'}, clockOut={wl?.clockOut ? 'set' : 'null'}
-        </div>
-        
         {!isClockedIn ? (
           <div>
-            <div className="text-xs text-red-500 mb-2">DEBUG: Showing CLOCK IN button (isClockedIn=false)</div>
             <button
               onClick={handleClockIn}
               disabled={isLoading || !currentProject}
@@ -329,7 +299,6 @@ function ClockInCardComponent() {
           </div>
         ) : (
           <div>
-            <div className="text-xs text-green-500 mb-2">DEBUG: Showing CLOCK OUT section (isClockedIn=true)</div>
           <div className="space-y-4">
             {/* Prominent green banner for shift confirmation */}
             <div className="bg-green-500 border-2 border-green-600 rounded-lg p-4 text-center shadow-lg">

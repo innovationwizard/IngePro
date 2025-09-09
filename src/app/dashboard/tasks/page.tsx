@@ -67,8 +67,6 @@ interface Project {
 
 
 export default function TasksPage() {
-  console.log('🚀 TasksPage component starting...')
-  console.log('🔍 Basic test log - should show up')
   const { data: session, status } = useSession()
   const router = useRouter()
   const [tasks, setTasks] = useState<Task[]>([])
@@ -79,16 +77,13 @@ export default function TasksPage() {
   const [showProjectAssignmentModal, setShowProjectAssignmentModal] = useState(false)
 
   useEffect(() => {
-    console.log('🔄 TasksPage useEffect triggered - status:', status, 'session:', !!session)
     if (status === 'loading') return
 
     if (!session) {
-      console.log('❌ No session, redirecting to login')
       router.push('/auth/login')
       return
     }
 
-    console.log('✅ Session found, fetching data...')
     fetchTasks()
     fetchCategories()
     fetchProjects()
@@ -265,9 +260,6 @@ export default function TasksPage() {
   const isWorker = session.user?.role === 'WORKER'
   const personRole = session.user?.role || ''
   
-  // Debug logging
-  console.log('TasksPage render - session user role:', session.user?.role, 'personRole:', personRole, 'isAdmin:', isAdmin)
-  console.log('🔍 TasksPage render test log - should show up')
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-full overflow-x-hidden">
@@ -278,15 +270,6 @@ export default function TasksPage() {
         </p>
       </div>
 
-      {/* PROMINENT DEBUG BANNER */}
-      <div className="bg-red-500 text-white p-4 rounded-lg mb-6 text-center">
-        <h3 className="text-lg font-bold mb-2">🔍 DEBUG INFO - TASK DELETION ISSUE</h3>
-        <p><strong>Session User Role:</strong> {session.user?.role}</p>
-        <p><strong>Person Role:</strong> {personRole}</p>
-        <p><strong>Is Admin:</strong> {isAdmin.toString()}</p>
-        <p><strong>Tasks Count:</strong> {tasks?.length || 0}</p>
-        <p><strong>Session User ID:</strong> {session.user?.id}</p>
-      </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="flex w-full gap-1 sm:gap-2 p-1 sm:p-2 tabs-list-mobile overflow-x-auto min-h-[3rem] bg-gray-100 rounded-lg shadow-sm">

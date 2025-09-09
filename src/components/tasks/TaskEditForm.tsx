@@ -42,9 +42,6 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
     progressUnit: ''
   })
 
-  // Debug categories
-  console.log('TaskEditForm received categories:', categories)
-  console.log('Categories length:', categories?.length)
 
   // Initialize form with task data when task changes
   useEffect(() => {
@@ -197,10 +194,6 @@ export default function TaskEditForm({ task, categories, isOpen, onClose, onTask
                   )}
                 </SelectContent>
               </Select>
-              {/* Debug info */}
-              <div className="text-xs text-gray-500 mt-1">
-                Current categoryId: {formData.categoryId || 'none'}
-              </div>
             </div>
           </div>
 

@@ -27,11 +27,9 @@ const makeProjectStore = () =>
     currentProject: null,
     projects: [],
     setCurrentProject: (project) => {
-      console.log('🔄 ProjectStore: setCurrentProject called with:', project);
       set({ currentProject: project });
     },
     setProjects: (projects) => {
-      console.log('🔄 ProjectStore: setProjects called with:', projects.length, 'projects');
       set({ projects });
     },
   }));

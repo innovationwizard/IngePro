@@ -4,6 +4,12 @@ import { authOptions } from '@/lib/auth'
 import { getPrisma } from '@/lib/prisma'
 import { z } from 'zod'
 
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
+
 export const runtime = 'nodejs'
 
 // Validation schema for progress validation
@@ -26,16 +32,39 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const progressUpdateId = params.id
+  
+  logToVercel('PROGRESS_VALIDATION_POST_STARTED', {
+    progressUpdateId,
+    timestamp: new Date().toISOString()
+  })
+
   try {
     const session = await getServerSession(authOptions)
     
     if (!session || !['ADMIN', 'SUPERVISOR'].includes(session.user?.role || '')) {
+      logToVercel('PROGRESS_VALIDATION_POST_UNAUTHORIZED', {
+        progressUpdateId,
+        userRole: session?.user?.role,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
+    logToVercel('PROGRESS_VALIDATION_POST_REQUEST_BODY', {
+      progressUpdateId,
+      body,
+      timestamp: new Date().toISOString()
+    })
+
     const validatedData = validationSchema.parse(body)
-    const progressUpdateId = params.id
+    
+    logToVercel('PROGRESS_VALIDATION_POST_VALIDATION_SUCCESS', {
+      progressUpdateId,
+      validatedData,
+      timestamp: new Date().toISOString()
+    })
     
     const prisma = await getPrisma()
     
@@ -54,10 +83,21 @@ export async function POST(
     }
 
     if (!companyId) {
+      logToVercel('PROGRESS_VALIDATION_POST_NO_COMPANY', {
+        progressUpdateId,
+        userId: session.user?.id,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
     // Get the progress update with task and project context
+    logToVercel('PROGRESS_VALIDATION_POST_FETCHING_UPDATE', {
+      progressUpdateId,
+      companyId,
+      timestamp: new Date().toISOString()
+    })
+
     const progressUpdate = await prisma.taskProgressUpdates.findFirst({
       where: {
         id: progressUpdateId,
@@ -100,11 +140,31 @@ export async function POST(
     })
 
     if (!progressUpdate) {
+      logToVercel('PROGRESS_VALIDATION_POST_UPDATE_NOT_FOUND', {
+        progressUpdateId,
+        companyId,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json({ error: 'Progress update not found' }, { status: 404 })
     }
 
+    logToVercel('PROGRESS_VALIDATION_POST_UPDATE_FOUND', {
+      progressUpdateId,
+      taskId: progressUpdate.taskId,
+      projectId: progressUpdate.projectId,
+      workerId: progressUpdate.workerId,
+      currentValidationStatus: progressUpdate.validationStatus,
+      amountCompleted: progressUpdate.amountCompleted,
+      timestamp: new Date().toISOString()
+    })
+
     // Verify the progress update is pending validation
     if (progressUpdate.validationStatus !== 'PENDING') {
+      logToVercel('PROGRESS_VALIDATION_POST_ALREADY_VALIDATED', {
+        progressUpdateId,
+        currentValidationStatus: progressUpdate.validationStatus,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json({ error: 'Progress update has already been validated' }, { status: 400 })
     }
 
@@ -136,12 +196,25 @@ export async function POST(
     }
 
     // Process validation in transaction
+    logToVercel('PROGRESS_VALIDATION_POST_STARTING_TRANSACTION', {
+      progressUpdateId,
+      action: validatedData.action,
+      timestamp: new Date().toISOString()
+    })
+
     const result = await prisma.$transaction(async (tx) => {
       let validationStatus: 'VALIDATED' | 'REJECTED' = 'VALIDATED'
       
       if (validatedData.action === 'REJECT') {
         validationStatus = 'REJECTED'
       }
+
+      logToVercel('PROGRESS_VALIDATION_POST_TRANSACTION_STATUS', {
+        progressUpdateId,
+        validationStatus,
+        action: validatedData.action,
+        timestamp: new Date().toISOString()
+      })
 
       // Update the progress update
       const updatedProgressUpdate = await tx.taskProgressUpdates.update({
@@ -208,6 +281,14 @@ export async function POST(
       return updatedProgressUpdate
     })
 
+    logToVercel('PROGRESS_VALIDATION_POST_SUCCESS', {
+      progressUpdateId,
+      action: validatedData.action,
+      validationStatus: result.validationStatus,
+      validatedBy: result.validatedBy,
+      timestamp: new Date().toISOString()
+    })
+
     return NextResponse.json({
       success: true,
       message: `Progress update ${validatedData.action.toLowerCase()}ed successfully`,
@@ -215,6 +296,13 @@ export async function POST(
     })
 
   } catch (error) {
+    logToVercel('PROGRESS_VALIDATION_POST_ERROR', {
+      progressUpdateId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    })
+    
     console.error('Error validating progress update:', error)
     
     if (error instanceof z.ZodError) {
@@ -236,15 +324,25 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const progressUpdateId = params.id
+  
+  logToVercel('PROGRESS_VALIDATION_GET_STARTED', {
+    progressUpdateId,
+    timestamp: new Date().toISOString()
+  })
+
   try {
     const session = await getServerSession(authOptions)
     
     if (!session || !['ADMIN', 'SUPERVISOR'].includes(session.user?.role || '')) {
+      logToVercel('PROGRESS_VALIDATION_GET_UNAUTHORIZED', {
+        progressUpdateId,
+        userRole: session?.user?.role,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const progressUpdateId = params.id
-    
     const prisma = await getPrisma()
     
     // Get person's company context
@@ -262,6 +360,11 @@ export async function GET(
     }
 
     if (!companyId) {
+      logToVercel('PROGRESS_VALIDATION_GET_NO_COMPANY', {
+        progressUpdateId,
+        userId: session.user?.id,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json({ error: 'No company context available' }, { status: 400 })
     }
 
@@ -305,12 +408,33 @@ export async function GET(
     })
 
     if (!progressUpdate) {
+      logToVercel('PROGRESS_VALIDATION_GET_NOT_FOUND', {
+        progressUpdateId,
+        companyId,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json({ error: 'Progress update not found' }, { status: 404 })
     }
+
+    logToVercel('PROGRESS_VALIDATION_GET_SUCCESS', {
+      progressUpdateId,
+      taskId: progressUpdate.taskId,
+      projectId: progressUpdate.projectId,
+      workerId: progressUpdate.workerId,
+      validationStatus: progressUpdate.validationStatus,
+      timestamp: new Date().toISOString()
+    })
 
     return NextResponse.json({ progressUpdate })
 
   } catch (error) {
+    logToVercel('PROGRESS_VALIDATION_GET_ERROR', {
+      progressUpdateId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    })
+    
     console.error('Error fetching progress update for validation:', error)
     return NextResponse.json(
       { error: 'Failed to fetch progress update' },

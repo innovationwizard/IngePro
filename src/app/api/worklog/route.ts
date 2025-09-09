@@ -63,7 +63,6 @@ export async function GET(request: NextRequest) {
           select: { projectId: true }
         })
         
-        console.log('DEBUG: Supervisor projects:', supervisorProjects)
         
         const projectIds = supervisorProjects.map(sp => sp.projectId)
         
@@ -84,23 +83,16 @@ export async function GET(request: NextRequest) {
             }
           })
           
-          console.log('DEBUG: Worker assignments:', workerAssignments)
-          
           // Filter to only include workers (not other supervisors/admins)
           const workerIds = workerAssignments
             .filter(wa => wa.person.role === 'WORKER')
             .map(wa => wa.personId)
           
-          console.log('DEBUG: Filtered worker IDs:', workerIds)
-          
           // Include supervisor's own worklogs and their workers' worklogs
           workerIds.push(session.user?.id!)
           
-          console.log('DEBUG: Final person IDs for supervisor:', workerIds)
-          
           where.personId = { in: workerIds }
         } else {
-          console.log('DEBUG: No projects assigned to supervisor, showing only own worklogs')
           // If no projects assigned, only see own worklogs
           where.personId = session.user?.id
         }
@@ -110,8 +102,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('DEBUG: Final where clause:', JSON.stringify(where, null, 2))
-    console.log('DEBUG: User role:', session.user?.role, 'User ID:', session.user?.id)
     
     const workLogs = await prisma.workLogs.findMany({
       where,
@@ -143,17 +133,6 @@ export async function GET(request: NextRequest) {
       take: limit
     })
     
-    console.log('DEBUG: Found worklogs:', workLogs.length, 'for user role:', session.user?.role)
-    console.log('DEBUG: Worklog details:', workLogs.map(wl => ({
-      id: wl.id,
-      personId: wl.personId,
-      personName: wl.person.name,
-      personRole: wl.person.role,
-      projectId: wl.projectId,
-      projectName: wl.project?.name,
-      clockIn: wl.clockIn,
-      clockOut: wl.clockOut
-    })))
 
     // Transform the data to match frontend expectations
     const transformedWorkLogs = workLogs.map(log => ({
@@ -231,19 +210,12 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      console.log('DEBUG: Worker worklog creation - Active worklog:', activeWorkLog)
-      console.log('DEBUG: Requested projectId:', projectId)
-
       if (activeWorkLog) {
         // Worker is already clocked in, they cannot create another worklog
-        console.log('DEBUG: Worker already clocked in, cannot create new worklog')
         return NextResponse.json({ 
           error: `Ya estás trabajando en ${activeWorkLog.project?.name}. Debes hacer clock out antes de crear un nuevo registro.` 
         }, { status: 400 })
       }
-      
-      // Worker is not clocked in, they can create a worklog (this is the clock-in process)
-      console.log('DEBUG: Worker not clocked in, proceeding with worklog creation')
     }
 
     // Validate project exists and person has access

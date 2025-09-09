@@ -23,10 +23,6 @@ export async function GET() {
       success: true,
       count: projects.length,
       projects: projects,
-      debug: {
-        message: 'Test endpoint working',
-        timestamp: new Date().toISOString()
-      }
     })
     
   } catch (error) {
@@ -34,10 +30,6 @@ export async function GET() {
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-      debug: {
-        message: 'Test endpoint failed',
-        timestamp: new Date().toISOString()
-      }
     }, { status: 500 })
   }
 }

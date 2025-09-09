@@ -3,6 +3,13 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getPrisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { createTaskProgressUpdate } from '@/lib/progressUtils'
+
+// Vercel logging function
+const logToVercel = (action: string, details: any = {}) => {
+  console.log(`[VERCEL_LOG] ${action}:`, details)
+  // In production, this will show up in Vercel logs
+}
 
 export const runtime = 'nodejs'
 
@@ -28,133 +35,59 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const taskId = params.id
+  
+  logToVercel('TASK_PROGRESS_POST_STARTED', {
+    taskId,
+    timestamp: new Date().toISOString()
+  })
+
   try {
     const session = await getServerSession(authOptions)
     
     if (!session || !['WORKER'].includes(session.user?.role || '')) {
+      logToVercel('TASK_PROGRESS_POST_UNAUTHORIZED', {
+        taskId,
+        userRole: session?.user?.role,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    const validatedData = progressUpdateSchema.parse(body)
-    const taskId = params.id
-    
-    const prisma = await getPrisma()
-    
-    // Get person's company context
-    let companyId = session.user?.companyId
-    
-    if (!companyId) {
-      const personTenant = await prisma.personTenants.findFirst({
-        where: {
-          personId: session.user?.id,
-          status: 'ACTIVE'
-        },
-        orderBy: { startDate: 'desc' }
-      })
-      companyId = personTenant?.companyId
-    }
-
-    if (!companyId) {
-      return NextResponse.json({ error: 'No company context available' }, { status: 400 })
-    }
-
-    // Verify the task exists and is assigned to the person for this project
-    const workerAssignment = await prisma.taskWorkerAssignments.findFirst({
-      where: {
-        taskId: taskId,
-        projectId: validatedData.projectId,
-        workerId: session.user?.id,
-        project: {
-          companyId: companyId
-        }
-      },
-      include: {
-        task: {
-          include: {
-            category: true
-          }
-        },
-        project: {
-          include: {
-            materials: {
-              include: {
-                material: true
-              }
-            }
-          }
-        }
-      }
+    logToVercel('TASK_PROGRESS_POST_REQUEST_BODY', {
+      taskId,
+      body,
+      timestamp: new Date().toISOString()
     })
 
-    if (!workerAssignment) {
-      return NextResponse.json({ error: 'Task not found or not assigned to you for this project' }, { status: 404 })
-    }
+    const validatedData = progressUpdateSchema.parse(body)
+    
+    logToVercel('TASK_PROGRESS_POST_VALIDATION_SUCCESS', {
+      taskId,
+      validatedData,
+      timestamp: new Date().toISOString()
+    })
 
-    // Verify materials belong to the project if provided
-    if (validatedData.materialConsumptions) {
-      const projectMaterialIds = workerAssignment.project.materials.map(pm => pm.materialId)
-      const consumptionMaterialIds = validatedData.materialConsumptions.map(mc => mc.materialId)
-      
-      const invalidMaterials = consumptionMaterialIds.filter(id => !projectMaterialIds.includes(id))
-      if (invalidMaterials.length > 0) {
-        return NextResponse.json({ 
-          error: 'Some materials are not available in this project' 
-        }, { status: 400 })
-      }
-    }
+    // Use consolidated progress creation method
+    const result = await createTaskProgressUpdate({
+      taskId: taskId,
+      projectId: validatedData.projectId,
+      workerId: session.user?.id || '',
+      amountCompleted: validatedData.amountCompleted,
+      status: validatedData.status,
+      additionalAttributes: validatedData.additionalAttributes,
+      materialConsumptions: validatedData.materialConsumptions,
+      materialLosses: validatedData.materialLosses,
+      photos: validatedData.photos,
+      isWorklogEntry: false
+    })
 
-    if (validatedData.materialLosses) {
-      const projectMaterialIds = workerAssignment.project.materials.map(pm => pm.materialId)
-      const lossMaterialIds = validatedData.materialLosses.map(ml => ml.materialId)
-      
-      const invalidMaterials = lossMaterialIds.filter(id => !projectMaterialIds.includes(id))
-      if (invalidMaterials.length > 0) {
-        return NextResponse.json({ 
-          error: 'Some materials are not available in this project' 
-        }, { status: 400 })
-      }
-    }
-
-    // Create progress update with materials in transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create the progress update
-      const progressUpdate = await tx.taskProgressUpdates.create({
-        data: {
-          taskId: taskId,
-          projectId: validatedData.projectId,
-          workerId: session.user?.id || '',
-          assignmentId: workerAssignment.id,
-          amountCompleted: validatedData.amountCompleted,
-          status: validatedData.status,
-          additionalAttributes: validatedData.additionalAttributes,
-          photos: validatedData.photos || [],
-        }
-      })
-
-      // Add material consumptions if provided
-      if (validatedData.materialConsumptions && validatedData.materialConsumptions.length > 0) {
-        await tx.materialConsumptions.createMany({
-          data: validatedData.materialConsumptions.map(mc => ({
-            taskProgressUpdateId: progressUpdate.id,
-            materialId: mc.materialId,
-            quantity: mc.quantity
-          }))
-        })
-      }
-
-      // Add material losses if provided
-      if (validatedData.materialLosses && validatedData.materialLosses.length > 0) {
-        await tx.materialLoss.createMany({
-          data: validatedData.materialLosses.map(ml => ({
-            taskProgressUpdateId: progressUpdate.id,
-            materialId: ml.materialId,
-            quantity: ml.quantity
-          }))
-        })
-      }
-
-      return progressUpdate
+    logToVercel('TASK_PROGRESS_POST_SUCCESS', {
+      taskId,
+      progressUpdateId: result.id,
+      amountCompleted: result.amountCompleted,
+      timestamp: new Date().toISOString()
     })
 
     return NextResponse.json({
@@ -164,7 +97,12 @@ export async function POST(
     })
 
   } catch (error) {
-    console.error('Error logging progress update:', error)
+    logToVercel('TASK_PROGRESS_POST_ERROR', {
+      taskId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    })
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -100,11 +100,6 @@ export async function GET(
         count: availableProjects.length,
         projects: availableProjects
       },
-      debug: {
-        workerId,
-        hasCompany: !!worker.companyId,
-        companyName: worker.company?.name
-      }
     })
 
   } catch (error) {
