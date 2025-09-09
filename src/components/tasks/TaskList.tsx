@@ -75,8 +75,7 @@ interface Task {
         unit: string
       }
       quantity: number
-      }
-    >
+    }>
   }>
   _count: {
     progressUpdates: number
@@ -215,12 +214,10 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const confirmDeleteTask = async () => {
     if (!deletingTask) return
 
-
     try {
       const response = await fetch(`/api/tasks?id=${deletingTask.id}`, {
         method: 'DELETE',
       })
-
 
       if (response.ok) {
         const result = await response.json()
@@ -461,7 +458,7 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                   )}
                   
                   {/* Delete button - Admin only */}
-                  {personRole === 'ADMIN' ? (
+                  {personRole === 'ADMIN' && (
                     <Button
                       variant="destructive"
                       size="sm"
@@ -613,9 +610,9 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
       </div>
 
       {filteredTasks.length === 0 && (
-               <div className="text-center py-8">
-         <p className="text-gray-500">No se encontraron tareas</p>
-       </div>
+        <div className="text-center py-8">
+          <p className="text-gray-500">No se encontraron tareas</p>
+        </div>
       )}
 
       {/* Modals */}
