@@ -9,18 +9,18 @@ export async function POST(request: NextRequest) {
   try {
     const userAgent = request.headers.get('user-agent')
     const source = 'manual'
-    const message = 'Usage logs email sent'
+    const message = 'Usage Logs Email sent'
 
     const prisma = await getPrisma()
     
-    // Get audit logs from the last 99 days (as requested)
-    const ninetyNineDaysAgo = new Date()
-    ninetyNineDaysAgo.setDate(ninetyNineDaysAgo.getDate() - 99)
+    // Get audit logs from the last 9 days
+    const nineDaysAgo = new Date()
+    nineDaysAgo.setDate(nineDaysAgo.getDate() - 9)
     
     const auditLogs = await prisma.auditLogs.findMany({
       where: {
         createdAt: {
-          gte: ninetyNineDaysAgo
+          gte: nineDaysAgo
         }
       },
       include: {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       message,
       logsProcessed: usageLogs.length,
       timeRange: {
-        from: ninetyNineDaysAgo.toISOString(),
+        from: nineDaysAgo.toISOString(),
         to: new Date().toISOString()
       },
       timestamp: new Date().toISOString(),
@@ -111,14 +111,14 @@ export async function GET(request: NextRequest) {
   try {
     const prisma = await getPrisma()
     
-    // Get audit logs from the last 99 days (same as POST method)
-    const ninetyNineDaysAgo = new Date()
-    ninetyNineDaysAgo.setDate(ninetyNineDaysAgo.getDate() - 99)
+    // Get audit logs from the last 9 days (same as POST method)
+    const nineDaysAgo = new Date()
+    nineDaysAgo.setDate(nineDaysAgo.getDate() - 9)
     
     const auditLogs = await prisma.auditLogs.findMany({
       where: {
         createdAt: {
-          gte: ninetyNineDaysAgo
+          gte: nineDaysAgo
         }
       },
       include: {
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
       logsProcessed: usageLogs.length,
       emailSent,
       timeRange: {
-        from: ninetyNineDaysAgo.toISOString(),
+        from: nineDaysAgo.toISOString(),
         to: new Date().toISOString()
       },
       timestamp: new Date().toISOString(),

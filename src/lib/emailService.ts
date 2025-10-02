@@ -29,12 +29,13 @@ export async function sendUsageLogsEmail(logs: UsageLogEntry[]): Promise<boolean
     ).join('\n')
     
     const emailContent = `IngePro Usage Logs - ${timestamp}
+---
 
 ${logLines}
 
 ---
-This is an automated hourly report for adoption monitoring.
-comment-for-human: This high frequency will be dialed down gradually as management determines optimal frequency.
+This is an automated report for adoption monitoring.
+ 
 `
 
     const mailOptions = {

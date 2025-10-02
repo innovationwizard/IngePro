@@ -12,7 +12,7 @@ This system sends usage log email notifications to track user activity for adopt
 - Time zone: Guatemala City (UTC-6)
 
 ### 2. API Endpoint (`src/app/api/cron/usage-logs-email/route.ts`)
-- Processes audit logs from the last 99 days
+- Processes audit logs from the last 9 days
 - Converts audit logs to user-friendly action descriptions
 - Sends formatted email with usage data
 
@@ -101,7 +101,7 @@ You can set up external monitoring systems to hit this endpoint:
 
 The system can be easily adjusted by:
 
-1. **Modifying time range** in the API endpoint (currently 99 days)
+1. **Modifying time range** in the API endpoint (currently 9 days)
 2. **Changing email frequency** by adjusting external trigger schedule
 3. **Adding authentication** if needed for security
 
