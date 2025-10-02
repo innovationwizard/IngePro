@@ -299,6 +299,21 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Create audit log for worklog creation
+    await prisma.auditLogs.create({
+      data: {
+        personId: session.user?.id!,
+        action: 'WORKLOG_CREATE',
+        entityType: 'WORKLOG',
+        entityId: workLog.id,
+        newValues: {
+          projectId: projectId || null,
+          clockIn: workLog.clockIn.toISOString(),
+          description: description || ''
+        }
+      }
+    })
+
     return NextResponse.json({
       success: true,
       message: 'Work log created successfully',
@@ -396,6 +411,24 @@ export async function PUT(request: NextRequest) {
               }
             }
           }
+        }
+      }
+    })
+
+    // Create audit log for worklog update
+    await prisma.auditLogs.create({
+      data: {
+        personId: session.user?.id!,
+        action: 'WORKLOG_UPDATE',
+        entityType: 'WORKLOG',
+        entityId: workLog.id,
+        oldValues: {
+          clockOut: workLog.clockOut?.toISOString() || null,
+          notes: workLog.notes
+        },
+        newValues: {
+          clockOut: updatedWorkLog.clockOut?.toISOString() || null,
+          notes: description || workLog.notes
         }
       }
     })

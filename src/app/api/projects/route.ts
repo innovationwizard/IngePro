@@ -248,6 +248,21 @@ export async function POST(request: NextRequest) {
       }
     })
     
+    // Create audit log for project creation
+    await prisma.auditLogs.create({
+      data: {
+        personId: session.user?.id!,
+        action: 'PROJECT_CREATE',
+        entityType: 'PROJECT',
+        entityId: project.id,
+        newValues: {
+          name: project.name,
+          description: project.description,
+          status: project.status,
+          companyId: project.companyId
+        }
+      }
+    })
 
     return NextResponse.json({
       success: true,

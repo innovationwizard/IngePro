@@ -8,5 +8,15 @@
       "source": "/:tenant/api/:path*", 
       "destination": "/api/:path*"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/rate-limit-cleanup",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/usage-logs-email",
+      "schedule": "0 * * * *"
+    }
   ]
 }

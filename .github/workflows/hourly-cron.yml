@@ -1,0 +1,27 @@
+name: hourly-cron
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour at minute 0 (UTC)
+  workflow_dispatch:        # allow manual run
+
+jobs:
+  call-endpoints:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: hourly-cron
+      cancel-in-progress: false   # avoid overlapping runs
+
+    steps:
+      - name: Hit usage-logs-email endpoint
+        run: |
+          set -euo pipefail
+          URL="https://ingepro.app/api/cron/usage-logs-email"
+          echo "Hitting $URL with POST method"
+          curl --fail --silent --show-error \
+               --max-time 300 \
+               --retry 3 --retry-all-errors --retry-delay 10 \
+               -X POST \
+               -H "User-Agent: gh-hourly-cron" \
+               "$URL"

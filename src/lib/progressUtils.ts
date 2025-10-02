@@ -215,6 +215,24 @@ export async function createTaskProgressUpdate(data: ProgressCreationData) {
       timestamp: new Date().toISOString()
     })
 
+    // Create audit log for task progress update
+    await prisma.auditLogs.create({
+      data: {
+        personId: data.workerId,
+        action: 'TASK_PROGRESS',
+        entityType: 'TASK_PROGRESS_UPDATE',
+        entityId: progressUpdate.id,
+        newValues: {
+          taskId: data.taskId,
+          projectId: data.projectId,
+          amountCompleted: progressUpdate.amountCompleted,
+          status: progressUpdate.status,
+          additionalAttributes: data.additionalAttributes,
+          isWorklogEntry: data.isWorklogEntry || false
+        }
+      }
+    })
+
     return progressUpdate
 
   } catch (error) {

@@ -131,6 +131,25 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role
         token.companyId = user.companyId
         token.companySlug = user.companySlug
+        
+        // Log login event
+        try {
+          const prisma = await getPrisma()
+          await prisma.auditLogs.create({
+            data: {
+              personId: user.id,
+              action: 'LOGIN',
+              entityType: 'AUTH',
+              entityId: user.id,
+              newValues: {
+                loginTime: new Date().toISOString(),
+                userAgent: 'NextAuth'
+              }
+            }
+          })
+        } catch (error) {
+          console.error('Failed to log login event:', error)
+        }
       }
       return token
     },
@@ -160,6 +179,27 @@ export const authOptions: NextAuthOptions = {
         }
       }
       return session
+    },
+    async signOut({ token }) {
+      // Log logout event
+      if (token?.sub) {
+        try {
+          const prisma = await getPrisma()
+          await prisma.auditLogs.create({
+            data: {
+              personId: token.sub,
+              action: 'LOGOUT',
+              entityType: 'AUTH',
+              entityId: token.sub,
+              newValues: {
+                logoutTime: new Date().toISOString()
+              }
+            }
+          })
+        } catch (error) {
+          console.error('Failed to log logout event:', error)
+        }
+      }
     }
   },
   pages: {

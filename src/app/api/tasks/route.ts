@@ -296,6 +296,22 @@ export async function POST(request: NextRequest) {
       return task
     })
 
+    // Create audit log for task creation
+    await prisma.auditLogs.create({
+      data: {
+        personId: session.user?.id!,
+        action: 'TASK_CREATE',
+        entityType: 'TASK',
+        entityId: result.id,
+        newValues: {
+          name: result.name,
+          description: result.description,
+          categoryId: result.categoryId,
+          progressUnit: result.progressUnit
+        }
+      }
+    })
+
     return NextResponse.json({
       success: true,
       message: 'Task created successfully',
