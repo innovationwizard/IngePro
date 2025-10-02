@@ -12,11 +12,7 @@
   "crons": [
     {
       "path": "/api/cron/rate-limit-cleanup",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/usage-logs-email",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

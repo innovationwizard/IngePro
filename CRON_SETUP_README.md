@@ -1,11 +1,12 @@
 # Rate Limit Cleanup Cron Job Setup (Vercel)
 
 ## Overview
-This cron job runs every 5 minutes to clean up expired rate limit entries, using Vercel's native cron functionality.
+This cron job runs daily to clean up expired rate limit entries, using Vercel's native cron functionality.
 
 ## What Changed
 - ❌ **Removed**: Client-side `setInterval` that ran every minute
-- ✅ **Added**: Vercel cron job that runs every 5 minutes
+- ❌ **Removed**: Duplicate GitHub Actions cron workflows
+- ✅ **Added**: Vercel cron job that runs daily (reduced from every 5 minutes)
 - ✅ **Added**: API endpoint integrated with Vercel's infrastructure
 - ✅ **Added**: No external cron setup needed
 
@@ -25,13 +26,13 @@ The cron job is automatically configured in your `vercel.json`:
   "crons": [
     {
       "path": "/api/cron/rate-limit-cleanup",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
 ```
 
-**No additional setup required!** Vercel automatically runs this endpoint every 5 minutes.
+**No additional setup required!** Vercel automatically runs this endpoint daily at midnight UTC.
 
 ### Option 2: Docker Cron
 If running in Docker, add to your Dockerfile:

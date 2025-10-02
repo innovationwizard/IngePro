@@ -1,7 +1,7 @@
-# Hourly Email Notification System Setup
+# Manual Usage Logs Email System
 
 ## Overview
-This system sends hourly email notifications to track user activity for adoption monitoring. The system is designed to be temporary and will be dialed down gradually as management determines the optimal frequency.
+This system sends usage log email notifications to track user activity for adoption monitoring. The system is now manually triggered via web endpoint to reduce Vercel cron usage.
 
 ## Components
 
@@ -16,10 +16,10 @@ This system sends hourly email notifications to track user activity for adoption
 - Converts audit logs to user-friendly action descriptions
 - Sends formatted email with usage data
 
-### 3. Cron Job Configuration
-- **Vercel Cron**: Runs every hour (`0 * * * *`)
-- **GitHub Actions**: Backup cron job (same schedule)
-- Both configured in `vercel.json` and `.github/workflows/hourly-cron.yml`
+### 3. Manual Trigger Configuration
+- **Web Endpoint**: Accessible via GET request to `/api/cron/usage-logs-email`
+- **No Cron Jobs**: Removed from Vercel cron to reduce usage limits
+- **External Bot Friendly**: Can be triggered by external monitoring systems
 
 ### 4. Activity Tracking
 Added audit logging to key endpoints:
@@ -75,15 +75,21 @@ The system maps technical audit log actions to user-friendly descriptions:
 
 ## Testing
 
-### Manual Test (Development)
+### Manual Trigger (Development)
 ```bash
 curl -X GET http://localhost:3000/api/cron/usage-logs-email
 ```
 
-### Production Test
+### Manual Trigger (Production)
 ```bash
-curl -X POST https://ingepro.app/api/cron/usage-logs-email
+curl -X GET https://ingepro.app/api/cron/usage-logs-email
 ```
+
+### External Bot Usage
+You can set up external monitoring systems to hit this endpoint:
+- **URL**: `https://ingepro.app/api/cron/usage-logs-email`
+- **Method**: GET
+- **Frequency**: As needed (no longer automated)
 
 ## Monitoring
 

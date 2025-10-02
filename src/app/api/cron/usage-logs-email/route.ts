@@ -122,13 +122,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET - Manual trigger for testing (development only)
+// GET - Manual trigger for usage logs email (accessible in production)
 export async function GET(request: NextRequest) {
   try {
-    // Only allow in development or with proper auth
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Method not allowed in production' }, { status: 405 })
-    }
+    // Allow manual access in production for external bot usage
 
     const prisma = await getPrisma()
     
