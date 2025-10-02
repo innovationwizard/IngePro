@@ -41,7 +41,6 @@ graph TB
     subgraph "Infrastructure"
         L[AWS RDS] --> M[Vercel Deployment]
         L --> N[AWS S3]
-        L --> O[AWS Lambda]
     end
     
     A --> E
@@ -265,8 +264,7 @@ graph LR
     
     subgraph "Infrastructure"
         M[AWS RDS] --> N[AWS S3]
-        N --> O[AWS Lambda]
-        O --> P[Vercel]
+        N --> P[Vercel]
     end
     
     subgraph "Development Tools"

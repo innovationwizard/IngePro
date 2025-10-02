@@ -110,7 +110,7 @@ module.exports = {
       'Frontend': ['Next.js', 'React', 'TypeScript', 'Tailwind CSS'],
       'Backend': ['Node.js', 'Prisma', 'PostgreSQL'],
       'Authentication': ['NextAuth.js', 'JWT', 'bcryptjs'],
-      'Infrastructure': ['AWS RDS', 'AWS S3', 'AWS Lambda', 'Vercel'],
+      'Infrastructure': ['AWS RDS', 'AWS S3', 'Vercel'],
       'Development': ['ESLint', 'Prettier', 'Prisma Studio']
     }
   },
