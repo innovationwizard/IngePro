@@ -51,11 +51,9 @@ jobs:
       - name: Commit and push changes
         if: steps.check_changes.outputs.no_changes == 'false'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add docs/architecture/
-          git commit -m "🤖 Auto-update architecture diagrams [skip ci]"
-          git push
+          echo "Architecture diagrams have been updated but auto-push is disabled"
+          echo "Please manually commit and push the changes in docs/architecture/"
+          git status
           
       - name: Create PR comment
         if: github.event_name == 'pull_request'
