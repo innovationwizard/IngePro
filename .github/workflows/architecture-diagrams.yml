@@ -1,23 +1,7 @@
 name: Generate Architecture Diagrams
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'src/**'
-      - 'prisma/**'
-      - 'package.json'
-      - 'next.config.js'
-      - 'tsconfig.json'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - 'src/**'
-      - 'prisma/**'
-      - 'package.json'
-      - 'next.config.js'
-      - 'tsconfig.json'
-  workflow_dispatch: # Allow manual triggering
+  workflow_dispatch: # Only manual triggering (docs generated locally via pre-commit hook)
 
 jobs:
   generate-architecture:
@@ -40,20 +24,13 @@ jobs:
         run: npm run generate-architecture
         
       - name: Check for changes
-        id: check_changes
         run: |
           if git diff --quiet docs/architecture/; then
-            echo "no_changes=true" >> $GITHUB_OUTPUT
+            echo "ℹ️  No changes to architecture diagrams"
           else
-            echo "no_changes=false" >> $GITHUB_OUTPUT
+            echo "📝 Architecture diagrams have been updated"
+            git status
           fi
-          
-      - name: Commit and push changes
-        if: steps.check_changes.outputs.no_changes == 'false'
-        run: |
-          echo "Architecture diagrams have been updated but auto-push is disabled"
-          echo "Please manually commit and push the changes in docs/architecture/"
-          git status
           
       - name: Create PR comment
         if: github.event_name == 'pull_request'

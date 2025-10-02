@@ -93,29 +93,24 @@ You can set up external monitoring systems to hit this endpoint:
 
 ## Monitoring
 
-- Check Vercel dashboard for cron execution logs
-- Monitor GitHub Actions for backup cron runs
 - Email delivery status logged to console
+- Check endpoint response for success/failure
+- Monitor external trigger system if using one
 
 ## Future Adjustments
 
-As requested, this high-frequency monitoring is temporary. The system can be easily adjusted by:
+The system can be easily adjusted by:
 
-1. **Changing cron schedule** in `vercel.json`:
-   - Every 2 hours: `0 */2 * * *`
-   - Every 6 hours: `0 */6 * * *`
-   - Daily: `0 9 * * *` (9 AM daily)
-
-2. **Updating GitHub Actions** schedule in `.github/workflows/hourly-cron.yml`
-
-3. **Modifying time range** in the API endpoint (currently 99 days)
+1. **Modifying time range** in the API endpoint (currently 99 days)
+2. **Changing email frequency** by adjusting external trigger schedule
+3. **Adding authentication** if needed for security
 
 ## Security Notes
 
 - Email service uses SMTP with authentication
-- Cron jobs are called by Vercel/GitHub infrastructure
-- No external access to cron endpoints
+- Endpoint is publicly accessible (consider adding auth if needed)
 - Audit logs are read-only for email generation
+- No automatic execution - manual trigger only
 
 ## Dependencies Added
 

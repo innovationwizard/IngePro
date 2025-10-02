@@ -4,28 +4,12 @@ import { sendUsageLogsEmail, UsageLogEntry } from '@/lib/emailService'
 
 export const runtime = 'nodejs'
 
-// POST - Send hourly usage logs email (called by cron job)
+// POST - Send usage logs email (called manually or by external app)
 export async function POST(request: NextRequest) {
   try {
-    // Detect the source of the request
     const userAgent = request.headers.get('user-agent')
-    const isGitHubActions = userAgent?.includes('gh-hourly-cron')
-    const isVercelCron = userAgent?.includes('Vercel') || process.env.NODE_ENV === 'development'
-    
-    let source = 'unknown'
-    let message = 'Usage logs email sent'
-    
-    if (isGitHubActions) {
-      source = 'github-actions-cron'
-      message = 'Usage logs email sent by GitHub Actions cron'
-    } else if (isVercelCron) {
-      source = 'vercel-cron'
-      message = 'Usage logs email sent by Vercel cron'
-    } else {
-      console.warn('Usage logs email called from unknown source:', userAgent)
-      source = 'manual'
-      message = 'Usage logs email sent manually'
-    }
+    const source = 'manual'
+    const message = 'Usage logs email sent'
 
     const prisma = await getPrisma()
     
@@ -125,18 +109,16 @@ export async function POST(request: NextRequest) {
 // GET - Manual trigger for usage logs email (accessible in production)
 export async function GET(request: NextRequest) {
   try {
-    // Allow manual access in production for external bot usage
-
     const prisma = await getPrisma()
     
-    // Get recent audit logs (last 24 hours for testing)
-    const oneDayAgo = new Date()
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1)
+    // Get audit logs from the last 99 days (same as POST method)
+    const ninetyNineDaysAgo = new Date()
+    ninetyNineDaysAgo.setDate(ninetyNineDaysAgo.getDate() - 99)
     
     const auditLogs = await prisma.auditLogs.findMany({
       where: {
         createdAt: {
-          gte: oneDayAgo
+          gte: ninetyNineDaysAgo
         }
       },
       include: {
@@ -194,14 +176,15 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
-      message: 'Manual usage logs email sent',
+      message: 'Usage logs email sent',
       logsProcessed: usageLogs.length,
       emailSent,
       timeRange: {
-        from: oneDayAgo.toISOString(),
+        from: ninetyNineDaysAgo.toISOString(),
         to: new Date().toISOString()
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      source: 'manual'
     })
 
   } catch (error) {
