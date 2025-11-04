@@ -19,15 +19,39 @@ export async function GET(req: NextRequest) {
       // SUPERUSER sees all projects
     } else if (session.user.role === 'ADMIN') {
       // ADMIN sees projects from their companies
-      const personTenants = await prisma.personTenants.findMany({
-        where: {
-          personId: session.user.id,
-          status: 'ACTIVE'
-        },
-        select: { companyId: true }
-      })
-      const companyIds = personTenants.map(ut => ut.companyId)
-      whereClause.companyId = { in: companyIds }
+      // First try to use session companyId if available
+      let companyIds: string[] = [];
+      if (session.user.companyId && session.user.companyId !== 'unknown' && session.user.companyId !== 'system') {
+        companyIds = [session.user.companyId];
+      }
+      
+      // Try to get additional companies from personTenants (if permissions allow)
+      try {
+        const personTenants = await prisma.personTenants.findMany({
+          where: {
+            personId: session.user.id,
+            status: 'ACTIVE'
+          },
+          select: { companyId: true }
+        })
+        const tenantCompanyIds = personTenants.map(ut => ut.companyId);
+        // Merge with session companyId, avoiding duplicates
+        companyIds = Array.from(new Set([...companyIds, ...tenantCompanyIds]));
+      } catch (error: any) {
+        // If personTenants query fails (e.g., permission denied), log and continue with session companyId
+        console.warn('Could not query personTenants in stats, using session companyId:', error?.code || error?.message);
+        // If we don't have any companyIds yet, return empty results
+        if (companyIds.length === 0) {
+          return NextResponse.json({ projectStats: [] });
+        }
+      }
+      
+      if (companyIds.length > 0) {
+        whereClause.companyId = { in: companyIds };
+      } else {
+        // No company context available, return empty results
+        return NextResponse.json({ projectStats: [] });
+      }
     } else if (session.user.role === 'SUPERVISOR') {
       // SUPERVISOR sees projects they are assigned to
       const personProjects = await prisma.personProjects.findMany({

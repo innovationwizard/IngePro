@@ -38,24 +38,58 @@ export async function GET(req: NextRequest) {
       // SUPERUSER sees all projects - no company filter needed
     } else if (session.user.role === 'ADMIN') {
       // ADMIN sees projects from ALL their companies
-      const personTenants = await prisma.personTenants.findMany({
-        where: {
-          personId: session.user.id,
-          status: 'ACTIVE'
-        },
-        select: { companyId: true }
-      });
-      companyIds = personTenants.map(ut => ut.companyId);
+      // First try to use session companyId if available
+      if (session.user.companyId && session.user.companyId !== 'unknown' && session.user.companyId !== 'system') {
+        companyIds = [session.user.companyId];
+      }
+      
+      // Try to get additional companies from personTenants (if permissions allow)
+      try {
+        const personTenants = await prisma.personTenants.findMany({
+          where: {
+            personId: session.user.id,
+            status: 'ACTIVE'
+          },
+          select: { companyId: true }
+        });
+        const tenantCompanyIds = personTenants.map(ut => ut.companyId);
+        // Merge with session companyId, avoiding duplicates
+        companyIds = Array.from(new Set([...companyIds, ...tenantCompanyIds]));
+      } catch (error: any) {
+        // If personTenants query fails (e.g., permission denied), log and continue with session companyId
+        console.warn('Could not query personTenants, using session companyId:', error?.code || error?.message);
+        // If we don't have any companyIds yet, this is a problem
+        if (companyIds.length === 0) {
+          console.error('No company context available for ADMIN user');
+        }
+      }
     } else {
-      // SUPERVISOR/WORKER sees projects from their companies (same as ADMIN logic)
-      const personTenants = await prisma.personTenants.findMany({
-        where: {
-          personId: session.user.id,
-          status: 'ACTIVE'
-        },
-        select: { companyId: true }
-      });
-      companyIds = personTenants.map(ut => ut.companyId);
+      // SUPERVISOR/WORKER sees projects from their companies
+      // First try to use session companyId if available
+      if (session.user.companyId && session.user.companyId !== 'unknown' && session.user.companyId !== 'system') {
+        companyIds = [session.user.companyId];
+      }
+      
+      // Try to get additional companies from personTenants (if permissions allow)
+      try {
+        const personTenants = await prisma.personTenants.findMany({
+          where: {
+            personId: session.user.id,
+            status: 'ACTIVE'
+          },
+          select: { companyId: true }
+        });
+        const tenantCompanyIds = personTenants.map(ut => ut.companyId);
+        // Merge with session companyId, avoiding duplicates
+        companyIds = Array.from(new Set([...companyIds, ...tenantCompanyIds]));
+      } catch (error: any) {
+        // If personTenants query fails (e.g., permission denied), log and continue with session companyId
+        console.warn('Could not query personTenants, using session companyId:', error?.code || error?.message);
+        // If we don't have any companyIds yet, this is a problem
+        if (companyIds.length === 0) {
+          console.error('No company context available for user');
+        }
+      }
     }
     
     // Step 2: Build query based on role
@@ -182,16 +216,22 @@ export async function POST(request: NextRequest) {
     let currentCompanyId: string | undefined = session.user?.companyId
     
     // If no company in session, try to get from PersonTenant (most recent active)
-    if (!currentCompanyId) {
-      const personTenant = await prisma.personTenants.findFirst({
-        where: {
-          personId: session.user?.id,
-          status: 'ACTIVE'
-        },
-        orderBy: { createdAt: 'desc' },
-        select: { companyId: true }
-      })
-      currentCompanyId = personTenant?.companyId || undefined
+    if (!currentCompanyId || currentCompanyId === 'unknown' || currentCompanyId === 'system') {
+      try {
+        const personTenant = await prisma.personTenants.findFirst({
+          where: {
+            personId: session.user?.id,
+            status: 'ACTIVE'
+          },
+          orderBy: { createdAt: 'desc' },
+          select: { companyId: true }
+        })
+        currentCompanyId = personTenant?.companyId || currentCompanyId || undefined
+      } catch (error: any) {
+        // If personTenants query fails, log and use session companyId if available
+        console.warn('Could not query personTenants in POST, using session companyId:', error?.code || error?.message);
+        // If we still don't have a companyId, we'll error out below
+      }
     }
     
     // Step 2: Get user's role from session
@@ -313,30 +353,54 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Project not found' }, { status: 404 })
       }
 
-      // Check access to current company
-      const currentCompanyAccess = await prisma.personTenants.findFirst({
-        where: {
-          personId: session.user?.id,
-          companyId: project.companyId,
-          status: 'ACTIVE'
+      // Check access to current company - use session companyId as fallback
+      let hasCurrentCompanyAccess = false;
+      if (session.user?.companyId === project.companyId) {
+        hasCurrentCompanyAccess = true;
+      } else {
+        try {
+          const currentCompanyAccess = await prisma.personTenants.findFirst({
+            where: {
+              personId: session.user?.id,
+              companyId: project.companyId,
+              status: 'ACTIVE'
+            }
+          })
+          hasCurrentCompanyAccess = !!currentCompanyAccess;
+        } catch (error: any) {
+          console.warn('Could not verify company access via personTenants, using session companyId:', error?.code || error?.message);
+          // If query fails, fall back to session companyId check
+          hasCurrentCompanyAccess = session.user?.companyId === project.companyId;
         }
-      })
+      }
       
-      if (!currentCompanyAccess) {
+      if (!hasCurrentCompanyAccess) {
         return NextResponse.json({ error: 'Unauthorized to current company' }, { status: 401 })
       }
 
       // If changing companies, check access to new company
       if (validatedData.companyId && validatedData.companyId !== project.companyId) {
-        const newCompanyAccess = await prisma.personTenants.findFirst({
-          where: {
-            personId: session.user?.id,
-            companyId: validatedData.companyId,
-            status: 'ACTIVE'
+        let hasNewCompanyAccess = false;
+        if (session.user?.companyId === validatedData.companyId) {
+          hasNewCompanyAccess = true;
+        } else {
+          try {
+            const newCompanyAccess = await prisma.personTenants.findFirst({
+              where: {
+                personId: session.user?.id,
+                companyId: validatedData.companyId,
+                status: 'ACTIVE'
+              }
+            })
+            hasNewCompanyAccess = !!newCompanyAccess;
+          } catch (error: any) {
+            console.warn('Could not verify new company access via personTenants, using session companyId:', error?.code || error?.message);
+            // If query fails, fall back to session companyId check
+            hasNewCompanyAccess = session.user?.companyId === validatedData.companyId;
           }
-        })
+        }
         
-        if (!newCompanyAccess) {
+        if (!hasNewCompanyAccess) {
           return NextResponse.json({ error: 'Unauthorized to new company' }, { status: 401 })
         }
       }
