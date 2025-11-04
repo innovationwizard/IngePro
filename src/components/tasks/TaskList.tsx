@@ -214,10 +214,14 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
   const confirmDeleteTask = async () => {
     if (!deletingTask) return
 
+    console.log('🗑️ confirmDeleteTask called for task:', deletingTask.id, 'personRole:', personRole)
+
     try {
       const response = await fetch(`/api/tasks?id=${deletingTask.id}`, {
         method: 'DELETE',
       })
+      
+      console.log('🗑️ Delete response status:', response.status, response.statusText)
 
       if (response.ok) {
         const result = await response.json()
@@ -226,7 +230,18 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
         setDeletingTask(null)
         onTaskUpdated()
       } else {
-        const errorData = await response.json()
+        let errorData
+        try {
+          errorData = await response.json()
+        } catch (parseError) {
+          // If response is not JSON, try to get text
+          const errorText = await response.text()
+          console.error('🗑️ Delete task error response:', errorText)
+          toast.error(`Error al eliminar la tarea: ${response.status} ${response.statusText}`)
+          return
+        }
+        
+        console.error('🗑️ Delete task error:', errorData)
         
         if (errorData.error && errorData.error.includes('Cannot delete task - it has active')) {
           const details = errorData.details || {}
@@ -240,13 +255,15 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
           Desasigna primero todas las asignaciones antes de eliminar.`
           
           toast.error(message, { duration: 8000 })
+        } else if (errorData.error && errorData.error.includes('Only admins can delete')) {
+          toast.error('No tienes permiso para eliminar tareas. Solo los administradores pueden eliminar tareas.', { duration: 5000 })
         } else {
-          toast.error(errorData.error || 'Error al eliminar la tarea')
+          toast.error(errorData.error || `Error al eliminar la tarea (${response.status})`, { duration: 5000 })
         }
       }
     } catch (error) {
       console.error('🗑️ Error deleting task:', error)
-      toast.error('Error al eliminar la tarea')
+      toast.error(`Error al eliminar la tarea: ${error instanceof Error ? error.message : 'Error desconocido'}`, { duration: 5000 })
     }
   }
 
@@ -274,6 +291,37 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
     if (percentage >= 50) return 'bg-blue-500'
     if (percentage >= 25) return 'bg-yellow-500'
     return 'bg-gray-300'
+  }
+
+  // Get unique projects from both projectAssignments and workerAssignments
+  const getUniqueProjects = (task: Task) => {
+    const projectMap = new Map<string, { name: string; nameEs?: string }>()
+    
+    // Add projects from projectAssignments
+    if (task.projectAssignments) {
+      task.projectAssignments.forEach(pa => {
+        if (pa.project && !projectMap.has(pa.project.id)) {
+          projectMap.set(pa.project.id, {
+            name: pa.project.name,
+            nameEs: pa.project.nameEs
+          })
+        }
+      })
+    }
+    
+    // Add unique projects from workerAssignments
+    if (task.workerAssignments) {
+      task.workerAssignments.forEach(wa => {
+        if (wa.project && !projectMap.has(wa.project.id)) {
+          projectMap.set(wa.project.id, {
+            name: wa.project.name,
+            nameEs: wa.project.nameEs
+          })
+        }
+      })
+    }
+    
+    return Array.from(projectMap.values())
   }
 
   return (
@@ -381,11 +429,12 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                     <div>
                       <span className="text-gray-500">Proyectos:</span>
                       <p className="font-medium">
-                        {task.projectAssignments && task.projectAssignments.length > 0
-                          ? task.projectAssignments
-                              .map((pa) => pa.project.nameEs || pa.project.name)
-                              .join(', ')
-                          : 'Sin proyectos asignados'}
+                        {(() => {
+                          const uniqueProjects = getUniqueProjects(task)
+                          return uniqueProjects.length > 0
+                            ? uniqueProjects.map(p => p.nameEs || p.name).join(', ')
+                            : 'Sin proyectos asignados'
+                        })()}
                       </p>
                     </div>
                     <div>
@@ -408,8 +457,8 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                   <p className="text-sm font-medium text-gray-500 mb-2">Trabajadores Asignados</p>
                   <div className="flex flex-wrap gap-2">
                     {task.workerAssignments && task.workerAssignments.length > 0 ? (
-                      task.workerAssignments.map((assignment) => (
-                        <Badge key={assignment.worker.id} variant="outline">
+                      task.workerAssignments.map((assignment, index) => (
+                        <Badge key={`${assignment.worker.id}-${assignment.project.id}-${index}`} variant="outline">
                           {assignment.worker.name} ({assignment.project.nameEs || assignment.project.name})
                         </Badge>
                       ))
@@ -462,7 +511,10 @@ export default function TaskList({ tasks, onTaskUpdated, personRole, currentUser
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDeleteTask(task)}
+                      onClick={() => {
+                        console.log('🗑️ Delete button clicked for task:', task.id, 'personRole:', personRole)
+                        handleDeleteTask(task)
+                      }}
                       className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white border border-red-700 rounded px-3 py-2 font-medium"
                     >
                       Eliminar

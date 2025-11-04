@@ -432,7 +432,19 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
+    console.log('🗑️ DELETE /api/tasks - Session check:', {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      userRoleType: typeof session?.user?.role
+    })
+    
     if (!session || session.user?.role !== 'ADMIN') {
+      console.log('🗑️ DELETE /api/tasks - Unauthorized:', {
+        noSession: !session,
+        role: session?.user?.role,
+        expectedRole: 'ADMIN'
+      })
       return NextResponse.json({ error: 'Only admins can delete tasks' }, { status: 401 })
     }
 
