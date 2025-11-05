@@ -13,14 +13,14 @@ export async function POST(request: NextRequest) {
 
     const prisma = await getPrisma()
     
-    // Get audit logs from the last 9 days
-    const nineDaysAgo = new Date()
-    nineDaysAgo.setDate(nineDaysAgo.getDate() - 9)
+    // Get audit logs from the last 8 hours
+    const eightHoursAgo = new Date()
+    eightHoursAgo.setHours(eightHoursAgo.getHours() - 8)
     
     const auditLogs = await prisma.auditLogs.findMany({
       where: {
         createdAt: {
-          gte: nineDaysAgo
+          gte: eightHoursAgo
         }
       },
       include: {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       message,
       logsProcessed: usageLogs.length,
       timeRange: {
-        from: nineDaysAgo.toISOString(),
+        from: eightHoursAgo.toISOString(),
         to: new Date().toISOString()
       },
       timestamp: new Date().toISOString(),
@@ -111,14 +111,14 @@ export async function GET(request: NextRequest) {
   try {
     const prisma = await getPrisma()
     
-    // Get audit logs from the last 9 days (same as POST method)
-    const nineDaysAgo = new Date()
-    nineDaysAgo.setDate(nineDaysAgo.getDate() - 9)
+    // Get audit logs from the last 8 hours (same as POST method)
+    const eightHoursAgo = new Date()
+    eightHoursAgo.setHours(eightHoursAgo.getHours() - 8)
     
     const auditLogs = await prisma.auditLogs.findMany({
       where: {
         createdAt: {
-          gte: nineDaysAgo
+          gte: eightHoursAgo
         }
       },
       include: {
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
       logsProcessed: usageLogs.length,
       emailSent,
       timeRange: {
-        from: nineDaysAgo.toISOString(),
+        from: eightHoursAgo.toISOString(),
         to: new Date().toISOString()
       },
       timestamp: new Date().toISOString(),
