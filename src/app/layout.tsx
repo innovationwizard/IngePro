@@ -73,6 +73,9 @@ export const viewport: Viewport = {
   minimumScale: 1,
 }
 
+// Force dynamic rendering to prevent static generation issues in Next.js 15
+export const dynamic = 'force-dynamic'
+
 export default function RootLayout({
   children,
 }: {

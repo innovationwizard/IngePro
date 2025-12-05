@@ -6,8 +6,8 @@ const nextConfig = {
   // Optimize for serverless deployment
   output: 'standalone',
   
-  // Disable static generation to prevent API route timeouts
-  staticPageGenerationTimeout: 0,
+  // Increase timeout for static generation (Next.js 15)
+  staticPageGenerationTimeout: 60,
   
   // Skip type checking and linting during build (faster deployment)
   typescript: {
@@ -18,10 +18,8 @@ const nextConfig = {
     ignoreDuringBuilds: true, // Skip ESLint during build
   },
   
-  // Experimental features (valid properties only)
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
+  // Server external packages (moved from experimental in Next.js 15)
+  serverExternalPackages: ['@prisma/client'],
   
   // Webpack configuration for Prisma
   webpack: (config, { isServer }) => {
